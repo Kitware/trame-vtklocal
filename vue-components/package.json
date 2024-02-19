@@ -1,0 +1,41 @@
+{
+  "name": "vue-trame_vtklocal",
+  "private": true,
+  "version": "0.0.0",
+  "main": "./dist/trame_vtklocal.umd.js",
+  "unpkg": "./dist/trame_vtklocal.umd.js",
+  "module": "./dist/trame_vtklocal.mjs",
+  "exports": {
+    ".": {
+      "import": "./dist/trame_vtklocal.mjs",
+      "require": "./dist/trame_vtklocal.umd.js"
+    }
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build --emptyOutDir",
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore --ignore-pattern public",
+    "semantic-release": "semantic-release"
+  },
+  "dependencies": {
+  },
+  "peerDependencies": {
+    "vue": "^2.7.0 || >=3.0.0"
+  },
+  "devDependencies": {
+    "@rushstack/eslint-patch": "^1.1.4",
+    "@vue/eslint-config-prettier": "^7.0.0",
+    "eslint": "^8.33.0",
+    "eslint-plugin-vue": "^9.3.0",
+    "prettier": "^2.7.1",
+    "semantic-release": "19.0.2",
+    "vite": "^4.1.0",
+    "vue": "^3.0.0"
+  },
+  "files": [
+    "dist/*",
+    "src/*",
+    "*.json",
+    "*.js"
+  ]
+}

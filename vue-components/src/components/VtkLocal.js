@@ -28,7 +28,7 @@ export default {
       canvasHeight.value = height;
       console.log(`vtkLocal::resize ${width}x${height}`);
       // objectManager.update();
-      window.dispatchEvent(new Event('resize'));
+      window.dispatchEvent(new Event("resize"));
       // FIXME: call setSize on vtkRenderWindow
     }
     let resizeObserver = new ResizeObserver(resize);
@@ -37,16 +37,16 @@ export default {
       const session = client.getConnection().getSession();
       const serverState = await session.call("vtklocal.get.state", [vtkId]);
       stateMTimes[vtkId] = serverState.mtime;
-      console.log(`vtkLocal::state(${vtkId}) =`)
+      // console.log(`vtkLocal::state(${vtkId}) =`)
       objectManager.registerState(serverState);
       return serverState;
     }
     async function fetchHash(hash) {
       const session = client.getConnection().getSession();
       const blob = await session.call("vtklocal.get.hash", [hash]);
-      const array = new Uint8Array(await blob.arrayBuffer())
+      const array = new Uint8Array(await blob.arrayBuffer());
+      objectManager.registerBlob(hash, array);
       hashesAvailable.add(hash);
-      objectManager.registerBlob(hash, Array.from(array)); // FIXME
       return blob;
     }
 
@@ -56,7 +56,6 @@ export default {
       const serverStatus = await session.call("vtklocal.get.status", [
         props.renderWindow,
       ]);
-      console.log("serverStatus", serverStatus);
       const pendingRequests = [];
       serverStatus.ids.forEach(([vtkId, mtime]) => {
         if (!stateMTimes[vtkId] || stateMTimes[vtkId] < mtime) {
@@ -69,7 +68,6 @@ export default {
         }
       });
       await Promise.all(pendingRequests);
-      // FIXME: update wasm module
       console.log("vtkLocal::update(end)");
       objectManager.update();
       emit("updated");
@@ -102,11 +100,11 @@ export default {
   template: `
         <div ref="container" style="position: relative; width: 100%; height: 100%;">
           <canvas 
+            id="canvas"
             ref="canvas" 
             style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);" 
             
-            :width="canvasWidth"
-            :height="canvasHeight" 
+           
 
             tabindex="0"
             
@@ -116,3 +114,5 @@ export default {
           />
         </div>`,
 };
+// :width="canvasWidth"
+// :height="canvasHeight"

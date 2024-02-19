@@ -1,2 +1,2 @@
 [codespell]
-skip = **/package-lock.json
+skip = **/package-lock.json,**/vtkObjectManager.js

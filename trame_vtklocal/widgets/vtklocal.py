@@ -28,6 +28,7 @@ class LocalView(HtmlElement):
             LocalView._next_id += 1
             self.__ref = f"_vtklocalview_{LocalView._next_id}"
 
+        # Must trigger update after registration
         self._window_id = self.object_manager.RegisterObject(render_window)
         self.object_manager.Update()
 
@@ -43,7 +44,7 @@ class LocalView(HtmlElement):
     def update(self):
         updated_ids = self.object_manager.Update()
         # TODO broadcast modified [(id,mtime), ...]
-        print(f"{updated_ids=}")
+        print(f"update({updated_ids=})")
         self.server.js_call(
             self.__ref,
             "update",

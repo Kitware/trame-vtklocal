@@ -41,6 +41,7 @@ def create_vtk_pipeline():
     actor.SetMapper(mapper)
 
     renderer.AddActor(actor)
+    renderer.SetBackground(1, 0, 0)
     renderer.ResetCamera()
 
     return renderWindow

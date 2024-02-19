@@ -33,11 +33,6 @@ def extract_ids(object_manager, id_list, id_to_explore):
     return id_list
 
 
-def extract_hashes(object_manager, hash_list, vtk_id):
-    for hash in object_manager.GetBlobHashes(vtk_id):
-        hash_list.add(hash)
-
-
 def map_id_mtime(object_manager, vtk_id):
     vtk_obj = object_manager.GetObjectWithId(vtk_id)
     return (vtk_id, vtk_obj.GetMTime())
@@ -51,25 +46,24 @@ class ObjectManagerAPI(LinkProtocol):
 
     @export_rpc("vtklocal.get.state")
     def get_state(self, obj_id):
-        print("get_state", obj_id)
+        # print("get_state", obj_id)
         state = self.vtk_object_manager.GetState(obj_id)
-        print(state)
+        # print(state)
         return state
 
     @export_rpc("vtklocal.get.hash")
     def get_hash(self, hash):
-        print("get_hash", hash)
+        # print("get_hash", hash)
         return self.addAttachment(memoryview(self.vtk_object_manager.GetBlob(hash)))
 
     @export_rpc("vtklocal.get.status")
     def get_status(self, obj_id):
-        print("get_status", obj_id)
+        # print("get_status", obj_id)
         ids = extract_ids(self.vtk_object_manager, [], obj_id)
-        hashes = set()
-        map(lambda vtk_id: extract_hashes(self.vtk_object_manager, hashes, vtk_id), ids)
+        hashes = list(self.vtk_object_manager.GetBlobHashes(ids))
         return dict(
             ids=[map_id_mtime(self.vtk_object_manager, v) for v in ids],
-            hashes=list(hashes),
+            hashes=hashes,
             mtime=self.vtk_object_manager.GetLatestMTimeFromObjects(),
         )
 

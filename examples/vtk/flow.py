@@ -32,6 +32,7 @@ from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
 # local rendering, but doesn't hurt to include it
 import vtkmodules.vtkRenderingOpenGL2  # noqa
 
+CLIENT_TYPE = "vue3"
 DATA_FILE = str((Path(__file__).parent.with_name("data") / "carotid.vtk").resolve())
 
 # -----------------------------------------------------------------------------
@@ -138,7 +139,7 @@ def create_vtk_pipeline():
 
 class DemoApp:
     def __init__(self, server=None):
-        self.server = get_server(server, client_type="vue2")
+        self.server = get_server(server, client_type=CLIENT_TYPE)
         self.render_window = create_vtk_pipeline()
         self.html_view = None
         self.ui = self._ui()

@@ -1,5 +1,1 @@
-# serve
-serve/*.map
-serve/*.html
-serve/*.common.*
-serve/*.umd.js
+serve/js

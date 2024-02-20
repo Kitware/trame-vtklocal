@@ -1,6 +1,7 @@
 from trame.app import get_server
 from trame.ui.html import DivLayout
-from trame.widgets import vtklocal
+from trame.widgets import vtklocal, html
+from trame.decorators import TrameApp, change
 
 from vtkmodules.vtkFiltersSources import vtkConeSource
 from vtkmodules.vtkRenderingCore import (
@@ -17,6 +18,8 @@ from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
 # Required for rendering initialization, not necessary for
 # local rendering, but doesn't hurt to include it
 import vtkmodules.vtkRenderingOpenGL2  # noqa
+
+CLIENT_TYPE = "vue3"
 
 # -----------------------------------------------------------------------------
 # VTK pipeline
@@ -44,7 +47,7 @@ def create_vtk_pipeline():
     renderer.SetBackground(1, 0, 0)
     renderer.ResetCamera()
 
-    return renderWindow
+    return renderWindow, cone
 
 
 # -----------------------------------------------------------------------------
@@ -52,17 +55,34 @@ def create_vtk_pipeline():
 # -----------------------------------------------------------------------------
 
 
+@TrameApp()
 class DemoApp:
     def __init__(self, server=None):
-        self.server = get_server(server, client_type="vue2")
-        self.render_window = create_vtk_pipeline()
+        self.server = get_server(server, client_type=CLIENT_TYPE)
+        self.render_window, self.cone = create_vtk_pipeline()
         self.html_view = None
         self.ui = self._ui()
+        print(self.ui)
+
+    @change("resolution")
+    def on_resolution_change(self, resolution, **kwargs):
+        if int(resolution) != 6:
+            self.cone.SetResolution(int(resolution))
+            self.render_window.Render()
+            self.html_view.update()
 
     def _ui(self):
         with DivLayout(self.server) as layout:
             self.html_view = vtklocal.LocalView(
                 self.render_window, style="width: 100vw; height: 100vh;"
+            )
+            html.Input(
+                type="range",
+                v_model=("resolution", 6),
+                min=3,
+                max=60,
+                step=1,
+                style="position: absolute; top: 1rem; right: 1rem; z-index: 10;",
             )
 
         return layout

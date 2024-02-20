@@ -14,7 +14,12 @@ __all__ = [
 
 serve_path = str(Path(__file__).with_name("serve").resolve())
 serve = {"__trame_vtklocal": serve_path}
-scripts = ["__trame_vtklocal/trame_vtklocal.umd.js"]
+module_scripts = [
+    "__trame_vtklocal/wasm/vtkObjectManager.js",
+]
+scripts = [
+    "__trame_vtklocal/js/trame_vtklocal.umd.js",
+]
 vue_use = ["trame_vtklocal"]
 
 
@@ -43,6 +48,11 @@ class ObjectManagerAPI(LinkProtocol):
         super().__init__(*args, **kwargs)
         self.vtk_object_manager = vtkObjectManager()
         self.vtk_object_manager.Initialize()
+        self.dirty_ids = set()
+
+    def update(self):
+        self.dirty_ids.update(self.vtk_object_manager.Update())
+        return self.dirty_ids
 
     @export_rpc("vtklocal.get.state")
     def get_state(self, obj_id):
@@ -59,8 +69,10 @@ class ObjectManagerAPI(LinkProtocol):
     @export_rpc("vtklocal.get.status")
     def get_status(self, obj_id):
         # print("get_status", obj_id)
-        ids = extract_ids(self.vtk_object_manager, [], obj_id)
-        hashes = list(self.vtk_object_manager.GetBlobHashes(ids))
+        ids = set(extract_ids(self.vtk_object_manager, [], obj_id))
+        ids.update(self.dirty_ids)
+        self.dirty_ids.clear()
+        hashes = list(self.vtk_object_manager.GetBlobHashes(list(ids)))
         return dict(
             ids=[map_id_mtime(self.vtk_object_manager, v) for v in ids],
             hashes=hashes,

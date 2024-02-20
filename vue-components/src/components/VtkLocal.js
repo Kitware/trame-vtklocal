@@ -37,13 +37,14 @@ export default {
       const session = client.getConnection().getSession();
       const serverState = await session.call("vtklocal.get.state", [vtkId]);
       stateMTimes[vtkId] = serverState.mtime;
-      // console.log(`vtkLocal::state(${vtkId}) =`)
+      console.log(`vtkLocal::state(${vtkId})`)
       objectManager.registerState(serverState);
       return serverState;
     }
     async function fetchHash(hash) {
       const session = client.getConnection().getSession();
       const blob = await session.call("vtklocal.get.hash", [hash]);
+      console.log(`vtkLocal::hash(${hash})`)
       const array = new Uint8Array(await blob.arrayBuffer());
       objectManager.registerBlob(hash, array);
       hashesAvailable.add(hash);
@@ -57,9 +58,13 @@ export default {
         props.renderWindow,
       ]);
       const pendingRequests = [];
+      console.log("ids", serverStatus.ids);
       serverStatus.ids.forEach(([vtkId, mtime]) => {
         if (!stateMTimes[vtkId] || stateMTimes[vtkId] < mtime) {
+          console.log("fetch", vtkId)
           pendingRequests.push(fetchState(vtkId));
+        } else {
+          console.log("skip", vtkId)
         }
       });
       serverStatus.hashes.forEach((hash) => {
@@ -105,8 +110,6 @@ export default {
             ref="canvas" 
             style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);" 
             
-           
-
             tabindex="0"
             
             @contextmenu.prevent

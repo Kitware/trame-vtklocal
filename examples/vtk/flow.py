@@ -4,8 +4,6 @@ from trame.app import get_server
 from trame.ui.html import DivLayout
 from trame.widgets import vtklocal
 
-# from trame.widgets import vtk as vtk_widgets
-
 from vtkmodules.vtkCommonColor import vtkNamedColors
 from vtkmodules.vtkCommonCore import vtkLookupTable
 from vtkmodules.vtkFiltersCore import (
@@ -25,12 +23,9 @@ from vtkmodules.vtkRenderingCore import (
     vtkRenderWindowInteractor,
 )
 
-# Required for interactor initialization
-from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
-
-# Required for rendering initialization, not necessary for
-# local rendering, but doesn't hurt to include it
+# Required for vtk factory
 import vtkmodules.vtkRenderingOpenGL2  # noqa
+from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
 
 CLIENT_TYPE = "vue3"
 DATA_FILE = str((Path(__file__).parent.with_name("data") / "carotid.vtk").resolve())

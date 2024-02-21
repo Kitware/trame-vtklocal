@@ -12,12 +12,9 @@ from vtkmodules.vtkRenderingCore import (
     vtkRenderWindowInteractor,
 )
 
-# Required for interactor initialization
-from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
-
-# Required for rendering initialization, not necessary for
-# local rendering, but doesn't hurt to include it
+# Required for vtk factory
 import vtkmodules.vtkRenderingOpenGL2  # noqa
+from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
 
 CLIENT_TYPE = "vue3"
 

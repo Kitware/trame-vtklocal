@@ -380,7 +380,7 @@ var tempDouble;
 var tempI64;
 
 var ASM_CONSTS = {
- 1580108: () => {
+ 1580188: () => {
   if (typeof (AudioContext) !== "undefined") {
    return true;
   } else if (typeof (webkitAudioContext) !== "undefined") {
@@ -388,7 +388,7 @@ var ASM_CONSTS = {
   }
   return false;
  },
- 1580255: () => {
+ 1580335: () => {
   if ((typeof (navigator.mediaDevices) !== "undefined") && (typeof (navigator.mediaDevices.getUserMedia) !== "undefined")) {
    return true;
   } else if (typeof (navigator.webkitGetUserMedia) !== "undefined") {
@@ -396,7 +396,7 @@ var ASM_CONSTS = {
   }
   return false;
  },
- 1580489: $0 => {
+ 1580569: $0 => {
   if (typeof (Module["SDL2"]) === "undefined") {
    Module["SDL2"] = {};
   }
@@ -418,11 +418,11 @@ var ASM_CONSTS = {
   }
   return SDL2.audioContext === undefined ? -1 : 0;
  },
- 1580982: () => {
+ 1581062: () => {
   var SDL2 = Module["SDL2"];
   return SDL2.audioContext.sampleRate;
  },
- 1581050: ($0, $1, $2, $3) => {
+ 1581130: ($0, $1, $2, $3) => {
   var SDL2 = Module["SDL2"];
   var have_microphone = function(stream) {
    if (SDL2.capture.silenceTimer !== undefined) {
@@ -463,7 +463,7 @@ var ASM_CONSTS = {
    }, have_microphone, no_microphone);
   }
  },
- 1582702: ($0, $1, $2, $3) => {
+ 1582782: ($0, $1, $2, $3) => {
   var SDL2 = Module["SDL2"];
   SDL2.audio.scriptProcessorNode = SDL2.audioContext["createScriptProcessor"]($1, 0, $0);
   SDL2.audio.scriptProcessorNode["onaudioprocess"] = function(e) {
@@ -475,7 +475,7 @@ var ASM_CONSTS = {
   };
   SDL2.audio.scriptProcessorNode["connect"](SDL2.audioContext["destination"]);
  },
- 1583112: ($0, $1) => {
+ 1583192: ($0, $1) => {
   var SDL2 = Module["SDL2"];
   var numChannels = SDL2.capture.currentCaptureBuffer.numberOfChannels;
   for (var c = 0; c < numChannels; ++c) {
@@ -494,7 +494,7 @@ var ASM_CONSTS = {
    }
   }
  },
- 1583717: ($0, $1) => {
+ 1583797: ($0, $1) => {
   var SDL2 = Module["SDL2"];
   var numChannels = SDL2.audio.currentOutputBuffer["numberOfChannels"];
   for (var c = 0; c < numChannels; ++c) {
@@ -507,7 +507,7 @@ var ASM_CONSTS = {
    }
   }
  },
- 1584197: $0 => {
+ 1584277: $0 => {
   var SDL2 = Module["SDL2"];
   if ($0) {
    if (SDL2.capture.silenceTimer !== undefined) {
@@ -545,7 +545,7 @@ var ASM_CONSTS = {
    SDL2.audioContext = undefined;
   }
  },
- 1585369: ($0, $1, $2) => {
+ 1585449: ($0, $1, $2) => {
   var w = $0;
   var h = $1;
   var pixels = $2;
@@ -616,7 +616,7 @@ var ASM_CONSTS = {
   }
   SDL2.ctx.putImageData(SDL2.image, 0, 0);
  },
- 1586838: ($0, $1, $2, $3, $4) => {
+ 1586918: ($0, $1, $2, $3, $4) => {
   var w = $0;
   var h = $1;
   var hot_x = $2;
@@ -653,18 +653,18 @@ var ASM_CONSTS = {
   stringToUTF8(url, urlBuf, url.length + 1);
   return urlBuf;
  },
- 1587827: $0 => {
+ 1587907: $0 => {
   if (Module["canvas"]) {
    Module["canvas"].style["cursor"] = UTF8ToString($0);
   }
  },
- 1587910: () => {
+ 1587990: () => {
   if (Module["canvas"]) {
    Module["canvas"].style["cursor"] = "none";
   }
  },
- 1587979: () => window.innerWidth,
- 1588009: () => window.innerHeight
+ 1588059: () => window.innerWidth,
+ 1588089: () => window.innerHeight
 };
 
 /** @constructor */ function ExitStatus(status) {
@@ -10397,7 +10397,7 @@ var wasmImports = {
  /** @export */ Oh: __emval_take_value,
  /** @export */ xb: __mmap_js,
  /** @export */ wb: __munmap_js,
- /** @export */ N: _abort,
+ /** @export */ O: _abort,
  /** @export */ Nh: _eglBindAPI,
  /** @export */ Mh: _eglChooseConfig,
  /** @export */ Lh: _eglCreateContext,
@@ -10711,7 +10711,7 @@ var wasmImports = {
  /** @export */ jb: _emscripten_sample_gamepad_data,
  /** @export */ ib: _emscripten_set_beforeunload_callback_on_thread,
  /** @export */ hb: _emscripten_set_blur_callback_on_thread,
- /** @export */ M: _emscripten_set_canvas_element_size,
+ /** @export */ N: _emscripten_set_canvas_element_size,
  /** @export */ ua: _emscripten_set_element_css_size,
  /** @export */ gb: _emscripten_set_focus_callback_on_thread,
  /** @export */ fb: _emscripten_set_fullscreenchange_callback_on_thread,
@@ -10757,7 +10757,7 @@ var wasmImports = {
  /** @export */ Na: _glBufferData,
  /** @export */ Ma: _glBufferSubData,
  /** @export */ pa: _glCheckFramebufferStatus,
- /** @export */ L: _glClear,
+ /** @export */ M: _glClear,
  /** @export */ oa: _glClearColor,
  /** @export */ na: _glClearDepthf,
  /** @export */ bc: _glClearStencil,
@@ -10781,7 +10781,7 @@ var wasmImports = {
  /** @export */ F: _glDetachShader,
  /** @export */ n: _glDisable,
  /** @export */ Ka: _glDisableVertexAttribArray,
- /** @export */ K: _glDrawArrays,
+ /** @export */ L: _glDrawArrays,
  /** @export */ Ja: _glDrawArraysInstanced,
  /** @export */ Ia: _glDrawBuffers,
  /** @export */ Ub: _glDrawElements,
@@ -10793,7 +10793,7 @@ var wasmImports = {
  /** @export */ ga: _glFlush,
  /** @export */ Ha: _glFramebufferRenderbuffer,
  /** @export */ Ga: _glFramebufferTexture2D,
- /** @export */ J: _glGenBuffers,
+ /** @export */ K: _glGenBuffers,
  /** @export */ Rb: _glGenFramebuffers,
  /** @export */ Qb: _glGenRenderbuffers,
  /** @export */ Pb: _glGenTextures,
@@ -10843,8 +10843,8 @@ var wasmImports = {
  /** @export */ T: _glUseProgram,
  /** @export */ S: _glVertexAttribDivisor,
  /** @export */ R: _glVertexAttribPointer,
- /** @export */ Q: _glViewport,
- /** @export */ P: invoke_i,
+ /** @export */ J: _glViewport,
+ /** @export */ Q: invoke_i,
  /** @export */ c: invoke_ii,
  /** @export */ e: invoke_iii,
  /** @export */ v: invoke_iiii,
@@ -10852,7 +10852,7 @@ var wasmImports = {
  /** @export */ A: invoke_v,
  /** @export */ d: invoke_vi,
  /** @export */ h: invoke_vii,
- /** @export */ O: invoke_viii,
+ /** @export */ P: invoke_viii,
  /** @export */ I: invoke_viiii,
  /** @export */ vb: _strftime_l
 };

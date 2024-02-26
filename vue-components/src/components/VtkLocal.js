@@ -1,4 +1,4 @@
-import { inject, ref, unref, onMounted, onBeforeUnmount } from "vue";
+import { inject, ref, unref, onMounted, onBeforeUnmount, nextTick } from "vue";
 import { createModule } from "../utils";
 
 export default {
@@ -24,13 +24,16 @@ export default {
 
     function resize() {
       const { width, height } = container.value.getBoundingClientRect();
-      canvasWidth.value = width;
-      canvasHeight.value = height;
+      const w = Math.floor(width * window.devicePixelRatio + 0.5);
+      const h = Math.floor(height * window.devicePixelRatio + 0.5);
+      canvasWidth.value = w;
+      canvasHeight.value = h;
       console.log(`vtkLocal::resize ${width}x${height}`);
-      if (props.renderWindow.length > 0)
-      {
-        objectManager.setSize(props.renderWindow, width, height);
-        objectManager.render(props.renderWindow);
+      if (props.renderWindow.length > 0) {
+        nextTick(() => {
+          objectManager.setSize(props.renderWindow, w, h);
+          objectManager.render(props.renderWindow);
+        });
       }
     }
     let resizeObserver = new ResizeObserver(resize);
@@ -92,7 +95,11 @@ export default {
       console.log("objectManager", objectManager);
       resizeObserver.observe(unref(container));
       update(/*startEventLoop=*/true);
-      setTimeout(() => window.dispatchEvent(new Event("resize")), 100);
+      setTimeout(() => {
+        canvasWidth.value = 300;
+        canvasHeight.value = 300;
+        nextTick(resize);
+      }, 100);
     });
 
     onBeforeUnmount(() => {
@@ -116,8 +123,9 @@ export default {
           <canvas 
             id="canvas"
             ref="canvas" 
-            style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);" 
-            
+            style="position: absolute; left: 0; top: 0; width: 100%; height: 100%;" 
+            :width="canvasWidth"
+            :height="canvasHeight"
             tabindex="0"
             
             @contextmenu.prevent
@@ -126,5 +134,3 @@ export default {
           />
         </div>`,
 };
-// :width="canvasWidth"
-// :height="canvasHeight"

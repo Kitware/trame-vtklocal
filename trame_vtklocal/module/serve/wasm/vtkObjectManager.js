@@ -380,7 +380,7 @@ var tempDouble;
 var tempI64;
 
 var ASM_CONSTS = {
- 1580092: () => {
+ 1580108: () => {
   if (typeof (AudioContext) !== "undefined") {
    return true;
   } else if (typeof (webkitAudioContext) !== "undefined") {
@@ -388,7 +388,7 @@ var ASM_CONSTS = {
   }
   return false;
  },
- 1580239: () => {
+ 1580255: () => {
   if ((typeof (navigator.mediaDevices) !== "undefined") && (typeof (navigator.mediaDevices.getUserMedia) !== "undefined")) {
    return true;
   } else if (typeof (navigator.webkitGetUserMedia) !== "undefined") {
@@ -396,7 +396,7 @@ var ASM_CONSTS = {
   }
   return false;
  },
- 1580473: $0 => {
+ 1580489: $0 => {
   if (typeof (Module["SDL2"]) === "undefined") {
    Module["SDL2"] = {};
   }
@@ -418,11 +418,11 @@ var ASM_CONSTS = {
   }
   return SDL2.audioContext === undefined ? -1 : 0;
  },
- 1580966: () => {
+ 1580982: () => {
   var SDL2 = Module["SDL2"];
   return SDL2.audioContext.sampleRate;
  },
- 1581034: ($0, $1, $2, $3) => {
+ 1581050: ($0, $1, $2, $3) => {
   var SDL2 = Module["SDL2"];
   var have_microphone = function(stream) {
    if (SDL2.capture.silenceTimer !== undefined) {
@@ -463,7 +463,7 @@ var ASM_CONSTS = {
    }, have_microphone, no_microphone);
   }
  },
- 1582686: ($0, $1, $2, $3) => {
+ 1582702: ($0, $1, $2, $3) => {
   var SDL2 = Module["SDL2"];
   SDL2.audio.scriptProcessorNode = SDL2.audioContext["createScriptProcessor"]($1, 0, $0);
   SDL2.audio.scriptProcessorNode["onaudioprocess"] = function(e) {
@@ -475,7 +475,7 @@ var ASM_CONSTS = {
   };
   SDL2.audio.scriptProcessorNode["connect"](SDL2.audioContext["destination"]);
  },
- 1583096: ($0, $1) => {
+ 1583112: ($0, $1) => {
   var SDL2 = Module["SDL2"];
   var numChannels = SDL2.capture.currentCaptureBuffer.numberOfChannels;
   for (var c = 0; c < numChannels; ++c) {
@@ -494,7 +494,7 @@ var ASM_CONSTS = {
    }
   }
  },
- 1583701: ($0, $1) => {
+ 1583717: ($0, $1) => {
   var SDL2 = Module["SDL2"];
   var numChannels = SDL2.audio.currentOutputBuffer["numberOfChannels"];
   for (var c = 0; c < numChannels; ++c) {
@@ -507,7 +507,7 @@ var ASM_CONSTS = {
    }
   }
  },
- 1584181: $0 => {
+ 1584197: $0 => {
   var SDL2 = Module["SDL2"];
   if ($0) {
    if (SDL2.capture.silenceTimer !== undefined) {
@@ -545,7 +545,7 @@ var ASM_CONSTS = {
    SDL2.audioContext = undefined;
   }
  },
- 1585353: ($0, $1, $2) => {
+ 1585369: ($0, $1, $2) => {
   var w = $0;
   var h = $1;
   var pixels = $2;
@@ -616,7 +616,7 @@ var ASM_CONSTS = {
   }
   SDL2.ctx.putImageData(SDL2.image, 0, 0);
  },
- 1586822: ($0, $1, $2, $3, $4) => {
+ 1586838: ($0, $1, $2, $3, $4) => {
   var w = $0;
   var h = $1;
   var hot_x = $2;
@@ -653,18 +653,18 @@ var ASM_CONSTS = {
   stringToUTF8(url, urlBuf, url.length + 1);
   return urlBuf;
  },
- 1587811: $0 => {
+ 1587827: $0 => {
   if (Module["canvas"]) {
    Module["canvas"].style["cursor"] = UTF8ToString($0);
   }
  },
- 1587894: () => {
+ 1587910: () => {
   if (Module["canvas"]) {
    Module["canvas"].style["cursor"] = "none";
   }
  },
- 1587963: () => window.innerWidth,
- 1587993: () => window.innerHeight
+ 1587979: () => window.innerWidth,
+ 1588009: () => window.innerHeight
 };
 
 /** @constructor */ function ExitStatus(status) {
@@ -10361,7 +10361,7 @@ for (var i = 0; i < 32; ++i) tempFixedLengthArray.push(new Array(i));
 var wasmImports = {
  /** @export */ a: ___cxa_throw,
  /** @export */ ki: ___syscall_faccessat,
- /** @export */ za: ___syscall_fcntl64,
+ /** @export */ ya: ___syscall_fcntl64,
  /** @export */ ji: ___syscall_fstat64,
  /** @export */ ii: ___syscall_getcwd,
  /** @export */ hi: ___syscall_getdents64,
@@ -10375,11 +10375,11 @@ var wasmImports = {
  /** @export */ $h: __embind_register_bool,
  /** @export */ _h: __embind_register_emval,
  /** @export */ rb: __embind_register_float,
- /** @export */ v: __embind_register_function,
+ /** @export */ x: __embind_register_function,
  /** @export */ u: __embind_register_integer,
  /** @export */ g: __embind_register_memory_view,
  /** @export */ qb: __embind_register_std_string,
- /** @export */ ya: __embind_register_std_wstring,
+ /** @export */ xa: __embind_register_std_wstring,
  /** @export */ Zh: __embind_register_void,
  /** @export */ Yh: __emscripten_get_now_is_monotonic,
  /** @export */ Xh: __emscripten_throw_longjmp,
@@ -10389,7 +10389,7 @@ var wasmImports = {
  /** @export */ Uh: __emval_get_global,
  /** @export */ ob: __emval_get_method_caller,
  /** @export */ Th: __emval_get_property,
- /** @export */ Z: __emval_incref,
+ /** @export */ nb: __emval_incref,
  /** @export */ Sh: __emval_instanceof,
  /** @export */ Rh: __emval_new_array,
  /** @export */ Qh: __emval_new_cstring,
@@ -10405,7 +10405,7 @@ var wasmImports = {
  /** @export */ Jh: _eglDestroyContext,
  /** @export */ Ih: _eglDestroySurface,
  /** @export */ Hh: _eglGetConfigAttrib,
- /** @export */ nb: _eglGetDisplay,
+ /** @export */ mb: _eglGetDisplay,
  /** @export */ Gh: _eglGetError,
  /** @export */ Fh: _eglInitialize,
  /** @export */ Eh: _eglMakeCurrent,
@@ -10424,9 +10424,9 @@ var wasmImports = {
  /** @export */ sh: _emscripten_exit_pointerlock,
  /** @export */ z: _emscripten_get_device_pixel_ratio,
  /** @export */ y: _emscripten_get_element_css_size,
- /** @export */ mb: _emscripten_get_gamepad_status,
+ /** @export */ lb: _emscripten_get_gamepad_status,
  /** @export */ rh: _emscripten_get_heap_max,
- /** @export */ xa: _emscripten_get_now,
+ /** @export */ wa: _emscripten_get_now,
  /** @export */ qh: _emscripten_get_num_gamepads,
  /** @export */ ph: _emscripten_get_screen_size,
  /** @export */ oh: _emscripten_glActiveTexture,
@@ -10704,122 +10704,122 @@ var wasmImports = {
  /** @export */ lc: _emscripten_glVertexAttribPointer,
  /** @export */ kc: _emscripten_glViewport,
  /** @export */ jc: _emscripten_glWaitSync,
- /** @export */ wa: _emscripten_has_asyncify,
+ /** @export */ va: _emscripten_has_asyncify,
  /** @export */ ic: _emscripten_request_fullscreen_strategy,
- /** @export */ lb: _emscripten_request_pointerlock,
+ /** @export */ kb: _emscripten_request_pointerlock,
  /** @export */ hc: _emscripten_resize_heap,
- /** @export */ kb: _emscripten_sample_gamepad_data,
- /** @export */ jb: _emscripten_set_beforeunload_callback_on_thread,
- /** @export */ ib: _emscripten_set_blur_callback_on_thread,
+ /** @export */ jb: _emscripten_sample_gamepad_data,
+ /** @export */ ib: _emscripten_set_beforeunload_callback_on_thread,
+ /** @export */ hb: _emscripten_set_blur_callback_on_thread,
  /** @export */ M: _emscripten_set_canvas_element_size,
- /** @export */ va: _emscripten_set_element_css_size,
- /** @export */ hb: _emscripten_set_focus_callback_on_thread,
- /** @export */ gb: _emscripten_set_fullscreenchange_callback_on_thread,
- /** @export */ fb: _emscripten_set_gamepadconnected_callback_on_thread,
- /** @export */ eb: _emscripten_set_gamepaddisconnected_callback_on_thread,
- /** @export */ db: _emscripten_set_keydown_callback_on_thread,
- /** @export */ cb: _emscripten_set_keypress_callback_on_thread,
- /** @export */ bb: _emscripten_set_keyup_callback_on_thread,
+ /** @export */ ua: _emscripten_set_element_css_size,
+ /** @export */ gb: _emscripten_set_focus_callback_on_thread,
+ /** @export */ fb: _emscripten_set_fullscreenchange_callback_on_thread,
+ /** @export */ eb: _emscripten_set_gamepadconnected_callback_on_thread,
+ /** @export */ db: _emscripten_set_gamepaddisconnected_callback_on_thread,
+ /** @export */ cb: _emscripten_set_keydown_callback_on_thread,
+ /** @export */ bb: _emscripten_set_keypress_callback_on_thread,
+ /** @export */ ab: _emscripten_set_keyup_callback_on_thread,
  /** @export */ gc: _emscripten_set_main_loop_arg,
- /** @export */ ab: _emscripten_set_mousedown_callback_on_thread,
- /** @export */ $a: _emscripten_set_mouseenter_callback_on_thread,
- /** @export */ _a: _emscripten_set_mouseleave_callback_on_thread,
- /** @export */ Za: _emscripten_set_mousemove_callback_on_thread,
- /** @export */ Ya: _emscripten_set_mouseup_callback_on_thread,
- /** @export */ Xa: _emscripten_set_pointerlockchange_callback_on_thread,
- /** @export */ ua: _emscripten_set_resize_callback_on_thread,
- /** @export */ Wa: _emscripten_set_timeout,
- /** @export */ Va: _emscripten_set_touchcancel_callback_on_thread,
- /** @export */ Ua: _emscripten_set_touchend_callback_on_thread,
- /** @export */ Ta: _emscripten_set_touchmove_callback_on_thread,
- /** @export */ Sa: _emscripten_set_touchstart_callback_on_thread,
- /** @export */ Ra: _emscripten_set_visibilitychange_callback_on_thread,
- /** @export */ Qa: _emscripten_set_wheel_callback_on_thread,
+ /** @export */ $a: _emscripten_set_mousedown_callback_on_thread,
+ /** @export */ _a: _emscripten_set_mouseenter_callback_on_thread,
+ /** @export */ Za: _emscripten_set_mouseleave_callback_on_thread,
+ /** @export */ Ya: _emscripten_set_mousemove_callback_on_thread,
+ /** @export */ Xa: _emscripten_set_mouseup_callback_on_thread,
+ /** @export */ Wa: _emscripten_set_pointerlockchange_callback_on_thread,
+ /** @export */ ta: _emscripten_set_resize_callback_on_thread,
+ /** @export */ Va: _emscripten_set_timeout,
+ /** @export */ Ua: _emscripten_set_touchcancel_callback_on_thread,
+ /** @export */ Ta: _emscripten_set_touchend_callback_on_thread,
+ /** @export */ Sa: _emscripten_set_touchmove_callback_on_thread,
+ /** @export */ Ra: _emscripten_set_touchstart_callback_on_thread,
+ /** @export */ Qa: _emscripten_set_visibilitychange_callback_on_thread,
+ /** @export */ Pa: _emscripten_set_wheel_callback_on_thread,
  /** @export */ fc: _emscripten_set_window_title,
- /** @export */ ta: _emscripten_sleep,
+ /** @export */ sa: _emscripten_sleep,
  /** @export */ bi: _environ_get,
  /** @export */ ai: _environ_sizes_get,
  /** @export */ ec: _exit,
- /** @export */ _: _fd_close,
+ /** @export */ Z: _fd_close,
  /** @export */ tb: _fd_read,
  /** @export */ zb: _fd_seek,
  /** @export */ sb: _fd_write,
- /** @export */ sa: _glActiveTexture,
+ /** @export */ ra: _glActiveTexture,
  /** @export */ dc: _glAttachShader,
  /** @export */ k: _glBindBuffer,
  /** @export */ H: _glBindFramebuffer,
  /** @export */ Y: _glBindRenderbuffer,
  /** @export */ q: _glBindTexture,
- /** @export */ ra: _glBindVertexArray,
- /** @export */ Pa: _glBlendEquationSeparate,
+ /** @export */ qa: _glBindVertexArray,
+ /** @export */ Oa: _glBlendEquationSeparate,
  /** @export */ X: _glBlendFuncSeparate,
  /** @export */ cc: _glBlitFramebuffer,
- /** @export */ Oa: _glBufferData,
- /** @export */ Na: _glBufferSubData,
- /** @export */ qa: _glCheckFramebufferStatus,
+ /** @export */ Na: _glBufferData,
+ /** @export */ Ma: _glBufferSubData,
+ /** @export */ pa: _glCheckFramebufferStatus,
  /** @export */ L: _glClear,
- /** @export */ pa: _glClearColor,
- /** @export */ oa: _glClearDepthf,
+ /** @export */ oa: _glClearColor,
+ /** @export */ na: _glClearDepthf,
  /** @export */ bc: _glClearStencil,
  /** @export */ W: _glColorMask,
  /** @export */ ac: _glCompileShader,
  /** @export */ $b: _glCopyBufferSubData,
- /** @export */ Ma: _glCopyTexImage2D,
+ /** @export */ La: _glCopyTexImage2D,
  /** @export */ _b: _glCreateProgram,
  /** @export */ Zb: _glCreateShader,
- /** @export */ na: _glCullFace,
+ /** @export */ ma: _glCullFace,
  /** @export */ G: _glDeleteBuffers,
  /** @export */ Yb: _glDeleteFramebuffers,
  /** @export */ Xb: _glDeleteProgram,
  /** @export */ Wb: _glDeleteQueries,
- /** @export */ ma: _glDeleteRenderbuffers,
- /** @export */ la: _glDeleteShader,
+ /** @export */ la: _glDeleteRenderbuffers,
+ /** @export */ ka: _glDeleteShader,
  /** @export */ Vb: _glDeleteTextures,
- /** @export */ ka: _glDeleteVertexArrays,
- /** @export */ ja: _glDepthFunc,
- /** @export */ ia: _glDepthMask,
+ /** @export */ ja: _glDeleteVertexArrays,
+ /** @export */ ia: _glDepthFunc,
+ /** @export */ ha: _glDepthMask,
  /** @export */ F: _glDetachShader,
  /** @export */ n: _glDisable,
- /** @export */ La: _glDisableVertexAttribArray,
+ /** @export */ Ka: _glDisableVertexAttribArray,
  /** @export */ K: _glDrawArrays,
- /** @export */ Ka: _glDrawArraysInstanced,
- /** @export */ Ja: _glDrawBuffers,
+ /** @export */ Ja: _glDrawArraysInstanced,
+ /** @export */ Ia: _glDrawBuffers,
  /** @export */ Ub: _glDrawElements,
  /** @export */ Tb: _glDrawElementsInstanced,
  /** @export */ p: _glDrawRangeElements,
  /** @export */ o: _glEnable,
  /** @export */ V: _glEnableVertexAttribArray,
  /** @export */ Sb: _glFinish,
- /** @export */ ha: _glFlush,
- /** @export */ Ia: _glFramebufferRenderbuffer,
- /** @export */ Ha: _glFramebufferTexture2D,
+ /** @export */ ga: _glFlush,
+ /** @export */ Ha: _glFramebufferRenderbuffer,
+ /** @export */ Ga: _glFramebufferTexture2D,
  /** @export */ J: _glGenBuffers,
  /** @export */ Rb: _glGenFramebuffers,
  /** @export */ Qb: _glGenRenderbuffers,
  /** @export */ Pb: _glGenTextures,
  /** @export */ Ob: _glGenVertexArrays,
- /** @export */ ga: _glGenerateMipmap,
- /** @export */ fa: _glGetAttribLocation,
- /** @export */ x: _glGetBooleanv,
+ /** @export */ fa: _glGenerateMipmap,
+ /** @export */ ea: _glGetAttribLocation,
+ /** @export */ w: _glGetBooleanv,
  /** @export */ i: _glGetError,
- /** @export */ ea: _glGetFloatv,
+ /** @export */ da: _glGetFloatv,
  /** @export */ r: _glGetFramebufferAttachmentParameteriv,
  /** @export */ b: _glGetIntegerv,
  /** @export */ Nb: _glGetProgramInfoLog,
- /** @export */ Ga: _glGetProgramiv,
+ /** @export */ Fa: _glGetProgramiv,
  /** @export */ t: _glGetRenderbufferParameteriv,
  /** @export */ Mb: _glGetShaderInfoLog,
- /** @export */ Fa: _glGetShaderiv,
+ /** @export */ Ea: _glGetShaderiv,
  /** @export */ E: _glGetString,
  /** @export */ Lb: _glGetStringi,
  /** @export */ Kb: _glGetUniformLocation,
- /** @export */ da: _glLineWidth,
+ /** @export */ ca: _glLineWidth,
  /** @export */ Jb: _glLinkProgram,
  /** @export */ s: _glPixelStorei,
  /** @export */ Ib: _glReadBuffer,
  /** @export */ m: _glReadPixels,
- /** @export */ ca: _glRenderbufferStorage,
- /** @export */ Ea: _glRenderbufferStorageMultisample,
+ /** @export */ ba: _glRenderbufferStorage,
+ /** @export */ Da: _glRenderbufferStorageMultisample,
  /** @export */ U: _glScissor,
  /** @export */ Hb: _glShaderSource,
  /** @export */ D: _glStencilFuncSeparate,
@@ -10827,19 +10827,19 @@ var wasmImports = {
  /** @export */ B: _glStencilOpSeparate,
  /** @export */ f: _glTexImage2D,
  /** @export */ Gb: _glTexImage3D,
- /** @export */ Da: _glTexParameterf,
+ /** @export */ Ca: _glTexParameterf,
  /** @export */ j: _glTexParameteri,
  /** @export */ Fb: _glTransformFeedbackVaryings,
  /** @export */ Eb: _glUniform1f,
  /** @export */ Db: _glUniform1fv,
  /** @export */ Cb: _glUniform1i,
  /** @export */ Bb: _glUniform1iv,
- /** @export */ Ca: _glUniform2fv,
+ /** @export */ Ba: _glUniform2fv,
  /** @export */ Ab: _glUniform2iv,
- /** @export */ ba: _glUniform3fv,
- /** @export */ aa: _glUniform4fv,
- /** @export */ Ba: _glUniformMatrix3fv,
- /** @export */ $: _glUniformMatrix4fv,
+ /** @export */ aa: _glUniform3fv,
+ /** @export */ $: _glUniform4fv,
+ /** @export */ Aa: _glUniformMatrix3fv,
+ /** @export */ _: _glUniformMatrix4fv,
  /** @export */ T: _glUseProgram,
  /** @export */ S: _glVertexAttribDivisor,
  /** @export */ R: _glVertexAttribPointer,
@@ -10847,8 +10847,8 @@ var wasmImports = {
  /** @export */ P: invoke_i,
  /** @export */ c: invoke_ii,
  /** @export */ e: invoke_iii,
- /** @export */ w: invoke_iiii,
- /** @export */ Aa: invoke_iiiii,
+ /** @export */ v: invoke_iiii,
+ /** @export */ za: invoke_iiiii,
  /** @export */ A: invoke_v,
  /** @export */ d: invoke_vi,
  /** @export */ h: invoke_vii,

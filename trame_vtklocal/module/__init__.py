@@ -38,11 +38,13 @@ class ObjectManagerAPI(LinkProtocol):
         super().__init__(*args, **kwargs)
         self.vtk_object_manager = vtkObjectManager()
         self.vtk_object_manager.Initialize()
-        self.dirty_ids = []
 
     def update(self):
-        self.dirty_ids = self.vtk_object_manager.Update()
-        return self.dirty_ids
+        self.vtk_object_manager.Update()
+
+    @property
+    def active_ids(self):
+        return self.vtk_object_manager.GetAllDependencies("")
 
     @export_rpc("vtklocal.get.state")
     def get_state(self, obj_id):
@@ -59,9 +61,10 @@ class ObjectManagerAPI(LinkProtocol):
     @export_rpc("vtklocal.get.status")
     def get_status(self, obj_id):
         print("get_status", obj_id)
-        hashes = self.vtk_object_manager.GetBlobHashes(self.dirty_ids)
+        ids = self.vtk_object_manager.GetAllDependencies(obj_id)
+        hashes = self.vtk_object_manager.GetBlobHashes(ids)
         return dict(
-            ids=[map_id_mtime(self.vtk_object_manager, v) for v in self.dirty_ids],
+            ids=[map_id_mtime(self.vtk_object_manager, v) for v in ids],
             hashes=hashes,
             mtime=self.vtk_object_manager.GetLatestMTimeFromObjects(),
         )

@@ -46,10 +46,10 @@ class LocalView(HtmlElement):
         return self.api.vtk_object_manager
 
     def update(self):
-        updated_ids = self.api.update()
+        self.api.update()
         # TODO broadcast modified [(id,mtime), ...]
-        print(f"update({updated_ids=})")
-        for vtk_id in updated_ids:
+        print(f"update({self.api.active_ids=})")
+        for vtk_id in self.api.active_ids:
             vtk_obj = self.object_manager.GetObjectAtId(vtk_id)
             print(f" - {vtk_id}:{vtk_obj.GetClassName()}")
         self.server.js_call(

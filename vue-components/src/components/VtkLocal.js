@@ -5,7 +5,7 @@ export default {
   emits: ["updated"],
   props: {
     renderWindow: {
-      type: Number,
+      type: String,
     },
     wsClient: {
       type: Object,
@@ -36,9 +36,14 @@ export default {
     async function fetchState(vtkId) {
       const session = client.getConnection().getSession();
       const serverState = await session.call("vtklocal.get.state", [vtkId]);
-      stateMTimes[vtkId] = serverState.mtime;
-      console.log(`vtkLocal::state(${vtkId})`)
-      objectManager.registerState(serverState);
+      if (serverState.length > 0) {
+        stateMTimes[vtkId] = JSON.parse(serverState).MTime;
+        console.log(`vtkLocal::state(${vtkId})`);
+        objectManager.registerState(serverState);
+      }
+      else {
+        throw new Error(`Server returned empty state for ${vtkId}`);
+      }
       return serverState;
     }
     async function fetchHash(hash) {
@@ -51,7 +56,7 @@ export default {
       return blob;
     }
 
-    async function update() {
+    async function update(startEventLoop = false) {
       console.log("vtkLocal::update(begin)");
       const session = client.getConnection().getSession();
       const serverStatus = await session.call("vtklocal.get.status", [
@@ -74,7 +79,7 @@ export default {
       });
       await Promise.all(pendingRequests);
       console.log("vtkLocal::update(end)");
-      objectManager.update();
+      objectManager.update(startEventLoop);
       emit("updated");
     }
 
@@ -83,7 +88,7 @@ export default {
       objectManager = await createModule(unref(canvas));
       console.log("objectManager", objectManager);
       resizeObserver.observe(unref(container));
-      update();
+      update(/*startEventLoop=*/true);
       setTimeout(() => window.dispatchEvent(new Event("resize")), 100);
     });
 

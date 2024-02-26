@@ -28,18 +28,8 @@ vue_use = ["trame_vtklocal"]
 # -----------------------------------------------------------------------------
 
 
-def extract_ids(object_manager, id_list, id_to_explore):
-    if id_to_explore in id_list:
-        return id_list
-
-    id_list.append(id_to_explore)
-    for child_id in object_manager.GetDirectDependencies(id_to_explore):
-        extract_ids(object_manager, id_list, child_id)
-    return id_list
-
-
 def map_id_mtime(object_manager, vtk_id):
-    vtk_obj = object_manager.GetObjectWithId(vtk_id)
+    vtk_obj = object_manager.GetObjectAtId(vtk_id)
     return (vtk_id, vtk_obj.GetMTime())
 
 
@@ -48,15 +38,15 @@ class ObjectManagerAPI(LinkProtocol):
         super().__init__(*args, **kwargs)
         self.vtk_object_manager = vtkObjectManager()
         self.vtk_object_manager.Initialize()
-        self.dirty_ids = set()
+        self.dirty_ids = []
 
     def update(self):
-        self.dirty_ids.update(self.vtk_object_manager.Update())
+        self.dirty_ids = self.vtk_object_manager.Update()
         return self.dirty_ids
 
     @export_rpc("vtklocal.get.state")
     def get_state(self, obj_id):
-        # print("get_state", obj_id)
+        print("get_state", obj_id)
         state = self.vtk_object_manager.GetState(obj_id)
         # print(state)
         return state
@@ -68,13 +58,10 @@ class ObjectManagerAPI(LinkProtocol):
 
     @export_rpc("vtklocal.get.status")
     def get_status(self, obj_id):
-        # print("get_status", obj_id)
-        ids = set(extract_ids(self.vtk_object_manager, [], obj_id))
-        ids.update(self.dirty_ids)
-        self.dirty_ids.clear()
-        hashes = list(self.vtk_object_manager.GetBlobHashes(list(ids)))
+        print("get_status", obj_id)
+        hashes = self.vtk_object_manager.GetBlobHashes(self.dirty_ids)
         return dict(
-            ids=[map_id_mtime(self.vtk_object_manager, v) for v in ids],
+            ids=[map_id_mtime(self.vtk_object_manager, v) for v in self.dirty_ids],
             hashes=hashes,
             mtime=self.vtk_object_manager.GetLatestMTimeFromObjects(),
         )

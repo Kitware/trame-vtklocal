@@ -32,7 +32,7 @@ class LocalView(HtmlElement):
         self._window_id = self.object_manager.RegisterObject(render_window)
         self.api.update()
 
-        self._attributes["rw_id"] = f':render-window="{self._window_id}"'
+        self._attributes["rw_id"] = f'render-window="{self._window_id}"'
         self._attributes["ref"] = f'ref="{self.__ref}"'
         self._attr_names += []
         self._event_names += []
@@ -50,7 +50,7 @@ class LocalView(HtmlElement):
         # TODO broadcast modified [(id,mtime), ...]
         print(f"update({updated_ids=})")
         for vtk_id in updated_ids:
-            vtk_obj = self.object_manager.GetObjectWithId(vtk_id)
+            vtk_obj = self.object_manager.GetObjectAtId(vtk_id)
             print(f" - {vtk_id}:{vtk_obj.GetClassName()}")
         self.server.js_call(
             self.__ref,

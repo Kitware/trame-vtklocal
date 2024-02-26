@@ -1,4 +1,4 @@
-import { inject, ref, unref, onMounted, onBeforeUnmount, nextTick } from "vue";
+import { inject, ref, unref, onMounted, onBeforeUnmount } from "vue";
 import { createModule } from "../utils";
 
 export default {
@@ -27,9 +27,11 @@ export default {
       canvasWidth.value = width;
       canvasHeight.value = height;
       console.log(`vtkLocal::resize ${width}x${height}`);
-      // objectManager.update();
-      // window.dispatchEvent(new Event("resize"));
-      // FIXME: call setSize on vtkRenderWindow
+      if (props.renderWindow.length > 0)
+      {
+        objectManager.setSize(props.renderWindow, width, height);
+        objectManager.render(props.renderWindow);
+      }
     }
     let resizeObserver = new ResizeObserver(resize);
 
@@ -80,6 +82,7 @@ export default {
       await Promise.all(pendingRequests);
       console.log("vtkLocal::update(end)");
       objectManager.update(startEventLoop);
+      resize();
       emit("updated");
     }
 

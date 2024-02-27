@@ -2,10 +2,14 @@ import { inject, ref, unref, onMounted, onBeforeUnmount, nextTick } from "vue";
 import { createModule } from "../utils";
 
 export default {
-  emits: ["updated"],
+  emits: ["updated", "memory"],
   props: {
     renderWindow: {
       type: String,
+    },
+    cacheSize: {
+      type: Number,
+      default: 100000000,
     },
     wsClient: {
       type: Object,
@@ -19,7 +23,8 @@ export default {
     const canvas = ref(null);
     const client = props.wsClient || trame?.client;
     const stateMTimes = {};
-    const hashesAvailable = new Set();
+    const hashesMTime = {};
+    const currentMTime = ref(1);
     let objectManager = null;
 
     function resize() {
@@ -56,7 +61,7 @@ export default {
       console.log(`vtkLocal::hash(${hash})`);
       const array = new Uint8Array(await blob.arrayBuffer());
       objectManager.registerBlob(hash, array);
-      hashesAvailable.add(hash);
+      hashesMTime[hash] = unref(currentMTime);
       return blob;
     }
 
@@ -80,9 +85,10 @@ export default {
         objectManager.unRegisterState(vtkId);
       });
       serverStatus.hashes.forEach((hash) => {
-        if (!hashesAvailable.has(hash)) {
+        if (!hashesMTime[hash]) {
           pendingRequests.push(fetchHash(hash));
         }
+        hashesMTime[hash] = unref(currentMTime);
       });
       await Promise.all(pendingRequests);
       // Shows memory, feel free to remove.
@@ -96,6 +102,42 @@ export default {
       objectManager.update(startEventLoop);
       resize();
       emit("updated");
+
+      // Memory management
+      currentMTime.value++;
+      const threshold =
+        props.cacheSize + objectManager.getTotalVTKDataObjectMemoryUsage();
+      if (objectManager.getTotalBlobMemoryUsage() > threshold) {
+        // Need to remove old blobs
+        const threshold =
+          props.cacheSize + objectManager.getTotalVTKDataObjectMemoryUsage();
+        const tsMap = {};
+        let mtimeToFree = unref(currentMTime);
+        Object.entries(hashesMTime).forEach(([hash, mtime]) => {
+          if (mtime < mtimeToFree) {
+            mtimeToFree = mtime;
+          }
+          const sMtime = mtime.toString();
+          if (tsMap[sMtime]) {
+            tsMap[sMtime].push(hash);
+          } else {
+            tsMap[sMtime] = [hash];
+          }
+        });
+
+        // Remove blobs starting by the old ones
+        while (objectManager.getTotalBlobMemoryUsage() > threshold) {
+          const hashesToDelete = tsMap[mtimeToFree];
+          for (let i = 0; i < hashesToDelete.length; i++) {
+            objectManager.unRegisterBlob(hashesToDelete[i]);
+          }
+          mtimeToFree++;
+        }
+      }
+      emit("memory", {
+        blobs: objectManager.getTotalBlobMemoryUsage(),
+        scene: objectManager.getTotalVTKDataObjectMemoryUsage(),
+      });
     }
 
     onMounted(async () => {

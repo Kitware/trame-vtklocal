@@ -105,7 +105,7 @@ def setup_vtk():
     iren.SetInteractorStyle(istyle)
     iren.SetRenderWindow(renWin)
     ren.ResetCamera()
-    return renWin
+    return renWin, cs2, ss
 
 
 # -----------------------------------------------------------------------------
@@ -116,7 +116,7 @@ def setup_vtk():
 class App:
     def __init__(self, server=None):
         self.server = get_server(server, client_type="vue3")
-        self.render_window = setup_vtk()
+        self.render_window, self.cone, self.sphere = setup_vtk()
         self.ui = self._build_ui()
 
     @property
@@ -126,6 +126,14 @@ class App:
     def _build_ui(self):
         with SinglePageLayout(self.server) as layout:
             layout.icon.click = self.ctrl.view_reset_camera
+            with layout.toolbar:
+                vuetify.VSpacer()
+                vuetify.VSlider(
+                    v_model=("resolution", 6),
+                    dense=True,
+                    hide_details=True,
+                )
+                vuetify.VBtn("Update", click=self.ctrl.view_update)
 
             with layout.content:
                 with vuetify.VContainer(
@@ -135,7 +143,8 @@ class App:
                     with vuetify.VContainer(
                         fluid=True, classes="pa-0 fill-height", style="width: 50%;"
                     ):
-                        vtklocal.LocalView(self.render_window)
+                        view = vtklocal.LocalView(self.render_window)
+                        self.ctrl.view_update = view.update
                     with vuetify.VContainer(
                         fluid=True, classes="pa-0 fill-height", style="width: 50%;"
                     ):

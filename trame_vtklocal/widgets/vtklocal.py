@@ -30,7 +30,7 @@ class LocalView(HtmlElement):
 
         # Must trigger update after registration
         self._window_id = self.object_manager.RegisterObject(render_window)
-        self.api.update()
+        self.object_manager.Update()
 
         self._attributes["rw_id"] = f'render-window="{self._window_id}"'
         self._attributes["ref"] = f'ref="{self.__ref}"'
@@ -47,12 +47,4 @@ class LocalView(HtmlElement):
 
     def update(self):
         self.api.update()
-        # TODO broadcast modified [(id,mtime), ...]
-        print(f"update({self.api.active_ids=})")
-        for vtk_id in self.api.active_ids:
-            vtk_obj = self.object_manager.GetObjectAtId(vtk_id)
-            print(f" - {vtk_id}:{vtk_obj.GetClassName()}")
-        self.server.js_call(
-            self.__ref,
-            "update",
-        )
+        self.server.js_call(self.__ref, "update")

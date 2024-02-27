@@ -1,6 +1,7 @@
 from trame.app import get_server
 from trame.ui.html import DivLayout
-from trame.widgets import vtklocal, html
+from trame.widgets import html
+from trame_vtklocal.widgets import vtklocal
 from trame.decorators import TrameApp, change
 
 from vtkmodules.vtkFiltersSources import vtkConeSource
@@ -41,7 +42,7 @@ def create_vtk_pipeline():
     actor.SetMapper(mapper)
 
     renderer.AddActor(actor)
-    renderer.SetBackground(1, 0, 0)
+    renderer.SetBackground(0.1, 0.2, 0.4)
     renderer.ResetCamera()
 
     return renderWindow, cone

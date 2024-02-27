@@ -380,7 +380,7 @@ var tempDouble;
 var tempI64;
 
 var ASM_CONSTS = {
- 1580188: () => {
+ 1580220: () => {
   if (typeof (AudioContext) !== "undefined") {
    return true;
   } else if (typeof (webkitAudioContext) !== "undefined") {
@@ -388,7 +388,7 @@ var ASM_CONSTS = {
   }
   return false;
  },
- 1580335: () => {
+ 1580367: () => {
   if ((typeof (navigator.mediaDevices) !== "undefined") && (typeof (navigator.mediaDevices.getUserMedia) !== "undefined")) {
    return true;
   } else if (typeof (navigator.webkitGetUserMedia) !== "undefined") {
@@ -396,7 +396,7 @@ var ASM_CONSTS = {
   }
   return false;
  },
- 1580569: $0 => {
+ 1580601: $0 => {
   if (typeof (Module["SDL2"]) === "undefined") {
    Module["SDL2"] = {};
   }
@@ -418,11 +418,11 @@ var ASM_CONSTS = {
   }
   return SDL2.audioContext === undefined ? -1 : 0;
  },
- 1581062: () => {
+ 1581094: () => {
   var SDL2 = Module["SDL2"];
   return SDL2.audioContext.sampleRate;
  },
- 1581130: ($0, $1, $2, $3) => {
+ 1581162: ($0, $1, $2, $3) => {
   var SDL2 = Module["SDL2"];
   var have_microphone = function(stream) {
    if (SDL2.capture.silenceTimer !== undefined) {
@@ -463,7 +463,7 @@ var ASM_CONSTS = {
    }, have_microphone, no_microphone);
   }
  },
- 1582782: ($0, $1, $2, $3) => {
+ 1582814: ($0, $1, $2, $3) => {
   var SDL2 = Module["SDL2"];
   SDL2.audio.scriptProcessorNode = SDL2.audioContext["createScriptProcessor"]($1, 0, $0);
   SDL2.audio.scriptProcessorNode["onaudioprocess"] = function(e) {
@@ -475,7 +475,7 @@ var ASM_CONSTS = {
   };
   SDL2.audio.scriptProcessorNode["connect"](SDL2.audioContext["destination"]);
  },
- 1583192: ($0, $1) => {
+ 1583224: ($0, $1) => {
   var SDL2 = Module["SDL2"];
   var numChannels = SDL2.capture.currentCaptureBuffer.numberOfChannels;
   for (var c = 0; c < numChannels; ++c) {
@@ -494,7 +494,7 @@ var ASM_CONSTS = {
    }
   }
  },
- 1583797: ($0, $1) => {
+ 1583829: ($0, $1) => {
   var SDL2 = Module["SDL2"];
   var numChannels = SDL2.audio.currentOutputBuffer["numberOfChannels"];
   for (var c = 0; c < numChannels; ++c) {
@@ -507,7 +507,7 @@ var ASM_CONSTS = {
    }
   }
  },
- 1584277: $0 => {
+ 1584309: $0 => {
   var SDL2 = Module["SDL2"];
   if ($0) {
    if (SDL2.capture.silenceTimer !== undefined) {
@@ -545,7 +545,7 @@ var ASM_CONSTS = {
    SDL2.audioContext = undefined;
   }
  },
- 1585449: ($0, $1, $2) => {
+ 1585481: ($0, $1, $2) => {
   var w = $0;
   var h = $1;
   var pixels = $2;
@@ -616,7 +616,7 @@ var ASM_CONSTS = {
   }
   SDL2.ctx.putImageData(SDL2.image, 0, 0);
  },
- 1586918: ($0, $1, $2, $3, $4) => {
+ 1586950: ($0, $1, $2, $3, $4) => {
   var w = $0;
   var h = $1;
   var hot_x = $2;
@@ -653,18 +653,18 @@ var ASM_CONSTS = {
   stringToUTF8(url, urlBuf, url.length + 1);
   return urlBuf;
  },
- 1587907: $0 => {
+ 1587939: $0 => {
   if (Module["canvas"]) {
    Module["canvas"].style["cursor"] = UTF8ToString($0);
   }
  },
- 1587990: () => {
+ 1588022: () => {
   if (Module["canvas"]) {
    Module["canvas"].style["cursor"] = "none";
   }
  },
- 1588059: () => window.innerWidth,
- 1588089: () => window.innerHeight
+ 1588091: () => window.innerWidth,
+ 1588121: () => window.innerHeight
 };
 
 /** @constructor */ function ExitStatus(status) {
@@ -10375,7 +10375,7 @@ var wasmImports = {
  /** @export */ $h: __embind_register_bool,
  /** @export */ _h: __embind_register_emval,
  /** @export */ rb: __embind_register_float,
- /** @export */ x: __embind_register_function,
+ /** @export */ v: __embind_register_function,
  /** @export */ u: __embind_register_integer,
  /** @export */ g: __embind_register_memory_view,
  /** @export */ qb: __embind_register_std_string,
@@ -10800,7 +10800,7 @@ var wasmImports = {
  /** @export */ Ob: _glGenVertexArrays,
  /** @export */ fa: _glGenerateMipmap,
  /** @export */ ea: _glGetAttribLocation,
- /** @export */ w: _glGetBooleanv,
+ /** @export */ x: _glGetBooleanv,
  /** @export */ i: _glGetError,
  /** @export */ da: _glGetFloatv,
  /** @export */ r: _glGetFramebufferAttachmentParameteriv,
@@ -10847,7 +10847,7 @@ var wasmImports = {
  /** @export */ Q: invoke_i,
  /** @export */ c: invoke_ii,
  /** @export */ e: invoke_iii,
- /** @export */ v: invoke_iiii,
+ /** @export */ w: invoke_iiii,
  /** @export */ za: invoke_iiiii,
  /** @export */ A: invoke_v,
  /** @export */ d: invoke_vi,

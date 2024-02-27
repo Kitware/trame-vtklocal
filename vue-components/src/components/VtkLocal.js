@@ -45,8 +45,7 @@ export default {
         stateMTimes[vtkId] = JSON.parse(serverState).MTime;
         console.log(`vtkLocal::state(${vtkId})`);
         objectManager.registerState(serverState);
-      }
-      else {
+      } else {
         throw new Error(`Server returned empty state for ${vtkId}`);
       }
       return serverState;
@@ -54,7 +53,7 @@ export default {
     async function fetchHash(hash) {
       const session = client.getConnection().getSession();
       const blob = await session.call("vtklocal.get.hash", [hash]);
-      console.log(`vtkLocal::hash(${hash})`)
+      console.log(`vtkLocal::hash(${hash})`);
       const array = new Uint8Array(await blob.arrayBuffer());
       objectManager.registerBlob(hash, array);
       hashesAvailable.add(hash);
@@ -71,11 +70,14 @@ export default {
       console.log("ids", serverStatus.ids);
       serverStatus.ids.forEach(([vtkId, mtime]) => {
         if (!stateMTimes[vtkId] || stateMTimes[vtkId] < mtime) {
-          console.log("fetch", vtkId)
+          console.log("fetch", vtkId);
           pendingRequests.push(fetchState(vtkId));
         } else {
-          console.log("skip", vtkId)
+          console.log("skip", vtkId);
         }
+      });
+      serverStatus.ignore_ids.forEach((vtkId) => {
+        objectManager.unRegisterState(vtkId);
       });
       serverStatus.hashes.forEach((hash) => {
         if (!hashesAvailable.has(hash)) {
@@ -83,7 +85,14 @@ export default {
         }
       });
       await Promise.all(pendingRequests);
-      console.log("vtkLocal::update(end)");
+      // Shows memory, feel free to remove.
+      console.log(
+        `vtkLocal::update(end) blobs: ${
+          objectManager.getTotalBlobMemoryUsage() / 1024
+        }kB, objects: ${
+          objectManager.getTotalVTKDataObjectMemoryUsage() / 1024
+        }kB`
+      );
       objectManager.update(startEventLoop);
       resize();
       emit("updated");
@@ -94,7 +103,7 @@ export default {
       objectManager = await createModule(unref(canvas));
       console.log("objectManager", objectManager);
       resizeObserver.observe(unref(container));
-      update(/*startEventLoop=*/true);
+      update(/*startEventLoop=*/ true);
       setTimeout(() => {
         canvasWidth.value = 300;
         canvasHeight.value = 300;

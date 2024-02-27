@@ -48,14 +48,14 @@ class ObjectManagerAPI(LinkProtocol):
 
     @export_rpc("vtklocal.get.state")
     def get_state(self, obj_id):
-        print("get_state", obj_id)
+        print(f"get_state {obj_id}")
         state = self.vtk_object_manager.GetState(obj_id)
         # print(state)
         return state
 
     @export_rpc("vtklocal.get.hash")
     def get_hash(self, hash):
-        # print("get_hash", hash)
+        print("get_hash", hash)
         return self.addAttachment(memoryview(self.vtk_object_manager.GetBlob(hash)))
 
     @export_rpc("vtklocal.get.status")
@@ -63,11 +63,15 @@ class ObjectManagerAPI(LinkProtocol):
         print("get_status", obj_id)
         ids = self.vtk_object_manager.GetAllDependencies(obj_id)
         hashes = self.vtk_object_manager.GetBlobHashes(ids)
-        return dict(
-            ids=[map_id_mtime(self.vtk_object_manager, v) for v in ids],
-            hashes=hashes,
-            mtime=self.vtk_object_manager.GetLatestMTimeFromObjects(),
-        )
+        renderWindow = self.vtk_object_manager.GetObjectAtId(obj_id)
+        ids_mtime = [map_id_mtime(self.vtk_object_manager, v) for v in ids]
+        ignore_ids = []
+        if renderWindow:
+            renderers = renderWindow.GetRenderers()
+            for renderer in renderers:
+                activeCamera = renderer.GetActiveCamera()
+                ignore_ids.append(self.vtk_object_manager.GetId(activeCamera))
+        return dict(ids=ids_mtime, hashes=hashes, ignore_ids=ignore_ids)
 
 
 # -----------------------------------------------------------------------------

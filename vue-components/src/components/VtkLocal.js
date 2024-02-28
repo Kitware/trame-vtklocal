@@ -68,7 +68,7 @@ export default {
       return blob;
     }
 
-    async function update(startEventLoop = false) {
+    async function update() {
       updateInProgress++;
       if (updateInProgress !== 1) {
         // console.error("Skip concurrent update");
@@ -102,7 +102,7 @@ export default {
         });
         await Promise.all(pendingRequests);
         try {
-          objectManager.update(startEventLoop);
+          objectManager.update();
         } catch (e) {
           console.error("WASM update failed");
           console.log(e);
@@ -157,7 +157,7 @@ export default {
         updateInProgress--;
         if (updateInProgress) {
           updateInProgress = 0;
-          update();
+          await update();
         }
       }
     }
@@ -167,16 +167,17 @@ export default {
       objectManager = await createModule(unref(canvas));
       // console.log("objectManager", objectManager);
       resizeObserver.observe(unref(container));
-      update(/*startEventLoop=*/ true);
-      setTimeout(() => {
+      update().then(() => {
         canvasWidth.value = 300;
         canvasHeight.value = 300;
+        objectManager.startEventLoop(props.renderWindow);
         nextTick(resize);
-      }, 100);
+      });
     });
 
     onBeforeUnmount(() => {
       // console.log("vtkLocal::unmounted");
+      objectManager.stopEventLoop(props.renderWindow);
       if (resizeObserver) {
         resizeObserver.disconnect();
         resizeObserver = null;

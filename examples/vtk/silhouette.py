@@ -95,6 +95,7 @@ class SilhouetteApp:
                 vuetify3.VDivider(vertical=True, classes="mx-2")
                 with vuetify3.VBtn(icon=True, click=self.reset_resolution):
                     vuetify3.VIcon("mdi-undo-variant")
+                vuetify3.VBtn("Update view", click=self.ctrl.view_update)
 
             with layout.content:
                 with vuetify3.VContainer(
@@ -111,6 +112,7 @@ class SilhouetteApp:
                         vr = vtk_widgets.VtkRemoteView(
                             self.render_window,
                             ref="remote",
+                            interactive_ratio=1,
                         )
                         self.ctrl.view2_update = vr.update
 

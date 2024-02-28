@@ -78,6 +78,7 @@ def setup_vtk():
 class App:
     def __init__(self, server=None):
         self.server = get_server(server, client_type="vue3")
+        self.local_view = None
         self.render_window = setup_vtk()
         self.ui = self._build_ui()
 
@@ -89,6 +90,10 @@ class App:
         with SinglePageLayout(self.server) as layout:
             layout.icon.click = self.ctrl.view_reset_camera
 
+            with layout.toolbar:
+                vuetify.VSpacer()
+                vuetify.VBtn("Update", click=self.ctrl.view_update)
+
             with layout.content:
                 with vuetify.VContainer(
                     fluid=True,
@@ -97,11 +102,12 @@ class App:
                     with vuetify.VContainer(
                         fluid=True, classes="pa-0 fill-height", style="width: 50%;"
                     ):
-                        vtklocal.LocalView(self.render_window)
+                        self.local_view = vtklocal.LocalView(self.render_window)
+                        self.ctrl.view_update = self.local_view.update
                     with vuetify.VContainer(
                         fluid=True, classes="pa-0 fill-height", style="width: 50%;"
                     ):
-                        VtkRemoteView(self.render_window)
+                        VtkRemoteView(self.render_window, interactive_ratio=1)
 
             # hide footer
             layout.footer.hide()

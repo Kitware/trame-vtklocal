@@ -3,13 +3,13 @@ from trame.ui.vuetify3 import SinglePageLayout
 from trame.widgets import vuetify3 as vuetify
 from trame.widgets.vtk import VtkRemoteView
 from trame_vtklocal.widgets import vtklocal
+from trame.decorators import TrameApp, change
 
 from vtkmodules.vtkCommonColor import vtkNamedColors
 from vtkmodules.vtkFiltersCore import vtkElevationFilter, vtkGlyph3D
 from vtkmodules.vtkFiltersSources import vtkConeSource, vtkCubeSource, vtkSphereSource
 from vtkmodules.vtkImagingCore import vtkRTAnalyticSource
 from vtkmodules.vtkImagingGeneral import vtkImageGradient
-from vtkmodules.vtkInteractionStyle import vtkInteractorStyleTrackballCamera
 from vtkmodules.vtkRenderingCore import (
     vtkActor,
     vtkPolyDataMapper,
@@ -98,14 +98,14 @@ def setup_vtk():
 
     renWin = vtkRenderWindow()
     renWin.AddRenderer(ren)
-    renWin.SetWindowName("GlyphTable")
 
-    iren = vtkRenderWindowInteractor()
-    istyle = vtkInteractorStyleTrackballCamera()
-    iren.SetInteractorStyle(istyle)
-    iren.SetRenderWindow(renWin)
+    renderWindowInteractor = vtkRenderWindowInteractor()
+    renderWindowInteractor.SetRenderWindow(renWin)
+    renderWindowInteractor.GetInteractorStyle().SetCurrentStyleToTrackballCamera()
+
     ren.ResetCamera()
-    return renWin, cs2, ss
+
+    return renWin, ren, cs2, ss
 
 
 # -----------------------------------------------------------------------------
@@ -113,23 +113,41 @@ def setup_vtk():
 # -----------------------------------------------------------------------------
 
 
+@TrameApp()
 class App:
     def __init__(self, server=None):
         self.server = get_server(server, client_type="vue3")
-        self.render_window, self.cone, self.sphere = setup_vtk()
+        self.render_window, self.renderer, self.cone, self.sphere = setup_vtk()
+        self.view_local = None
+        self.view_remote = None
         self.ui = self._build_ui()
 
     @property
     def ctrl(self):
         return self.server.controller
 
+    @change("resolution")
+    def on_resolution_change(self, resolution, **kwargs):
+        self.cone.SetResolution(int(resolution))
+        self.sphere.SetStartTheta(int(resolution) * 6)
+        self.view_local.update()
+        self.view_remote.update()
+
+    def reset_camera(self):
+        self.renderer.ResetCamera()
+        self.view_local.update()
+        self.view_remote.update()
+
     def _build_ui(self):
         with SinglePageLayout(self.server) as layout:
-            layout.icon.click = self.ctrl.view_reset_camera
+            layout.icon.click = self.reset_camera
             with layout.toolbar:
                 vuetify.VSpacer()
                 vuetify.VSlider(
                     v_model=("resolution", 6),
+                    min=3,
+                    max=60,
+                    step=1,
                     dense=True,
                     hide_details=True,
                 )
@@ -143,12 +161,14 @@ class App:
                     with vuetify.VContainer(
                         fluid=True, classes="pa-0 fill-height", style="width: 50%;"
                     ):
-                        view = vtklocal.LocalView(self.render_window)
-                        self.ctrl.view_update = view.update
+                        self.view_local = vtklocal.LocalView(self.render_window)
+                        self.ctrl.view_update = self.view_local.update
                     with vuetify.VContainer(
                         fluid=True, classes="pa-0 fill-height", style="width: 50%;"
                     ):
-                        VtkRemoteView(self.render_window)
+                        self.view_remote = VtkRemoteView(
+                            self.render_window, interactive_ratio=1
+                        )
 
             # hide footer
             layout.footer.hide()

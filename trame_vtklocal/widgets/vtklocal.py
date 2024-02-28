@@ -34,8 +34,10 @@ class LocalView(HtmlElement):
 
         self._attributes["rw_id"] = f'render-window="{self._window_id}"'
         self._attributes["ref"] = f'ref="{self.__ref}"'
-        self._attr_names += []
-        self._event_names += []
+        self._attr_names += [
+            ("cache_size", "cacheSize"),
+        ]
+        self._event_names += ["updated", "memory"]
 
     @property
     def api(self):

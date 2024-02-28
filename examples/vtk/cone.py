@@ -73,12 +73,14 @@ class DemoApp:
     def _ui(self):
         with DivLayout(self.server) as layout:
             client.Style("body { margin: 0; }")
-            self.html_view = vtklocal.LocalView(
-                self.render_window,
-                style="width: 100vw; height: 100vh;",
-                cache_size=("cache", 0),
-                memory="mem_blob = $event.blobs; mem_vtk = $event.scene;",
-            )
+            with html.Div(
+                style="position: absolute; left: 0; top: 0; width: 100vw; height: 100vh;"
+            ):
+                self.html_view = vtklocal.LocalView(
+                    self.render_window,
+                    cache_size=("cache", 0),
+                    memory="mem_blob = $event.blobs; mem_vtk = $event.scene;",
+                )
             html.Div(
                 "Scene: {{ (mem_vtk / 1024).toFixed(1) }}KB - Arrays: {{ (mem_blob / 1024).toFixed(1) }}KB - cache: {{ (cache/1024).toFixed(1) }}KB ",
                 style="position: absolute; top: 1rem; left: 1rem; z-index: 10; background: white; padding: 1rem; border-radius: 1rem;",

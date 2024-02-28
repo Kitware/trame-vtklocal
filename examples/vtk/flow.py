@@ -2,7 +2,7 @@ from pathlib import Path
 
 from trame.app import get_server
 from trame.ui.html import DivLayout
-from trame.widgets import vtklocal
+from trame.widgets import vtklocal, client
 
 from vtkmodules.vtkCommonColor import vtkNamedColors
 from vtkmodules.vtkCommonCore import vtkLookupTable
@@ -141,6 +141,7 @@ class DemoApp:
 
     def _ui(self):
         with DivLayout(self.server) as layout:
+            client.Style("body { margin: 0; }")
             self.html_view = vtklocal.LocalView(
                 self.render_window, style="width: 100vw; height: 100vh;"
             )

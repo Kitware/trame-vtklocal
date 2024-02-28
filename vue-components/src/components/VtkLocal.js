@@ -102,7 +102,7 @@ export default {
         });
         await Promise.all(pendingRequests);
         try {
-          objectManager.update();
+          objectManager.updateObjectsFromStates();
         } catch (e) {
           console.error("WASM update failed");
           console.log(e);

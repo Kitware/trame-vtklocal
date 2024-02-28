@@ -40,7 +40,7 @@ class ObjectManagerAPI(LinkProtocol):
         self.vtk_object_manager.Initialize()
 
     def update(self):
-        self.vtk_object_manager.Update()
+        self.vtk_object_manager.UpdateStatesFromObjects()
 
     @property
     def active_ids(self):

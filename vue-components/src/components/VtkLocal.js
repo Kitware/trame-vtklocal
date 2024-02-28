@@ -2,7 +2,7 @@ import { inject, ref, unref, onMounted, onBeforeUnmount, nextTick } from "vue";
 import { createModule } from "../utils";
 
 export default {
-  emits: ["updated", "memory"],
+  emits: ["updated", "memory-vtk", "memory-arrays"],
   props: {
     renderWindow: {
       type: String,
@@ -17,8 +17,6 @@ export default {
   },
   setup(props, { emit }) {
     const trame = inject("trame");
-    const canvasWidth = ref(300);
-    const canvasHeight = ref(300);
     const container = ref(null);
     const canvas = ref(null);
     const client = props.wsClient || trame?.client;
@@ -28,21 +26,24 @@ export default {
     let objectManager = null;
     let updateInProgress = 0;
 
+    // Resize -----------------------------------------------------------------
+
     function resize() {
       const { width, height } = container.value.getBoundingClientRect();
       const w = Math.floor(width * window.devicePixelRatio + 0.5);
       const h = Math.floor(height * window.devicePixelRatio + 0.5);
-      canvasWidth.value = w;
-      canvasHeight.value = h;
-      // console.log(`vtkLocal::resize ${width}x${height}`);
-      if (props.renderWindow.length > 0) {
-        nextTick(() => {
-          objectManager.setSize(props.renderWindow, w, h);
-          objectManager.render(props.renderWindow);
-        });
+      const canvasDOM = unref(canvas);
+      if (canvasDOM && objectManager && props.renderWindow) {
+        canvasDOM.width = w;
+        canvasDOM.height = h;
+        // console.log(`vtkLocal::resize ${width}x${height}`);
+        objectManager.setSize(props.renderWindow, w, h);
+        objectManager.render(props.renderWindow);
       }
     }
     let resizeObserver = new ResizeObserver(resize);
+
+    // Fetch ------------------------------------------------------------------
 
     async function fetchState(vtkId) {
       const session = client.getConnection().getSession();
@@ -57,6 +58,7 @@ export default {
       }
       return serverState;
     }
+
     async function fetchHash(hash) {
       const session = client.getConnection().getSession();
       // console.log(`vtkLocal::hash(${hash}) - before`);
@@ -67,6 +69,50 @@ export default {
       hashesMTime[hash] = unref(currentMTime);
       return blob;
     }
+
+    // Memory -----------------------------------------------------------------
+
+    function checkMemory() {
+      const memVtk = objectManager.getTotalVTKDataObjectMemoryUsage();
+      const memArrays = objectManager.getTotalBlobMemoryUsage();
+      const threshold = Number(props.cacheSize) + memVtk;
+
+      if (memArrays > threshold) {
+        // Need to remove old blobs
+        const tsMap = {};
+        let mtimeToFree = unref(currentMTime);
+        Object.entries(hashesMTime).forEach(([hash, mtime]) => {
+          if (mtime < mtimeToFree) {
+            mtimeToFree = mtime;
+          }
+          const sMtime = mtime.toString();
+          if (tsMap[sMtime]) {
+            tsMap[sMtime].push(hash);
+          } else {
+            tsMap[sMtime] = [hash];
+          }
+        });
+
+        // Remove blobs starting by the old ones
+        while (objectManager.getTotalBlobMemoryUsage() > threshold) {
+          const hashesToDelete = tsMap[mtimeToFree];
+          if (hashesToDelete) {
+            for (let i = 0; i < hashesToDelete.length; i++) {
+              // console.log(
+              //   `Delete hash(${hashesToDelete[i]}) - mtime: ${mtimeToFree}`
+              // );
+              objectManager.unRegisterBlob(hashesToDelete[i]);
+              delete hashesMTime[hashesToDelete[i]];
+            }
+          }
+          mtimeToFree++;
+        }
+      }
+      emit("memory-vtk", objectManager.getTotalVTKDataObjectMemoryUsage());
+      emit("memory-arrays", objectManager.getTotalBlobMemoryUsage());
+    }
+
+    // Update -----------------------------------------------------------------
 
     async function update() {
       updateInProgress++;
@@ -101,56 +147,16 @@ export default {
           hashesMTime[hash] = unref(currentMTime);
         });
         await Promise.all(pendingRequests);
+        currentMTime.value++;
         try {
           objectManager.updateObjectsFromStates();
+          resize();
         } catch (e) {
           console.error("WASM update failed");
           console.log(e);
         }
-        resize();
         emit("updated");
-
-        // Memory management
-        currentMTime.value++;
-        const threshold =
-          Number(props.cacheSize) +
-          objectManager.getTotalVTKDataObjectMemoryUsage();
-        if (objectManager.getTotalBlobMemoryUsage() > threshold) {
-          // console.log("Free memory");
-          // Need to remove old blobs
-          const tsMap = {};
-          let mtimeToFree = unref(currentMTime);
-          Object.entries(hashesMTime).forEach(([hash, mtime]) => {
-            if (mtime < mtimeToFree) {
-              mtimeToFree = mtime;
-            }
-            const sMtime = mtime.toString();
-            if (tsMap[sMtime]) {
-              tsMap[sMtime].push(hash);
-            } else {
-              tsMap[sMtime] = [hash];
-            }
-          });
-
-          // Remove blobs starting by the old ones
-          while (objectManager.getTotalBlobMemoryUsage() > threshold) {
-            const hashesToDelete = tsMap[mtimeToFree];
-            if (hashesToDelete) {
-              for (let i = 0; i < hashesToDelete.length; i++) {
-                // console.log(
-                //   `Delete hash(${hashesToDelete[i]}) - mtime: ${mtimeToFree}`
-                // );
-                objectManager.unRegisterBlob(hashesToDelete[i]);
-                delete hashesMTime[hashesToDelete[i]];
-              }
-            }
-            mtimeToFree++;
-          }
-        }
-        emit("memory", {
-          blobs: objectManager.getTotalBlobMemoryUsage(),
-          scene: objectManager.getTotalVTKDataObjectMemoryUsage(),
-        });
+        checkMemory();
       } catch (e) {
         console.error("Error in update", e);
       } finally {
@@ -162,17 +168,17 @@ export default {
       }
     }
 
+    // Life Cycles ------------------------------------------------------------
+
     onMounted(async () => {
       // console.log("vtkLocal::mounted");
       objectManager = await createModule(unref(canvas));
-      // console.log("objectManager", objectManager);
-      resizeObserver.observe(unref(container));
-      update().then(() => {
-        canvasWidth.value = 300;
-        canvasHeight.value = 300;
-        objectManager.startEventLoop(props.renderWindow);
-        nextTick(resize);
-      });
+      await update();
+      objectManager.startEventLoop(props.renderWindow);
+      await nextTick();
+      if (resizeObserver) {
+        resizeObserver.observe(unref(container));
+      }
     });
 
     onBeforeUnmount(() => {
@@ -184,12 +190,11 @@ export default {
       }
     });
 
+    // Public -----------------------------------------------------------------
     return {
       container,
       canvas,
       update,
-      canvasWidth,
-      canvasHeight,
     };
   },
   template: `
@@ -198,13 +203,11 @@ export default {
             id="canvas"
             ref="canvas" 
             style="position: absolute; left: 0; top: 0; width: 100%; height: 100%;" 
-            :width="canvasWidth"
-            :height="canvasHeight"
             tabindex="0"
             
             @contextmenu.prevent
             @click="canvas.focus()"
-            
+            @mouseenter="canvas.focus()"
           />
         </div>`,
 };

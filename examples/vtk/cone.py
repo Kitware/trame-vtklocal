@@ -79,7 +79,8 @@ class DemoApp:
                 self.html_view = vtklocal.LocalView(
                     self.render_window,
                     cache_size=("cache", 0),
-                    memory="mem_blob = $event.blobs; mem_vtk = $event.scene;",
+                    memory_vtk="mem_vtk = $event",
+                    memory_arrays="mem_blob = $event",
                 )
             html.Div(
                 "Scene: {{ (mem_vtk / 1024).toFixed(1) }}KB - Arrays: {{ (mem_blob / 1024).toFixed(1) }}KB - cache: {{ (cache/1024).toFixed(1) }}KB ",

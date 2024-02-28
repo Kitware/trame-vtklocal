@@ -37,7 +37,11 @@ class LocalView(HtmlElement):
         self._attr_names += [
             ("cache_size", "cacheSize"),
         ]
-        self._event_names += ["updated", "memory"]
+        self._event_names += [
+            "updated",
+            ("memory_vtk", "memory-vtk"),
+            ("memory_arrays", "memory-arrays"),
+        ]
 
     @property
     def api(self):

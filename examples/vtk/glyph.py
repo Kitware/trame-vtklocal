@@ -130,8 +130,8 @@ class App:
     def on_resolution_change(self, resolution, **kwargs):
         self.cone.SetResolution(int(resolution))
         self.sphere.SetStartTheta(int(resolution) * 6)
-        self.view_local.update()
         self.view_remote.update()
+        self.view_local.update()
 
     def reset_camera(self):
         self.renderer.ResetCamera()

@@ -30,9 +30,10 @@ class LocalView(HtmlElement):
 
         # Must trigger update after registration
         self._window_id = self.object_manager.RegisterObject(render_window)
+        render_window.Render()
         self.object_manager.UpdateStatesFromObjects()
 
-        self._attributes["rw_id"] = f'render-window="{self._window_id}"'
+        self._attributes["rw_id"] = f':render-window="{self._window_id}"'
         self._attributes["ref"] = f'ref="{self.__ref}"'
         self._attr_names += [
             ("cache_size", "cacheSize"),

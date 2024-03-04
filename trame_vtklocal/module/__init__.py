@@ -2,7 +2,7 @@ from pathlib import Path
 from wslink import register as export_rpc
 from wslink.websocket import LinkProtocol
 
-from vtkmodules.vtkMarshallingManager import vtkObjectManager
+from vtkmodules.vtkSerializationManager import vtkObjectManager
 
 __all__ = [
     "serve",
@@ -15,7 +15,7 @@ __all__ = [
 serve_path = str(Path(__file__).with_name("serve").resolve())
 serve = {"__trame_vtklocal": serve_path}
 module_scripts = [
-    "__trame_vtklocal/wasm/vtkObjectManager.js",
+    "__trame_vtklocal/wasm/vtkSceneManager-9.3.mjs",
 ]
 scripts = [
     "__trame_vtklocal/js/trame_vtklocal.umd.js",
@@ -39,8 +39,16 @@ class ObjectManagerAPI(LinkProtocol):
         self.vtk_object_manager = vtkObjectManager()
         self.vtk_object_manager.Initialize()
 
+        self._debug_state = False
+        self._debug_state_counter = 1
+
     def update(self):
         self.vtk_object_manager.UpdateStatesFromObjects()
+        if self._debug_state:
+            self.vtk_object_manager.DumpGlobalState(
+                f"snapshot-{self._debug_state_counter}"
+            )
+            self._debug_state_counter += 1
 
     @property
     def active_ids(self):
@@ -48,19 +56,18 @@ class ObjectManagerAPI(LinkProtocol):
 
     @export_rpc("vtklocal.get.state")
     def get_state(self, obj_id):
-        print(f"get_state {obj_id}")
+        # print(f"get_state {obj_id} {self.vtk_object_manager.GetObjectAtId(obj_id).GetClassName()}")
         state = self.vtk_object_manager.GetState(obj_id)
-        # print(state)
         return state
 
     @export_rpc("vtklocal.get.hash")
     def get_hash(self, hash):
-        print("get_hash", hash)
+        # print("get_hash", hash)
         return self.addAttachment(memoryview(self.vtk_object_manager.GetBlob(hash)))
 
     @export_rpc("vtklocal.get.status")
     def get_status(self, obj_id):
-        print("get_status", obj_id)
+        # print("get_status", obj_id)
         ids = self.vtk_object_manager.GetAllDependencies(obj_id)
         hashes = self.vtk_object_manager.GetBlobHashes(ids)
         renderWindow = self.vtk_object_manager.GetObjectAtId(obj_id)

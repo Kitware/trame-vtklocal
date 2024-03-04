@@ -1,11 +1,11 @@
-import { inject, ref, unref, onMounted, onBeforeUnmount, nextTick } from "vue";
+import { inject, ref, unref, onMounted, onBeforeUnmount } from "vue";
 import { createModule } from "../utils";
 
 export default {
   emits: ["updated", "memory-vtk", "memory-arrays"],
   props: {
     renderWindow: {
-      type: String,
+      type: Number,
     },
     cacheSize: {
       type: Number,
@@ -23,7 +23,7 @@ export default {
     const stateMTimes = {};
     const hashesMTime = {};
     const currentMTime = ref(1);
-    let objectManager = null;
+    let sceneManager = null;
     let updateInProgress = 0;
 
     // Resize -----------------------------------------------------------------
@@ -33,12 +33,12 @@ export default {
       const w = Math.floor(width * window.devicePixelRatio + 0.5);
       const h = Math.floor(height * window.devicePixelRatio + 0.5);
       const canvasDOM = unref(canvas);
-      if (canvasDOM && objectManager && props.renderWindow) {
+      if (canvasDOM && sceneManager && props.renderWindow) {
         canvasDOM.width = w;
         canvasDOM.height = h;
         // console.log(`vtkLocal::resize ${width}x${height}`);
-        objectManager.setSize(props.renderWindow, w, h);
-        objectManager.render(props.renderWindow);
+        sceneManager.setSize(props.renderWindow, w, h);
+        sceneManager.render(props.renderWindow);
       }
     }
     let resizeObserver = new ResizeObserver(resize);
@@ -51,7 +51,8 @@ export default {
       if (serverState.length > 0) {
         stateMTimes[vtkId] = JSON.parse(serverState).MTime;
         // console.log(`vtkLocal::state(${vtkId})`);
-        objectManager.registerState(serverState);
+        sceneManager.unRegisterState(vtkId);
+        sceneManager.registerState(serverState);
       } else {
         console.log(`Server returned empty state for ${vtkId}`);
         // throw new Error(`Server returned empty state for ${vtkId}`);
@@ -64,7 +65,7 @@ export default {
       // console.log(`vtkLocal::hash(${hash}) - before`);
       const blob = await session.call("vtklocal.get.hash", [hash]);
       const array = new Uint8Array(await blob.arrayBuffer());
-      objectManager.registerBlob(hash, array);
+      sceneManager.registerBlob(hash, array);
       // console.log(`vtkLocal::hash(${hash}) - available`);
       hashesMTime[hash] = unref(currentMTime);
       return blob;
@@ -73,8 +74,8 @@ export default {
     // Memory -----------------------------------------------------------------
 
     function checkMemory() {
-      const memVtk = objectManager.getTotalVTKDataObjectMemoryUsage();
-      const memArrays = objectManager.getTotalBlobMemoryUsage();
+      const memVtk = sceneManager.getTotalVTKDataObjectMemoryUsage();
+      const memArrays = sceneManager.getTotalBlobMemoryUsage();
       const threshold = Number(props.cacheSize) + memVtk;
 
       if (memArrays > threshold) {
@@ -94,22 +95,22 @@ export default {
         });
 
         // Remove blobs starting by the old ones
-        while (objectManager.getTotalBlobMemoryUsage() > threshold) {
+        while (sceneManager.getTotalBlobMemoryUsage() > threshold) {
           const hashesToDelete = tsMap[mtimeToFree];
           if (hashesToDelete) {
             for (let i = 0; i < hashesToDelete.length; i++) {
               // console.log(
               //   `Delete hash(${hashesToDelete[i]}) - mtime: ${mtimeToFree}`
               // );
-              objectManager.unRegisterBlob(hashesToDelete[i]);
+              sceneManager.unRegisterBlob(hashesToDelete[i]);
               delete hashesMTime[hashesToDelete[i]];
             }
           }
           mtimeToFree++;
         }
       }
-      emit("memory-vtk", objectManager.getTotalVTKDataObjectMemoryUsage());
-      emit("memory-arrays", objectManager.getTotalBlobMemoryUsage());
+      emit("memory-vtk", sceneManager.getTotalVTKDataObjectMemoryUsage());
+      emit("memory-arrays", sceneManager.getTotalBlobMemoryUsage());
     }
 
     // Update -----------------------------------------------------------------
@@ -138,7 +139,7 @@ export default {
           }
         });
         serverStatus.ignore_ids.forEach((vtkId) => {
-          objectManager.unRegisterState(vtkId);
+          sceneManager.unRegisterState(vtkId);
         });
         serverStatus.hashes.forEach((hash) => {
           if (!hashesMTime[hash]) {
@@ -149,7 +150,7 @@ export default {
         await Promise.all(pendingRequests);
         currentMTime.value++;
         try {
-          objectManager.updateObjectsFromStates();
+          sceneManager.updateObjectsFromStates();
           resize();
         } catch (e) {
           console.error("WASM update failed");
@@ -172,10 +173,14 @@ export default {
 
     onMounted(async () => {
       // console.log("vtkLocal::mounted");
-      objectManager = await createModule(unref(canvas));
+      sceneManager = await createModule(unref(canvas));
       await update();
-      objectManager.startEventLoop(props.renderWindow);
-      await nextTick();
+      // sceneManager.addObserver(props.renderWindow, "StartEvent", (id, eventName) => {
+      //   eventName = sceneManager.UTF8ToString(eventName);
+      //   console.log(`${eventName} emitted from ${id}`);
+      // });
+      // sceneManager.addObserver(props.renderWindow, "EndEvent", () => { console.log("vtkRenderWindow EndEvent"); });
+      sceneManager.startEventLoop(props.renderWindow);
       if (resizeObserver) {
         resizeObserver.observe(unref(container));
       }
@@ -183,7 +188,7 @@ export default {
 
     onBeforeUnmount(() => {
       // console.log("vtkLocal::unmounted");
-      objectManager.stopEventLoop(props.renderWindow);
+      sceneManager.stopEventLoop(props.renderWindow);
       if (resizeObserver) {
         resizeObserver.disconnect();
         resizeObserver = null;

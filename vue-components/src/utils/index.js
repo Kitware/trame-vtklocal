@@ -2,7 +2,7 @@ export async function createModule(canvas) {
   const module = {
     canvas,
     locateFile() {
-      return "__trame_vtklocal/wasm/vtkSceneManager-9.3.wasm";
+      return "__trame_vtklocal/wasm/vtkWasmSceneManager-9.3.wasm";
     },
     print() {
       console.info(Array.prototype.slice.call(arguments).join(" "));
@@ -11,7 +11,7 @@ export async function createModule(canvas) {
       console.error(Array.prototype.slice.call(arguments).join(" "));
     },
   };
-  const objectManager = await window.createVTKSceneManager(module);
+  const objectManager = await window.createVTKWasmSceneManager(module);
   objectManager.initialize();
   return objectManager;
 }

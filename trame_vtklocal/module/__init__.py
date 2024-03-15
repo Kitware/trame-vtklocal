@@ -15,7 +15,7 @@ __all__ = [
 serve_path = str(Path(__file__).with_name("serve").resolve())
 serve = {"__trame_vtklocal": serve_path}
 module_scripts = [
-    "__trame_vtklocal/wasm/vtkSceneManager-9.3.mjs",
+    "__trame_vtklocal/wasm/vtkWasmSceneManager-9.3.mjs",
 ]
 scripts = [
     "__trame_vtklocal/js/trame_vtklocal.umd.js",
@@ -45,9 +45,7 @@ class ObjectManagerAPI(LinkProtocol):
     def update(self):
         self.vtk_object_manager.UpdateStatesFromObjects()
         if self._debug_state:
-            self.vtk_object_manager.DumpGlobalState(
-                f"snapshot-{self._debug_state_counter}"
-            )
+            self.vtk_object_manager.Export(f"snapshot-{self._debug_state_counter}")
             self._debug_state_counter += 1
 
     @property

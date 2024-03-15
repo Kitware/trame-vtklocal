@@ -32,6 +32,8 @@ class LocalView(HtmlElement):
         self._window_id = self.object_manager.RegisterObject(render_window)
         render_window.Render()
         self.object_manager.UpdateStatesFromObjects()
+        if self.api._debug_state:
+            self.object_manager.Export(f"snapshot-{self.api._debug_state_counter}")
 
         self._attributes["rw_id"] = f':render-window="{self._window_id}"'
         self._attributes["ref"] = f'ref="{self.__ref}"'

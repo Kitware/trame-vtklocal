@@ -58,7 +58,7 @@ jobs:
 
     - name: Install and Run Tests
       run: |
-        pip install .
+        pip install . --extra-index-url https://wheels.vtk.org
         pip install -r tests/requirements.txt
         pytest -s ./tests
 

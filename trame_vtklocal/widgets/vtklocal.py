@@ -39,6 +39,7 @@ class LocalView(HtmlElement):
         self._attributes["ref"] = f'ref="{self.__ref}"'
         self._attr_names += [
             ("cache_size", "cacheSize"),
+            ("eager_sync", "eagerSync"),
         ]
         self._event_names += [
             "updated",

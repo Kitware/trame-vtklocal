@@ -59,6 +59,9 @@ class ObjectManagerAPI(LinkProtocol):
         super().__init__(*args, **kwargs)
         self.vtk_object_manager = vtkObjectManager()
         self.vtk_object_manager.Initialize()
+        self._subscriptions = {}
+        self._last_publish_states = {}
+        self._last_publish_hash = set()
 
         self._debug_state = False
         self._debug_state_counter = 1
@@ -69,9 +72,50 @@ class ObjectManagerAPI(LinkProtocol):
             self.vtk_object_manager.Export(f"snapshot-{self._debug_state_counter}")
             self._debug_state_counter += 1
 
+        # Handle subscription push
+        remove_from_subscriptions = []
+        for obj_id, count in self._subscriptions.items():
+            if count == 0:
+                remove_from_subscriptions.append(obj_id)
+            elif count > 0:
+                status = self.get_status(obj_id)
+                for state_id, mtime in status.get("ids", []):
+                    if mtime > self._last_publish_states.get(state_id, 0):
+                        self._last_publish_states[state_id] = mtime
+                        self.publish(
+                            "vtklocal.subscriptions",
+                            dict(
+                                type="state",
+                                id=state_id,
+                                mtime=mtime,
+                                content=self.get_state(state_id),
+                            ),
+                        )
+                for hash in status.get("hashes", []):
+                    if hash not in self._last_publish_hash:
+                        self._last_publish_hash.add(hash)
+                        self.publish(
+                            "vtklocal.subscriptions",
+                            dict(type="blob", hash=hash, content=self.get_hash(hash)),
+                        )
+
+        for id_to_gc in remove_from_subscriptions:
+            self._subscriptions.pop(id_to_gc)
+
     @property
     def active_ids(self):
         return self.vtk_object_manager.GetAllDependencies("")
+
+    @export_rpc("vtklocal.subscribe.update")
+    def update_subscription(self, obj_id, delta):
+        if obj_id in self._subscriptions:
+            self._subscriptions[obj_id] += delta
+        elif delta > 0:
+            self._subscriptions[obj_id] = delta
+
+        if delta > 0:
+            self._last_publish_states.clear()
+            self._last_publish_hash.clear()
 
     @export_rpc("vtklocal.get.state")
     def get_state(self, obj_id):

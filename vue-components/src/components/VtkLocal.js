@@ -7,6 +7,10 @@ export default {
     renderWindow: {
       type: Number,
     },
+    eagerSync: {
+      type: Boolean,
+      default: false,
+    },
     cacheSize: {
       type: Number,
       default: 100000000,
@@ -23,9 +27,47 @@ export default {
     const client = props.wsClient || trame?.client;
     const stateMTimes = {};
     const hashesMTime = {};
+    const pendingArrays = {};
     const currentMTime = ref(1);
     let sceneManager = null;
     let updateInProgress = 0;
+    let subscription = null;
+
+    // Subscription handling --------------------------------------------------
+
+    function handleMessage([event]) {
+      if (event.type === "state") {
+        const { mtime, content, id } = event;
+        sceneManager.unRegisterState(id);
+        sceneManager.registerState(content);
+        stateMTimes[id] = mtime;
+      }
+      if (event.type === "blob") {
+        const { hash, content } = event;
+        pendingArrays[hash] = new Promise((resolve) => {
+          content.arrayBuffer().then((arrayBuffer) => {
+            const array = new Uint8Array(arrayBuffer);
+            sceneManager.registerBlob(hash, array);
+            resolve();
+          });
+        });
+      }
+    }
+
+    async function subscribe() {
+      const session = client.getConnection().getSession();
+      subscription = session.subscribe("vtklocal.subscriptions", handleMessage);
+      await session.call("vtklocal.subscribe.update", [props.renderWindow, +1]);
+    }
+
+    async function unsubscribe() {
+      const session = client.getConnection().getSession();
+      if (subscription) {
+        session.unsubscribe(subscription);
+        subscription = null;
+      }
+      await session.call("vtklocal.subscribe.update", [props.renderWindow, -1]);
+    }
 
     // Resize -----------------------------------------------------------------
 
@@ -62,12 +104,17 @@ export default {
     }
 
     async function fetchHash(hash) {
+      if (pendingArrays[hash]) {
+        await pendingArrays[hash];
+        hashesMTime[hash] = unref(currentMTime);
+        delete pendingArrays[hash];
+        return;
+      }
       const session = client.getConnection().getSession();
       // console.log(`vtkLocal::hash(${hash}) - before`);
       const blob = await session.call("vtklocal.get.hash", [hash]);
       const array = new Uint8Array(await blob.arrayBuffer());
       sceneManager.registerBlob(hash, array);
-      // console.log(`vtkLocal::hash(${hash}) - available`);
       hashesMTime[hash] = unref(currentMTime);
       return blob;
     }
@@ -175,6 +222,9 @@ export default {
     onMounted(async () => {
       // console.log("vtkLocal::mounted");
       sceneManager = await createModule(unref(canvas), wasmFile);
+      if (props.eagerSync) {
+        subscribe();
+      }
       await update();
       // sceneManager.addObserver(props.renderWindow, "StartEvent", (id, eventName) => {
       //   eventName = sceneManager.UTF8ToString(eventName);
@@ -188,6 +238,9 @@ export default {
     });
 
     onBeforeUnmount(() => {
+      if (subscription) {
+        unsubscribe();
+      }
       // console.log("vtkLocal::unmounted");
       sceneManager.stopEventLoop(props.renderWindow);
       if (resizeObserver) {

@@ -14,7 +14,7 @@ Installation
 
 .. code-block:: console
 
-    pip install trame-vtklocal
+    pip install trame-vtklocal --extra-index-url https://wheels.vtk.org
 
 
 Development

@@ -28,7 +28,7 @@ def create_vtk_pipeline(path):
     colors = vtkNamedColors()
     data_source = None
 
-    if Path(path).is_file():
+    if path is not None and Path(path).is_file():
         data_source = vtkXMLPolyDataReader()
         data_source.SetFileName(path)
     else:

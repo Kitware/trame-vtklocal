@@ -1,27 +1,48 @@
 from pathlib import Path
 from wslink import register as export_rpc
 from wslink.websocket import LinkProtocol
+from trame_client.utils.web_module import file_with_digest
 
 from vtkmodules.vtkSerializationManager import vtkObjectManager
+import vtk_wasm
 
 __all__ = [
     "serve",
     "scripts",
+    "module_scripts",
+    "state",
     "vue_use",
     "setup",
     "get_helper",
 ]
 
 serve_path = str(Path(__file__).with_name("serve").resolve())
-serve = {"__trame_vtklocal": serve_path}
-module_scripts = [
-    "__trame_vtklocal/wasm/vtkWasmSceneManager-9.3.mjs",
-]
-scripts = [
-    "__trame_vtklocal/js/trame_vtklocal.umd.js",
-]
-vue_use = ["trame_vtklocal"]
 
+serve = {"__trame_vtklocal": serve_path}
+state = {}
+scripts = ["__trame_vtklocal/js/trame_vtklocal.umd.js"]
+vue_use = ["trame_vtklocal"]
+module_scripts = []
+
+
+def register_wasm():
+    global serve, module_scripts, state
+    BASE_URL = "__trame_vtklocal_wasm"
+    wasm_path = Path(vtk_wasm.__file__).parent.resolve()
+    serve[BASE_URL] = str(wasm_path)
+    for file in wasm_path.glob("vtkWasmSceneManager*"):
+        if file.name.rfind("-") != len("vtkWasmSceneManager"):
+            continue  # skip digested files
+
+        file = file_with_digest(file, digest_size=6)
+        if file.suffix == ".mjs":
+            module_scripts.append(f"{BASE_URL}/{file.name}")
+
+        if file.suffix == ".wasm":
+            state[f"{BASE_URL}_name"] = file.name
+
+
+register_wasm()
 
 # -----------------------------------------------------------------------------
 # Protocol

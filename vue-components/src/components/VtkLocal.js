@@ -17,6 +17,7 @@ export default {
   },
   setup(props, { emit }) {
     const trame = inject("trame");
+    const wasmFile = trame.state.get("__trame_vtklocal_wasm_name");
     const container = ref(null);
     const canvas = ref(null);
     const client = props.wsClient || trame?.client;
@@ -173,7 +174,7 @@ export default {
 
     onMounted(async () => {
       // console.log("vtkLocal::mounted");
-      sceneManager = await createModule(unref(canvas));
+      sceneManager = await createModule(unref(canvas), wasmFile);
       await update();
       // sceneManager.addObserver(props.renderWindow, "StartEvent", (id, eventName) => {
       //   eventName = sceneManager.UTF8ToString(eventName);

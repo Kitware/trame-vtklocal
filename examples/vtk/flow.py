@@ -100,7 +100,8 @@ def create_vtk_pipeline():
     isoActor = vtkActor()
     isoActor.SetMapper(isoMapper)
     isoActor.GetProperty().SetRepresentationToWireframe()
-    isoActor.GetProperty().SetOpacity(0.25)
+    # isoActor.GetProperty().SetLineWidth(2)
+    isoActor.GetProperty().SetOpacity(0.75)
 
     # Outline
 
@@ -141,13 +142,10 @@ class DemoApp:
 
     def _ui(self):
         with DivLayout(self.server) as layout:
+            layout.root.style = "width: 100vw; height: 100vh;"
             client.Style("body { margin: 0; }")
-            self.html_view = vtklocal.LocalView(
-                self.render_window, style="width: 100vw; height: 100vh;"
-            )
-            # vtk_widgets.VtkRemoteView(
-            #     self.render_window, style="width: 100vw; height: 100vh;"
-            # )
+            self.html_view = vtklocal.LocalView(self.render_window)
+            # vtk_widgets.VtkRemoteView(self.render_window)
 
         return layout
 

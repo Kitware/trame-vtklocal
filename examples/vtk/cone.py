@@ -61,7 +61,7 @@ class DemoApp:
         self.server.state.update(dict(mem_blob=0, mem_vtk=0))
         self.html_view = None
         self.ui = self._ui()
-        print(self.ui)
+        # print(self.ui)
 
     @change("resolution")
     def on_resolution_change(self, resolution, **kwargs):

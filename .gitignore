@@ -1,6 +1,8 @@
 .DS_Store
+build
 node_modules
 .venv
+.venv-pv
 
 # local env files
 .env.local

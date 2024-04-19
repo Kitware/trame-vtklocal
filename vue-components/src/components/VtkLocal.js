@@ -21,7 +21,7 @@ export default {
   },
   setup(props, { emit }) {
     const trame = inject("trame");
-    const wasmFile = trame.state.get("__trame_vtklocal_wasm_name");
+    const wasmURL = trame.state.get("__trame_vtklocal_wasm_url");
     const container = ref(null);
     const canvas = ref(null);
     const client = props.wsClient || trame?.client;
@@ -45,11 +45,15 @@ export default {
       if (event.type === "blob") {
         const { hash, content } = event;
         pendingArrays[hash] = new Promise((resolve) => {
-          content.arrayBuffer().then((arrayBuffer) => {
-            const array = new Uint8Array(arrayBuffer);
-            sceneManager.registerBlob(hash, array);
+          if (content.arrayBuffer) {
+            content.arrayBuffer().then((buffer) => {
+              sceneManager.registerBlob(hash, new Uint8Array(buffer));
+              resolve();
+            });
+          } else {
+            sceneManager.registerBlob(hash, content);
             resolve();
-          });
+          }
         });
       }
     }
@@ -112,11 +116,13 @@ export default {
       }
       const session = client.getConnection().getSession();
       // console.log(`vtkLocal::hash(${hash}) - before`);
-      const blob = await session.call("vtklocal.get.hash", [hash]);
-      const array = new Uint8Array(await blob.arrayBuffer());
+      const content = await session.call("vtklocal.get.hash", [hash]);
+      const array = content.arrayBuffer
+        ? new Uint8Array(await content.arrayBuffer())
+        : content;
       sceneManager.registerBlob(hash, array);
       hashesMTime[hash] = unref(currentMTime);
-      return blob;
+      return array;
     }
 
     // Memory -----------------------------------------------------------------
@@ -221,7 +227,7 @@ export default {
 
     onMounted(async () => {
       // console.log("vtkLocal::mounted");
-      sceneManager = await createModule(unref(canvas), wasmFile);
+      sceneManager = await createModule(unref(canvas), wasmURL);
       if (props.eagerSync) {
         subscribe();
       }

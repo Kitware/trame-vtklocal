@@ -1,8 +1,8 @@
-export async function createModule(canvas, wasmFile) {
+export async function createModule(canvas, wasmURL) {
   const module = {
     canvas,
     locateFile() {
-      return `__trame_vtklocal_wasm/${wasmFile}`;
+      return wasmURL;
     },
     print() {
       console.info(Array.prototype.slice.call(arguments).join(" "));

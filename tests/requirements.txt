@@ -1,1 +1,3 @@
+--extra-index-url https://wheels.vtk.org
 pytest
+vtk==9.3.20240418.dev0

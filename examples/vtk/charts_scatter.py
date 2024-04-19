@@ -1,5 +1,5 @@
 import math
-
+import os
 from vtkmodules.vtkChartsCore import vtkChart, vtkChartXY, vtkPlotPoints
 from vtkmodules.vtkCommonColor import vtkNamedColors
 from vtkmodules.vtkCommonCore import vtkFloatArray
@@ -17,7 +17,7 @@ from trame.ui.html import DivLayout
 from trame.widgets import html, client, vtk as vtk_widgets
 from trame_vtklocal.widgets import vtklocal
 
-WASM = False
+WASM = "USE_WASM" in os.environ
 
 
 def create_vtk_pipeline():

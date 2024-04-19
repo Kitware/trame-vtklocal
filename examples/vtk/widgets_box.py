@@ -1,3 +1,4 @@
+import os
 from trame.app import get_server
 from trame.ui.html import DivLayout
 from trame.widgets import html, client, vtk as vtk_widgets
@@ -19,7 +20,7 @@ from vtkmodules.vtkRenderingCore import (
     vtkRenderer,
 )
 
-WASM = False
+WASM = "USE_WASM" in os.environ
 
 
 def boxCallback(obj, event):

@@ -56,3 +56,7 @@ Running examples
 
     # regular trame app
     python ./examples/vtk/cone.py 
+
+
+Some example are meant to test and validate WASM rendering.
+Some will default for remote rendering but if you want to force them to use WASM just run `export USE_WASM=1` before executing them.

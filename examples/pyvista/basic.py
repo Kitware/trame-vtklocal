@@ -13,11 +13,15 @@ WASM = "USE_WASM" in os.environ
 
 
 def setup_pyvista():
-    mesh = examples.download_knee_full()
     p = pv.Plotter()
-    p.add_mesh_threshold(mesh)
+    mesh = examples.download_st_helens()
+    warped = mesh.warp_by_scalar("Elevation")
+    surf = warped.extract_surface().triangulate()
+    surf = surf.decimate_pro(0.75)  # reduce the density of the mesh by 75%
+    p.add_mesh(surf, cmap="gist_earth")
     p.reset_camera()
-    # p.show_axes() # FIXME
+    p.show_axes()
+
     return p.ren_win
 
 

@@ -13,11 +13,21 @@ WASM = "USE_WASM" in os.environ
 
 
 def setup_pyvista():
-    mesh = examples.download_knee_full()
+    elevation = examples.download_crater_topo().warp_by_scalar()
+    topo_map = examples.download_crater_imagery()
+    topo_map = topo_map.flip_y()  # flip to align to our dataset
+
+    bounds = (1818000, 1824500, 5645000, 5652500, 0, 3000)
+    local = elevation.clip_box(bounds, invert=False)
+    surrounding = elevation.clip_box(bounds, invert=True)
+    local.texture_map_to_plane(use_bounds=True, inplace=True)
+
     p = pv.Plotter()
-    p.add_mesh_threshold(mesh)
+    p.add_mesh(local, texture=topo_map)
+    p.add_mesh(surrounding, color="white")
     p.reset_camera()
     # p.show_axes() # FIXME
+
     return p.ren_win
 
 

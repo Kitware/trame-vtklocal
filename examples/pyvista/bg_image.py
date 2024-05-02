@@ -13,11 +13,12 @@ WASM = "USE_WASM" in os.environ
 
 
 def setup_pyvista():
-    mesh = examples.download_knee_full()
     p = pv.Plotter()
-    p.add_mesh_threshold(mesh)
+    p.add_mesh(examples.load_airplane(), smooth_shading=True)
+    p.add_background_image(examples.mapfile)
     p.reset_camera()
     # p.show_axes() # FIXME
+
     return p.ren_win
 
 

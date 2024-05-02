@@ -13,11 +13,14 @@ WASM = "USE_WASM" in os.environ
 
 
 def setup_pyvista():
-    mesh = examples.download_knee_full()
+    point_cloud = examples.download_lidar()
+
     p = pv.Plotter()
-    p.add_mesh_threshold(mesh)
+    p.add_mesh(point_cloud, color="lightblue", point_size=5)
+    p.enable_eye_dome_lighting()
     p.reset_camera()
-    # p.show_axes() # FIXME
+    p.show_axes()
+
     return p.ren_win
 
 

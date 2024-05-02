@@ -13,11 +13,20 @@ WASM = "USE_WASM" in os.environ
 
 
 def setup_pyvista():
-    mesh = examples.download_knee_full()
-    p = pv.Plotter()
-    p.add_mesh_threshold(mesh)
+    mesh = examples.download_cow()
+    decimated = mesh.decimate_boundary(target_reduction=0.75)
+
+    p = pv.Plotter(shape=(1, 2), border=False)
+    p.subplot(0, 0)
+    p.add_text("Original mesh", font_size=24)
+    p.add_mesh(mesh, show_edges=True, color=True)
+    p.subplot(0, 1)
+    p.add_text("Decimated version", font_size=24)
+    p.add_mesh(decimated, color=True, show_edges=True)
+    p.link_views()  # link all the views
     p.reset_camera()
     # p.show_axes() # FIXME
+
     return p.ren_win
 
 

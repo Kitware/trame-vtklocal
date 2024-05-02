@@ -1,4 +1,5 @@
 import os
+import numpy as np
 import pyvista as pv
 from pyvista import examples
 
@@ -13,11 +14,28 @@ WASM = "USE_WASM" in os.environ
 
 
 def setup_pyvista():
-    mesh = examples.download_knee_full()
+    path = examples.download_gpr_path().points
+    data = examples.download_gpr_data_array()
+
+    nsamples, ntraces = (
+        data.shape
+    )  # Might be opposite for your data, pay attention here
+    z_spacing = 0.12
+    points = np.repeat(path, nsamples, axis=0)
+    tp = np.arange(0, z_spacing * nsamples, z_spacing)
+    tp = path[:, 2][:, None] - tp
+    points[:, -1] = tp.ravel()
+    grid = pv.StructuredGrid()
+    grid.points = points
+    grid.dimensions = nsamples, ntraces, 1
+    grid["values"] = data.ravel(order="F")
+    # ---
     p = pv.Plotter()
-    p.add_mesh_threshold(mesh)
+    p.add_mesh(grid, cmap="seismic", clim=[-1, 1])
+    p.add_mesh(pv.PolyData(path), color="orange")
     p.reset_camera()
     # p.show_axes() # FIXME
+
     return p.ren_win
 
 

@@ -30,6 +30,7 @@ def setup_pyvista():
     p.add_mesh_slice_spline(mesh, initial_points=points, n_handles=5)
     p.show_grid()
     p.reset_camera()
+    # p.show_axes() # FIXME
 
     return p.ren_win
 

@@ -2,7 +2,7 @@ from trame.app import get_server
 from trame.ui.html import DivLayout
 from trame.widgets import html, client
 from trame_vtklocal.widgets import vtklocal
-from trame.decorators import TrameApp, change
+from trame.decorators import TrameApp, change, trigger
 
 from vtkmodules.vtkFiltersSources import vtkConeSource
 from vtkmodules.vtkRenderingCore import (
@@ -63,6 +63,13 @@ class DemoApp:
         self.ui = self._ui()
         # print(self.ui)
 
+    @trigger("export")
+    def export(self, format):
+        return self.html_view.export(format)
+
+    def reset_camera(self):
+        self.html_view.reset_camera()
+
     @change("resolution")
     def on_resolution_change(self, resolution, **kwargs):
         if int(resolution) != 6:
@@ -101,6 +108,21 @@ class DemoApp:
                 max=100000,
                 step=1000,
                 style="position: absolute; top: 1rem; right: 10rem; z-index: 10;",
+            )
+            html.Button(
+                "Export json",
+                click="utils.download('scene-wasm.json', trigger('export', ['json']), 'application/octet-stream')",
+                style="position: absolute; top: 3rem; right: 1rem; z-index: 10;",
+            )
+            html.Button(
+                "Export zip",
+                click="utils.download('scene-wasm.zip', trigger('export', ['zip']), 'application/octet-stream')",
+                style="position: absolute; top: 3rem; right: 7rem; z-index: 10;",
+            )
+            html.Button(
+                "Reset Camera",
+                click=self.reset_camera,
+                style="position: absolute; top: 3rem; right: 14rem; z-index: 10;",
             )
 
         return layout

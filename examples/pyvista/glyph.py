@@ -1,23 +1,28 @@
-import os
 import pyvista as pv
-from pyvista import examples
+import numpy as np
 
 from trame.app import get_server
 from trame.ui.html import DivLayout
-from trame.widgets import html, client, vtk as vtk_widgets
+from trame.widgets import html, client
 from trame_vtklocal.widgets import vtklocal
-
-WASM = "USE_WASM" in os.environ
 
 # -----------------------------------------------------------------------------
 
 
 def setup_pyvista():
-    mesh = examples.download_knee_full()
     p = pv.Plotter()
-    p.add_mesh_threshold(mesh)
+    point_cloud = np.random.random((100, 3))
+    pdata = pv.PolyData(point_cloud)
+    pdata["orig_sphere"] = np.arange(100)
+
+    # create many spheres from the point cloud
+    sphere = pv.Sphere(radius=0.02, phi_resolution=10, theta_resolution=10)
+    pc = pdata.glyph(scale=False, geom=sphere, orient=False)
+
+    p.add_mesh(pc, cmap="Reds")
     p.reset_camera()
     # p.show_axes() # FIXME
+
     return p.ren_win
 
 
@@ -37,12 +42,7 @@ class TrameApp:
             with html.Div(
                 style="position: absolute; left: 0; top: 0; width: 100vw; height: 100vh;"
             ):
-                if WASM:
-                    self.html_view = vtklocal.LocalView(self.render_window)
-                else:
-                    self.html_view = vtk_widgets.VtkRemoteView(
-                        self.render_window, interactive_ratio=1
-                    )
+                self.html_view = vtklocal.LocalView(self.render_window)
 
         return layout
 

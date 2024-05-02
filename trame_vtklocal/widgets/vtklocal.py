@@ -36,6 +36,13 @@ def encode_blobs(blob_map):
     return result
 
 
+def get_version():
+    from vtkmodules.vtkCommonCore import vtkVersion
+
+    vtk_version = vtkVersion()
+    return vtk_version.GetVTKVersion()
+
+
 class LocalView(HtmlElement):
     _next_id = 0
 
@@ -104,6 +111,7 @@ class LocalView(HtmlElement):
         blobs_file = Path(f"{base_name}.blobs.json")
 
         json_structure = {
+            "version": get_version(),
             "states": json.loads(states_file.read_text()),
             "blobs": encode_blobs(json.loads(blobs_file.read_text())),
         }

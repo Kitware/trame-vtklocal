@@ -2,6 +2,18 @@
 
 <!--next-version-placeholder-->
 
+## v0.2.0 (2024-05-02)
+
+### Feature
+
+* **export:** Add export capability from widget ([`86857d2`](https://github.com/Kitware/trame-vtklocal/commit/86857d2609e4be9b3f7622b207dacf4b74a74634))
+
+### Documentation
+
+* **examples:** Add missing dep in requirements.txt ([`f1a2055`](https://github.com/Kitware/trame-vtklocal/commit/f1a205570f36c33f1110f4cfb4fc69084f747953))
+* **examples:** More pyvista examples ([`a6f93a8`](https://github.com/Kitware/trame-vtklocal/commit/a6f93a8686e5828de1959fdc95ae5365cf60ccbf))
+* **examples:** Make the WASM switch from os.env ([`0d75b08`](https://github.com/Kitware/trame-vtklocal/commit/0d75b08e59cdf772617dd45f036c6287f63e139e))
+
 ## v0.1.0 (2024-04-19)
 
 ### Feature

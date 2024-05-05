@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.3.2 (2024-05-05)
+
+### Fix
+
+* **wasm:** Use env var to copy vtk wasm binaries for development ([`2a36678`](https://github.com/Kitware/trame-vtklocal/commit/2a36678af4227ce6cdf7c9e927612ebc6321f40b))
+
 ## v0.3.1 (2024-05-05)
 
 ### Fix

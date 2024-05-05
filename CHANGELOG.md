@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.3.1 (2024-05-05)
+
+### Fix
+
+* **wasm:** Do not throw exception when get request succeeds ([`3f4c02f`](https://github.com/Kitware/trame-vtklocal/commit/3f4c02f45b10aaae02f97cd29d9532d8c5177d57))
+
 ## v0.3.0 (2024-05-05)
 
 ### Feature

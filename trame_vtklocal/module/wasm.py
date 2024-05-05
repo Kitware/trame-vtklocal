@@ -15,6 +15,7 @@ async def download_file(urls, filename):
                 else:
                     with open(filename, "wb") as f:
                         f.write(data)
+                        success = True
                     break
         if not success:
             raise Exception("Invalid URLs " + ",".join(urls) + ". Got 404 response.")

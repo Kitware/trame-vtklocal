@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.3.0 (2024-05-05)
+
+### Feature
+
+* **wasm:** Allow loading custom vtk-wasm tarball ([`9cc5ca1`](https://github.com/Kitware/trame-vtklocal/commit/9cc5ca12a71191253873d6f6d6e3304912485baa))
+
 ## v0.2.0 (2024-05-02)
 
 ### Feature

@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.3.3 (2024-05-27)
+
+### Fix
+
+* **reset_camera:** Connect reset_camera call ([`010d396`](https://github.com/Kitware/trame-vtklocal/commit/010d39634f7f74205b2280d1096fc412761edd48))
+
 ## v0.3.2 (2024-05-05)
 
 ### Fix

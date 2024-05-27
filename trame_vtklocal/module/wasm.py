@@ -6,6 +6,18 @@ import shutil
 import tarfile
 
 
+def run_async(coroutine):
+    try:
+        loop = asyncio.get_running_loop()
+        if loop.is_running():
+            loop.create_task(coroutine)
+        else:
+            loop.run_until_complete(coroutine)
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        loop.run_until_complete(coroutine)
+
+
 async def download_file(url, filename):
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
@@ -51,9 +63,10 @@ def get_wasm_info():
 
     vtk_version = vtkVersion()
     version = vtk_version.GetVTKVersion()
+    wasm_bits = "wasm32"
     return (
         version,
-        f"https://gitlab.kitware.com/api/v4/projects/13/packages/generic/vtk-wasm/{version}/vtk-wasm.{version}.tar.gz",
+        f"https://gitlab.kitware.com/api/v4/projects/13/packages/generic/vtk-{wasm_bits}-emscripten/{version}/vtk-{version}-{wasm_bits}-emscripten.tar.gz",
     )
 
 
@@ -63,9 +76,7 @@ def register_wasm(serve_path):
     dest_directory = Path(serve_path) / "wasm" / version
 
     if not dest_directory.exists():
-        asyncio.new_event_loop().run_until_complete(
-            setup_wasm_directory(dest_directory, wasm_url)
-        )
+        run_async(setup_wasm_directory(dest_directory, wasm_url))
 
     return dict(
         module_scripts=[f"{BASE_URL}/vtkWasmSceneManager.mjs"],

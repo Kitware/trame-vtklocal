@@ -133,11 +133,18 @@ class LocalView(HtmlElement):
 
             return zip_buffer.getvalue()
 
-    def reset_camera(self, **kwargs):
-        self._render_window.GetRenderers().GetFirstRenderer().ResetCamera()
-        self._render_window.Render()
-        self.object_manager.UpdateStatesFromObjects()
-        self.update()
+    def reset_camera(self, renderer_or_render_window=None, **kwargs):
+        if renderer_or_render_window is None:
+            renderer_or_render_window = self._render_window
+
+        if renderer_or_render_window.IsA("vtkRenderWindow"):
+            renderer_or_render_window = (
+                renderer_or_render_window.GetRenderers().GetFirstRenderer()
+            )
+
+        if renderer_or_render_window.IsA("vtkRenderer"):
+            id_to_reset_camera = self.get_wasm_id(renderer_or_render_window)
+            self.server.js_call(self.__ref, "resetCamera", id_to_reset_camera)
 
     @property
     def ref_name(self):

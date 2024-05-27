@@ -3,6 +3,7 @@ build
 node_modules
 .venv
 .venv-pv
+.pyvista
 
 # local env files
 .env.local

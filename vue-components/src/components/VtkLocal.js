@@ -205,6 +205,7 @@ export default {
         currentMTime.value++;
         try {
           sceneManager.updateObjectsFromStates();
+          sceneManager.render(props.renderWindow);
           resize();
         } catch (e) {
           console.error("WASM update failed");
@@ -221,6 +222,13 @@ export default {
           await update();
         }
       }
+    }
+
+    // resetCamera ------------------------------------------------------------
+
+    function resetCamera(rendererId) {
+      sceneManager.resetCamera(rendererId);
+      sceneManager.render(props.renderWindow);
     }
 
     // Life Cycles ------------------------------------------------------------
@@ -260,6 +268,7 @@ export default {
       container,
       canvas,
       update,
+      resetCamera,
     };
   },
   template: `

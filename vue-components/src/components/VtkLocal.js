@@ -2,7 +2,7 @@ import { inject, ref, unref, onMounted, onBeforeUnmount } from "vue";
 import { createModule } from "../utils";
 
 export default {
-  emits: ["updated", "memory-vtk", "memory-arrays"],
+  emits: ["updated", "memory-vtk", "memory-arrays", "camera"],
   props: {
     renderWindow: {
       type: Number,
@@ -22,6 +22,9 @@ export default {
   setup(props, { emit }) {
     const trame = inject("trame");
     const wasmURL = trame.state.get("__trame_vtklocal_wasm_url");
+    const cameraIds = [];
+    const observerTags = [];
+    let interactorId = null;
     const container = ref(null);
     const canvas = ref(null);
     const client = props.wsClient || trame?.client;
@@ -192,6 +195,11 @@ export default {
             // console.log("skip", vtkId);
           }
         });
+
+        // For listeners
+        cameraIds.push(...serverStatus.cameras);
+        interactorId = serverStatus.interactor
+
         serverStatus.ignore_ids.forEach((vtkId) => {
           sceneManager.unRegisterState(vtkId);
         });
@@ -244,6 +252,26 @@ export default {
         subscribe();
       }
       await update();
+
+      // Interactor listener
+      // console.log("interactorId", interactorId)
+      // observerTags.push([interactorId, sceneManager.addObserver(interactorId, "RenderEvent", (id, eventName) => {
+      //   console.log("interactor changed", id, eventName);
+      // })]);
+
+      // Camera listener
+      for (let i = 0; i < cameraIds.length; i++) {
+        const cid = cameraIds[i];
+        console.log("Listen to camera", cid);
+        observerTags.push([cid, sceneManager.addObserver(cid, "ModifiedEvent", () => {
+          // crash: sceneManager.unRegisterState(cid);
+          // crash: sceneManager.updateStatesFromObjects();
+          const cameraState = sceneManager.getState(cid);
+          console.log(`${cameraState.Position}`);
+          emit("camera", cameraState);
+        })]);
+      }
+
       // sceneManager.addObserver(props.renderWindow, "StartEvent", (id, eventName) => {
       //   eventName = sceneManager.UTF8ToString(eventName);
       //   console.log(`${eventName} emitted from ${id}`);
@@ -259,6 +287,13 @@ export default {
       if (subscription) {
         unsubscribe();
       }
+
+      // Camera listeners
+      while (observerTags.length) {
+        const [cid, tag] = observerTags.pop();
+        sceneManager.removeObserver(cid, tag);
+      }
+
       // console.log("vtkLocal::unmounted");
       sceneManager.stopEventLoop(props.renderWindow);
       if (resizeObserver) {

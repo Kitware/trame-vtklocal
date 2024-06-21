@@ -124,12 +124,22 @@ class ObjectManagerAPI(LinkProtocol):
         renderWindow = self.vtk_object_manager.GetObjectAtId(obj_id)
         ids_mtime = [map_id_mtime(self.vtk_object_manager, v) for v in ids]
         ignore_ids = []
+        cameras = []
         if renderWindow:
+            interactor = self.vtk_object_manager.GetId(renderWindow.interactor)
             renderers = renderWindow.GetRenderers()
             for renderer in renderers:
                 activeCamera = renderer.GetActiveCamera()
-                ignore_ids.append(self.vtk_object_manager.GetId(activeCamera))
-        return dict(ids=ids_mtime, hashes=hashes, ignore_ids=ignore_ids)
+                cid = self.vtk_object_manager.GetId(activeCamera)
+                ignore_ids.append(cid)
+                cameras.append(cid)
+        return dict(
+            ids=ids_mtime,
+            hashes=hashes,
+            ignore_ids=ignore_ids,
+            cameras=cameras,
+            interactor=interactor,
+        )
 
 
 class ObjectManagerHelper:

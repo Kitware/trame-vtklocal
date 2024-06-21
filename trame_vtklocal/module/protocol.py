@@ -15,11 +15,29 @@ class ObjectManagerAPI(LinkProtocol):
         self.vtk_object_manager = vtkObjectManager()
         self.vtk_object_manager.Initialize()
         self._subscriptions = {}
+        self._widgets = {}
         self._last_publish_states = {}
         self._last_publish_hash = set()
 
         self._debug_state = False
         self._debug_state_counter = 1
+
+    def register_widget(self, root_obj, dep_obj):
+        self.vtk_object_manager.RegisterObject(dep_obj)
+        root_id = self.vtk_object_manager.GetId(root_obj)
+        dep_id = self.vtk_object_manager.GetId(dep_obj)
+        if root_id not in self._widgets:
+            self._widgets[root_id] = set()
+
+        self._widgets[root_id].add(dep_id)
+        print(f"Register widget: {dep_obj.GetClassName()}={dep_id}")
+
+    def unregister_widget(self, root_obj, dep_obj):
+        self.vtk_object_manager.UnRegisterObject(dep_obj)
+        root_id = self.vtk_object_manager.GetId(root_obj)
+        dep_id = self.vtk_object_manager.GetId(dep_obj)
+        if root_id in self._widgets:
+            self._widgets[root_id].discard(dep_id)
 
     def update(self):
         self.vtk_object_manager.UpdateStatesFromObjects()
@@ -72,6 +90,11 @@ class ObjectManagerAPI(LinkProtocol):
             self._last_publish_states.clear()
             self._last_publish_hash.clear()
 
+        # Keep track of widgets as well
+        if obj_id in self._widgets:
+            for w_id in self._widgets[obj_id]:
+                self.update_subscription(w_id, delta)
+
     @export_rpc("vtklocal.get.state")
     def get_state(self, obj_id):
         # print(f"get_state {obj_id} {self.vtk_object_manager.GetObjectAtId(obj_id).GetClassName()}")
@@ -87,6 +110,16 @@ class ObjectManagerAPI(LinkProtocol):
     def get_status(self, obj_id):
         # print("get_status", obj_id)
         ids = self.vtk_object_manager.GetAllDependencies(obj_id)
+
+        # Add widgets ids without duplicate
+        ids_width_deps = list(ids)
+        if obj_id in self._widgets:
+            for dep_id in self._widgets[obj_id]:
+                ids_width_deps += list(
+                    self.vtk_object_manager.GetAllDependencies(dep_id)
+                )
+        ids = list(set(ids_width_deps))
+
         hashes = self.vtk_object_manager.GetBlobHashes(ids)
         renderWindow = self.vtk_object_manager.GetObjectAtId(obj_id)
         ids_mtime = [map_id_mtime(self.vtk_object_manager, v) for v in ids]

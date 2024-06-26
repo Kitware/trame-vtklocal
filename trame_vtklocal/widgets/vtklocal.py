@@ -91,12 +91,12 @@ class LocalView(HtmlElement):
 
     def register_widget(self, w):
         if w not in self.__registered_obj:
+            self.api.register_widget(self._render_window, w)
             self.__registered_obj.append(w)
-            self.object_manager.RegisterObject(w)
 
     def uregister_widgets(self):
         for w in self.__registered_obj:
-            self.object_manager.UnRegisterObject(w)
+            self.api.unregister(self._render_window, w)
 
         self.__registered_obj.clear()
 

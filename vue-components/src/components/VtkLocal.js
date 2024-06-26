@@ -205,7 +205,11 @@ export default {
         currentMTime.value++;
         try {
           sceneManager.updateObjectsFromStates();
+          // typically, server side framebuffer is arbitrary size, not synchronized with canvas size.
+          // render after deserialization so that the server-side size gets seen by VTK's OpenGL cache.
           sceneManager.render(props.renderWindow);
+          // now resize to fit canvas, the previous render is required otherwise, VTK's OpenGL cache
+          // thinks a resize is not necessary because the size is same as before state update.
           resize();
         } catch (e) {
           console.error("WASM update failed");

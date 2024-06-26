@@ -75,6 +75,13 @@ def register_wasm(serve_path):
     BASE_URL = f"__trame_vtklocal/wasm/{version}"
     dest_directory = Path(serve_path) / "wasm" / version
 
+    if VTK_WASM_DIR:
+        # remove existing wasm folder so that the latest wasm binary is copied.
+        if dest_directory.exists():
+            dest_directory.joinpath("vtkWasmSceneManager.mjs").unlink(missing_ok=True)
+            dest_directory.joinpath("vtkWasmSceneManager.wasm").unlink(missing_ok=True)
+            dest_directory.rmdir()
+
     if not dest_directory.exists():
         run_async(setup_wasm_directory(dest_directory, wasm_url))
 

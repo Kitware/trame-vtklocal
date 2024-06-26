@@ -41,6 +41,18 @@ Install the library
 
     pip install -e .
 
+Optionally, you can develop with bleeding edge VTK by following these steps
+
+.. code-block:: console
+
+    # Compile VTK for wasm32 architecture using emscripten. Build artifacts can be found in dev/vtk/build/wasm
+    docker run --rm -it -u$(id -u):$(id -g) -v$PWD:/work dockcross/web-wasm:20230831-0ac0f7a ./utils/build_vtk.sh wasm32
+
+    # Compile VTK with python wrappings using system C++ compiler. Build artifacts can be found in dev/vtk/build/py
+    ./utils/build_vtk.sh py
+
+    # Set environment variables
+    source ./utils/dev_environment.sh
 
 Running examples
 ----------------------------------------

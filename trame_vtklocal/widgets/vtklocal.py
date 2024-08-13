@@ -94,6 +94,7 @@ class LocalView(HtmlElement):
         if w not in self.__registered_obj:
             self.api.register_widget(self._render_window, w)
             self.__registered_obj.append(w)
+            self.api.update()
 
     def uregister_widgets(self):
         for w in self.__registered_obj:

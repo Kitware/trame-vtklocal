@@ -264,10 +264,7 @@ export default {
         const cid = cameraIds[i];
         console.log("Listen to camera", cid);
         observerTags.push([cid, sceneManager.addObserver(cid, "ModifiedEvent", () => {
-          // crash: sceneManager.unRegisterState(cid);
-          // crash: sceneManager.updateStatesFromObjects();
           const cameraState = sceneManager.getState(cid);
-          console.log(`${cameraState.Position}`);
           emit("camera", cameraState);
         })]);
       }

@@ -75,6 +75,7 @@ class LocalView(HtmlElement):
             "updated",
             ("memory_vtk", "memory-vtk"),
             ("memory_arrays", "memory-arrays"),
+            "camera",
         ]
 
     @property

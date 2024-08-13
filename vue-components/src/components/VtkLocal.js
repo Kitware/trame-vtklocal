@@ -24,7 +24,6 @@ export default {
     const wasmURL = trame.state.get("__trame_vtklocal_wasm_url");
     const cameraIds = [];
     const observerTags = [];
-    let interactorId = null;
     const container = ref(null);
     const canvas = ref(null);
     const client = props.wsClient || trame?.client;
@@ -198,7 +197,7 @@ export default {
 
         // For listeners
         cameraIds.push(...serverStatus.cameras);
-        interactorId = serverStatus.interactor
+        // interactorId = serverStatus.interactor;
 
         serverStatus.ignore_ids.forEach((vtkId) => {
           sceneManager.unRegisterState(vtkId);
@@ -253,27 +252,24 @@ export default {
       }
       await update();
 
-      // Interactor listener
-      // console.log("interactorId", interactorId)
-      // observerTags.push([interactorId, sceneManager.addObserver(interactorId, "RenderEvent", (id, eventName) => {
-      //   console.log("interactor changed", id, eventName);
-      // })]);
-
       // Camera listener
       for (let i = 0; i < cameraIds.length; i++) {
         const cid = cameraIds[i];
         console.log("Listen to camera", cid);
-        observerTags.push([cid, sceneManager.addObserver(cid, "ModifiedEvent", () => {
-          const cameraState = sceneManager.getState(cid);
-          emit("camera", cameraState);
-        })]);
+        observerTags.push([
+          cid,
+          sceneManager.addObserver(cid, "ModifiedEvent", () => {
+            // slow         => python ./examples/pyvista/drap2dsurf.py --server
+            // state update => python ./examples/vtk/glyph.py --server
+            // FIXME
+            // slow but needed to make camera event working
+            // sceneManager.updateStatesFromObjects();
+            const cameraState = sceneManager.getState(cid);
+            emit("camera", cameraState);
+          }),
+        ]);
       }
 
-      // sceneManager.addObserver(props.renderWindow, "StartEvent", (id, eventName) => {
-      //   eventName = sceneManager.UTF8ToString(eventName);
-      //   console.log(`${eventName} emitted from ${id}`);
-      // });
-      // sceneManager.addObserver(props.renderWindow, "EndEvent", () => { console.log("vtkRenderWindow EndEvent"); });
       sceneManager.startEventLoop(props.renderWindow);
       if (resizeObserver) {
         resizeObserver.observe(unref(container));

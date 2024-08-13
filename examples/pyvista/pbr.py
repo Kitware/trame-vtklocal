@@ -1,4 +1,4 @@
-import os
+# import os
 import pyvista as pv
 from pyvista import examples
 
@@ -7,7 +7,7 @@ from trame.ui.html import DivLayout
 from trame.widgets import html, client, vtk as vtk_widgets
 from trame_vtklocal.widgets import vtklocal
 
-WASM = "USE_WASM" in os.environ
+WASM = True  # "USE_WASM" in os.environ
 
 # -----------------------------------------------------------------------------
 

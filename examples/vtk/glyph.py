@@ -124,7 +124,7 @@ class App:
         self.view_remote = None
         self.ui = self._build_ui()
 
-        self.server.state.update(dict(camera=None))
+        self.server.state.camera = None
 
     @property
     def ctrl(self):
@@ -141,7 +141,9 @@ class App:
     def on_camera_change(self, camera, **kwargs):
         if camera is not None:
             self.view_local.object_manager.RegisterState(json.dumps(camera))
+            # FIXME - need to only apply camera state
             self.view_local.object_manager.UpdateObjectsFromStates()
+            # FIXME - bug end
             self.view_remote.update()
 
     def reset_camera(self):

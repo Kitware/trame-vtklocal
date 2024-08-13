@@ -1,5 +1,5 @@
-import math
 import os
+import math
 from vtkmodules.vtkChartsCore import vtkChart, vtkChartXY, vtkPlotPoints
 from vtkmodules.vtkCommonColor import vtkNamedColors
 from vtkmodules.vtkCommonCore import vtkFloatArray

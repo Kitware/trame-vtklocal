@@ -1,3 +1,4 @@
+# import json
 from wslink import register as export_rpc
 from wslink.websocket import LinkProtocol
 
@@ -97,8 +98,19 @@ class ObjectManagerAPI(LinkProtocol):
 
     @export_rpc("vtklocal.get.state")
     def get_state(self, obj_id):
-        # print(f"get_state {obj_id} {self.vtk_object_manager.GetObjectAtId(obj_id).GetClassName()}")
         state = self.vtk_object_manager.GetState(obj_id)
+
+        # -------------------------------------------------
+        # DEBUG - Helper for dynamic state patching
+        # -------------------------------------------------
+        # state = json.loads(state)
+        # if state["ClassName"] == "vtkTextProperty":
+        #     state["FontSize"] *= 2
+        # elif state["ClassName"] == "vtkCubeAxesActor":
+        #     state["ScreenSize"] *= 2
+        # state = json.dumps(state)
+        # -------------------------------------------------
+
         return state
 
     @export_rpc("vtklocal.get.hash")

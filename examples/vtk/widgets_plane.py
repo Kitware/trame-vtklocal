@@ -1,4 +1,4 @@
-import os
+# import os
 from pathlib import Path
 
 from trame.app import get_server
@@ -29,7 +29,7 @@ from vtkmodules.vtkRenderingCore import (
     vtkRenderer,
 )
 
-WASM = "USE_WASM" in os.environ
+WASM = True  # "USE_WASM" in os.environ
 
 
 def create_vtk_pipeline(file_to_load):

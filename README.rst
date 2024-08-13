@@ -64,7 +64,7 @@ Running examples
     # We need a VTK that has its wasm counterpart
     # This is the first version available with it
     # For ParaView (not yet supported), VTK don't need to be installed
-    pip install "vtk==9.3.20240418.dev0" --extra-index-url https://wheels.vtk.org
+    pip install "vtk==9.3.20240810.dev0" --extra-index-url https://wheels.vtk.org
 
     # regular trame app
     python ./examples/vtk/cone.py 
@@ -72,3 +72,13 @@ Running examples
 
 Some example are meant to test and validate WASM rendering.
 Some will default for remote rendering but if you want to force them to use WASM just run `export USE_WASM=1` before executing them.
+
+SharedArrayBuffer
+----------------------------------------
+
+To enable SharedArrayBuffer within trame you can run the following.
+
+.. code-block:: console
+
+    export WSLINK_HTTP_HEADERS=./http_headers.json
+    python ./examples/vtk/cone.py

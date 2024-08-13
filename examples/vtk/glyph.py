@@ -22,6 +22,8 @@ from vtkmodules.vtkRenderingCore import (
 import vtkmodules.vtkRenderingOpenGL2  # noqa
 from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
 
+import json
+
 
 def setup_vtk():
     colors = vtkNamedColors()
@@ -122,6 +124,8 @@ class App:
         self.view_remote = None
         self.ui = self._build_ui()
 
+        self.server.state.update(dict(camera=None))
+
     @property
     def ctrl(self):
         return self.server.controller
@@ -132,6 +136,13 @@ class App:
         self.sphere.SetStartTheta(int(resolution) * 6)
         self.view_remote.update()
         self.view_local.update()
+
+    @change("camera")
+    def on_camera_change(self, camera, **kwargs):
+        if camera is not None:
+            self.view_local.object_manager.RegisterState(json.dumps(camera))
+            self.view_local.object_manager.UpdateObjectsFromStates()
+            self.view_remote.update()
 
     def reset_camera(self):
         self.renderer.ResetCamera()
@@ -164,6 +175,7 @@ class App:
                         self.view_local = vtklocal.LocalView(
                             self.render_window,
                             eager_sync=True,
+                            camera="camera = $event",
                         )
                         self.ctrl.view_update = self.view_local.update
                     with vuetify.VContainer(

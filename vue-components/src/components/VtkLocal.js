@@ -259,11 +259,7 @@ export default {
         observerTags.push([
           cid,
           sceneManager.addObserver(cid, "ModifiedEvent", () => {
-            // slow         => python ./examples/pyvista/drap2dsurf.py --server
-            // state update => python ./examples/vtk/glyph.py --server
-            // FIXME
-            // slow but needed to make camera event working
-            // sceneManager.updateStatesFromObjects();
+            sceneManager.updateStateFromObject(cid);
             const cameraState = sceneManager.getState(cid);
             emit("camera", cameraState);
           }),

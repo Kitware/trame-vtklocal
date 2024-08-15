@@ -140,10 +140,7 @@ class App:
     @change("camera")
     def on_camera_change(self, camera, **kwargs):
         if camera is not None:
-            self.view_local.object_manager.RegisterState(json.dumps(camera))
-            # FIXME - need to only apply camera state
-            self.view_local.object_manager.UpdateObjectsFromStates()
-            # FIXME - bug end
+            self.view_local.object_manager.UpdateObjectFromState(json.dumps(camera))
             self.view_remote.update()
 
     def reset_camera(self):

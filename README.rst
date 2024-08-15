@@ -46,13 +46,13 @@ Optionally, you can develop with bleeding edge VTK by following these steps
 .. code-block:: console
 
     # Compile VTK for wasm32 architecture using emscripten. Build artifacts can be found in dev/vtk/build/wasm
-    docker run --rm -it -u$(id -u):$(id -g) -v$PWD:/work dockcross/web-wasm:20230831-0ac0f7a ./utils/build_vtk.sh wasm32
+    docker run --rm -it -v$PWD:/work kitware/vtk:ci-fedora39-20240731 /bin/bash -c "cd /work && ./utils/build_vtk.sh -u https://gitlab.kitware.com/vtk/vtk.git -b master -t wasm32 -p RelWithDebInfo"
 
     # Compile VTK with python wrappings using system C++ compiler. Build artifacts can be found in dev/vtk/build/py
-    ./utils/build_vtk.sh py
+    ./utils/build_vtk.sh -u https://gitlab.kitware.com/vtk/vtk.git -b master -t py -p RelWithDebInfo
 
     # Set environment variables
-    source ./utils/dev_environment.sh
+    source ./utils/dev_environment.sh -b master -p RelWithDebInfo
 
 Running examples
 ----------------------------------------

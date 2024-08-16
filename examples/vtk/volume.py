@@ -78,6 +78,10 @@ def setup_vtk():
 class App:
     def __init__(self, server=None):
         self.server = get_server(server, client_type="vue3")
+
+        # enable shared array buffer
+        self.server.http_headers.shared_array_buffer = True
+
         self.local_view = None
         self.render_window = setup_vtk()
         self.ui = self._build_ui()

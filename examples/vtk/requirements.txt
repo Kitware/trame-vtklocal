@@ -1,2 +1,3 @@
 trame-vuetify
 trame-vtk
+trame-server>=3.1

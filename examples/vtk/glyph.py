@@ -119,6 +119,10 @@ def setup_vtk():
 class App:
     def __init__(self, server=None):
         self.server = get_server(server, client_type="vue3")
+
+        # enable shared array buffer
+        self.server.http_headers.shared_array_buffer = True
+
         self.render_window, self.renderer, self.cone, self.sphere = setup_vtk()
         self.view_local = None
         self.view_remote = None

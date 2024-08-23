@@ -2,6 +2,28 @@
 
 <!--next-version-placeholder-->
 
+## v0.4.0 (2024-08-23)
+
+### Feature
+
+* **camera:** Allow to push camera from server ([`e95249b`](https://github.com/Kitware/trame-vtklocal/commit/e95249b2ea369be0a4afbe6b3d502e71f6dab873))
+
+### Fix
+
+* **SharedArrayBuffer:** Automatically swicth based on server flag ([`521024e`](https://github.com/Kitware/trame-vtklocal/commit/521024e606bdfe7fc949c9679d79916e0d25cdf5))
+* **example:** Enable http headers ([`78d2c63`](https://github.com/Kitware/trame-vtklocal/commit/78d2c632baadd87ad6d9b210eb5f09ef09a46a19))
+* **camera:** Sync only camera state ([`b03dbcf`](https://github.com/Kitware/trame-vtklocal/commit/b03dbcfb3a34ffdeb9b24f0be42799be7a9e9e61))
+* **examples:** Examples reviewed ([`9df7733`](https://github.com/Kitware/trame-vtklocal/commit/9df7733d9b9ac747c46256f4b9c46cdf1cde8768))
+* **example:** Sync client camera on server ([`931ce43`](https://github.com/Kitware/trame-vtklocal/commit/931ce4388537f82bb2afe2415dc3b75c4382044f))
+* **widgets:** Update state after widget is registered ([`5a9f677`](https://github.com/Kitware/trame-vtklocal/commit/5a9f67768ea0ae1bfb02446e42fbbf0516f95030))
+* **camera:** Camera event working now ([`6807b54`](https://github.com/Kitware/trame-vtklocal/commit/6807b5468f9b57a46c1ce2fdb77072d4bb58ce26))
+* **camera:** Try to send camera update ([`7238b25`](https://github.com/Kitware/trame-vtklocal/commit/7238b25fb96cb159095b99a38522530e22d96e25))
+* **widgets:** Handle registration and state delivery ([`f4f878d`](https://github.com/Kitware/trame-vtklocal/commit/f4f878d64f487d050c1c151462f05ec62e04a374))
+
+### Documentation
+
+* **glyph:** Update to add reset camera buttons ([`d9cb473`](https://github.com/Kitware/trame-vtklocal/commit/d9cb47327de349539998dca3a12bcc2c48473b13))
+
 ## v0.3.3 (2024-05-27)
 
 ### Fix

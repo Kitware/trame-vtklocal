@@ -255,7 +255,6 @@ export default {
       // Camera listener
       for (let i = 0; i < cameraIds.length; i++) {
         const cid = cameraIds[i];
-        console.log("Listen to camera", cid);
         observerTags.push([
           cid,
           sceneManager.addObserver(cid, "ModifiedEvent", () => {

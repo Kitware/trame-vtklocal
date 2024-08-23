@@ -86,8 +86,8 @@ class LocalView(HtmlElement):
     def object_manager(self):
         return self.api.vtk_object_manager
 
-    def update(self):
-        self.api.update()
+    def update(self, push_camera=False):
+        self.api.update(push_camera=push_camera)
         self.server.js_call(self.__ref, "update")
 
     def register_widget(self, w):

@@ -19,6 +19,7 @@ class ObjectManagerAPI(LinkProtocol):
         self._widgets = {}
         self._last_publish_states = {}
         self._last_publish_hash = set()
+        self._push_camera = False
 
         self._debug_state = False
         self._debug_state_counter = 1
@@ -40,7 +41,9 @@ class ObjectManagerAPI(LinkProtocol):
         if root_id in self._widgets:
             self._widgets[root_id].discard(dep_id)
 
-    def update(self):
+    def update(self, push_camera=False, **_):
+        self._push_camera = push_camera
+
         self.vtk_object_manager.UpdateStatesFromObjects()
         if self._debug_state:
             self.vtk_object_manager.Export(f"snapshot-{self._debug_state_counter}")
@@ -143,7 +146,8 @@ class ObjectManagerAPI(LinkProtocol):
             for renderer in renderers:
                 activeCamera = renderer.GetActiveCamera()
                 cid = self.vtk_object_manager.GetId(activeCamera)
-                ignore_ids.append(cid)
+                if not self._push_camera:
+                    ignore_ids.append(cid)
                 cameras.append(cid)
         return dict(
             ids=ids_mtime,

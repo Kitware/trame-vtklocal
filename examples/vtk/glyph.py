@@ -152,6 +152,12 @@ class App:
         self.view_local.update()
         self.view_remote.update()
 
+    def update_client(self, reset_camera=False):
+        if reset_camera:
+            self.renderer.ResetCamera()
+            self.ctrl.rview_reset_camera()
+        self.ctrl.view_update(push_camera=True)
+
     def _build_ui(self):
         with SinglePageLayout(self.server) as layout:
             layout.icon.click = self.reset_camera
@@ -165,11 +171,11 @@ class App:
                     dense=True,
                     hide_details=True,
                 )
-                vuetify.VBtn("S => C", click=self.ctrl.view_update)
+                vuetify.VBtn("S => C", click=self.update_client)
                 vuetify.VBtn(icon="mdi-crop-free", click=self.ctrl.view_reset_camera)
                 vuetify.VBtn(
                     icon="mdi-panorama-variant-outline",
-                    click=self.ctrl.rview_reset_camera,
+                    click=(self.update_client, "[true]"),
                 )
 
             with layout.content:

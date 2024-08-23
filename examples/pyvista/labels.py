@@ -1,4 +1,3 @@
-import os
 import numpy as np
 import pyvista as pv
 
@@ -7,7 +6,7 @@ from trame.ui.html import DivLayout
 from trame.widgets import html, client, vtk as vtk_widgets
 from trame_vtklocal.widgets import vtklocal
 
-WASM = "USE_WASM" in os.environ
+WASM = True  # "USE_WASM" in os.environ
 
 # -----------------------------------------------------------------------------
 
@@ -40,7 +39,7 @@ def setup_pyvista():
 
     p = pv.Plotter()
     p.add_mesh(spline, scalars="arc_length", render_lines_as_tubes=True, line_width=10)
-    p.add_point_labels(
+    labels = p.add_point_labels(
         label_points,
         labels,
         always_visible=True,
@@ -61,9 +60,19 @@ def setup_pyvista():
 class TrameApp:
     def __init__(self, server=None):
         self.server = get_server(server, client_type="vue3")
+
+        # enable shared array buffer
+        self.server.http_headers.shared_array_buffer = True
+
         self.render_window = setup_pyvista()
         self.html_view = None
         self.ui = self._ui()
+        self.server.state.change("scale")(self.update_scale)
+
+    def update_scale(self, scale, **_):
+        print(scale)
+        # self.text.SetTextScaleModeToViewport()
+        # self.html_view.update()
 
     def _ui(self):
         with DivLayout(self.server) as layout:
@@ -77,6 +86,14 @@ class TrameApp:
                     self.html_view = vtk_widgets.VtkRemoteView(
                         self.render_window, interactive_ratio=1
                     )
+                html.Input(
+                    type="range",
+                    min=0.5,
+                    max=4,
+                    step=0.1,
+                    v_model=("scale", 1),
+                    style="position: absolute; top: 10px; left: 10px; z-index: 100; width: calc(100vw - 20px);",
+                )
 
         return layout
 

@@ -1,4 +1,4 @@
-import os
+# import os
 import pyvista as pv
 from pyvista import examples
 
@@ -7,7 +7,7 @@ from trame.ui.html import DivLayout
 from trame.widgets import html, client, vtk as vtk_widgets
 from trame_vtklocal.widgets import vtklocal
 
-WASM = "USE_WASM" in os.environ
+WASM = True  # "USE_WASM" in os.environ
 
 # -----------------------------------------------------------------------------
 
@@ -31,6 +31,10 @@ def setup_pyvista():
 class TrameApp:
     def __init__(self, server=None):
         self.server = get_server(server, client_type="vue3")
+
+        # enable shared array buffer
+        self.server.http_headers.shared_array_buffer = True
+
         self.render_window = setup_pyvista()
         self.html_view = None
         self.ui = self._ui()

@@ -1,4 +1,4 @@
-import os
+# import os
 from pathlib import Path
 
 from trame.app import get_server
@@ -29,7 +29,7 @@ from vtkmodules.vtkRenderingCore import (
     vtkRenderer,
 )
 
-WASM = "USE_WASM" in os.environ
+WASM = True  # "USE_WASM" in os.environ
 
 
 def create_vtk_pipeline(file_to_load):
@@ -132,6 +132,10 @@ class IPWCallback:
 class App:
     def __init__(self, server=None):
         self.server = get_server(server, client_type="vue3")
+
+        # enable shared array buffer
+        self.server.http_headers.shared_array_buffer = True
+
         self.server.cli.add_argument("--data")
         args, _ = self.server.cli.parse_known_args()
         self.render_window, self.widget = create_vtk_pipeline(args.data)

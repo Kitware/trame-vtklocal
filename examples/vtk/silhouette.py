@@ -56,6 +56,10 @@ def setup_vtk():
 class SilhouetteApp:
     def __init__(self, server=None):
         self.server = get_server(server, client_type="vue3")
+
+        # enable shared array buffer
+        self.server.http_headers.shared_array_buffer = True
+
         self.render_window, self.cone_source = setup_vtk()
         self.ui = self._build_ui()
 
@@ -105,6 +109,7 @@ class SilhouetteApp:
                     with vuetify3.VCol(classes="pa-0 fill-height"):
                         view = vtklocal.LocalView(
                             self.render_window,
+                            eager_sync=True,
                         )
                         self.ctrl.view_update = view.update
                         self.ctrl.view_reset_camera = view.reset_camera

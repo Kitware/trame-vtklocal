@@ -22,6 +22,8 @@ from vtkmodules.vtkRenderingCore import (
 import vtkmodules.vtkRenderingOpenGL2  # noqa
 from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
 
+import json
+
 
 def setup_vtk():
     colors = vtkNamedColors()
@@ -117,10 +119,16 @@ def setup_vtk():
 class App:
     def __init__(self, server=None):
         self.server = get_server(server, client_type="vue3")
+
+        # enable shared array buffer
+        self.server.http_headers.shared_array_buffer = True
+
         self.render_window, self.renderer, self.cone, self.sphere = setup_vtk()
         self.view_local = None
         self.view_remote = None
         self.ui = self._build_ui()
+
+        self.server.state.camera = None
 
     @property
     def ctrl(self):
@@ -133,10 +141,22 @@ class App:
         self.view_remote.update()
         self.view_local.update()
 
+    @change("camera")
+    def on_camera_change(self, camera, **kwargs):
+        if camera is not None:
+            self.view_local.object_manager.UpdateObjectFromState(json.dumps(camera))
+            self.view_remote.update()
+
     def reset_camera(self):
         self.renderer.ResetCamera()
         self.view_local.update()
         self.view_remote.update()
+
+    def update_client(self, reset_camera=False):
+        if reset_camera:
+            self.renderer.ResetCamera()
+            self.ctrl.rview_reset_camera()
+        self.ctrl.view_update(push_camera=True)
 
     def _build_ui(self):
         with SinglePageLayout(self.server) as layout:
@@ -151,7 +171,12 @@ class App:
                     dense=True,
                     hide_details=True,
                 )
-                vuetify.VBtn("Update", click=self.ctrl.view_update)
+                vuetify.VBtn("S => C", click=self.update_client)
+                vuetify.VBtn(icon="mdi-crop-free", click=self.ctrl.view_reset_camera)
+                vuetify.VBtn(
+                    icon="mdi-panorama-variant-outline",
+                    click=(self.update_client, "[true]"),
+                )
 
             with layout.content:
                 with vuetify.VContainer(
@@ -164,14 +189,17 @@ class App:
                         self.view_local = vtklocal.LocalView(
                             self.render_window,
                             eager_sync=True,
+                            camera="camera = $event",
                         )
                         self.ctrl.view_update = self.view_local.update
+                        self.ctrl.view_reset_camera = self.view_local.reset_camera
                     with vuetify.VContainer(
                         fluid=True, classes="pa-0 fill-height", style="width: 50%;"
                     ):
                         self.view_remote = VtkRemoteView(
                             self.render_window, interactive_ratio=1
                         )
+                        self.ctrl.rview_reset_camera = self.view_remote.reset_camera
 
             # hide footer
             layout.footer.hide()

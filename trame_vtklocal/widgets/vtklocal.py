@@ -75,6 +75,7 @@ class LocalView(HtmlElement):
             "updated",
             ("memory_vtk", "memory-vtk"),
             ("memory_arrays", "memory-arrays"),
+            ("camera", "camera"),
         ]
 
     @property
@@ -85,18 +86,19 @@ class LocalView(HtmlElement):
     def object_manager(self):
         return self.api.vtk_object_manager
 
-    def update(self):
-        self.api.update()
+    def update(self, push_camera=False):
+        self.api.update(push_camera=push_camera)
         self.server.js_call(self.__ref, "update")
 
     def register_widget(self, w):
         if w not in self.__registered_obj:
+            self.api.register_widget(self._render_window, w)
             self.__registered_obj.append(w)
-            self.object_manager.RegisterObject(w)
+            self.api.update()
 
     def uregister_widgets(self):
         for w in self.__registered_obj:
-            self.object_manager.UnRegisterObject(w)
+            self.api.unregister(self._render_window, w)
 
         self.__registered_obj.clear()
 

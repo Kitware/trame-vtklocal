@@ -78,6 +78,10 @@ def create_vtk_pipeline():
 class App:
     def __init__(self, server=None):
         self.server = get_server(server, client_type="vue3")
+
+        # enable shared array buffer
+        self.server.http_headers.shared_array_buffer = True
+
         self.render_window, self.widget = create_vtk_pipeline()
         self.html_view = None
         self.ui = self._ui()
@@ -90,6 +94,7 @@ class App:
             ):
                 if WASM:
                     self.html_view = vtklocal.LocalView(self.render_window)
+                    self.html_view.register_widget(self.widget)
                 else:
                     self.html_view = vtk_widgets.VtkRemoteView(self.render_window)
 

@@ -165,7 +165,12 @@ class App:
                     dense=True,
                     hide_details=True,
                 )
-                vuetify.VBtn("Update", click=self.ctrl.view_update)
+                vuetify.VBtn("S => C", click=self.ctrl.view_update)
+                vuetify.VBtn(icon="mdi-crop-free", click=self.ctrl.view_reset_camera)
+                vuetify.VBtn(
+                    icon="mdi-panorama-variant-outline",
+                    click=self.ctrl.rview_reset_camera,
+                )
 
             with layout.content:
                 with vuetify.VContainer(
@@ -181,12 +186,14 @@ class App:
                             camera="camera = $event",
                         )
                         self.ctrl.view_update = self.view_local.update
+                        self.ctrl.view_reset_camera = self.view_local.reset_camera
                     with vuetify.VContainer(
                         fluid=True, classes="pa-0 fill-height", style="width: 50%;"
                     ):
                         self.view_remote = VtkRemoteView(
                             self.render_window, interactive_ratio=1
                         )
+                        self.ctrl.rview_reset_camera = self.view_remote.reset_camera
 
             # hide footer
             layout.footer.hide()

@@ -1,2 +1,2 @@
 [codespell]
-skip = **/package-lock.json,**/vtkWasmSceneManager-9.3.mjs
+skip = **/package-lock.json,**/vtkWasmSceneManager-9.3.mjs,CHANGELOG.md

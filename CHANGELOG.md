@@ -2,6 +2,16 @@
 
 <!--next-version-placeholder-->
 
+## v0.5.0 (2024-08-26)
+
+### Feature
+
+* **listeners:** Initial support with static definition ([`7e0da92`](https://github.com/Kitware/trame-vtklocal/commit/7e0da9226ec349fce462c9c0dc189f65d2dce565))
+
+### Documentation
+
+* **example:** Fix plane and box ([`0d0cd02`](https://github.com/Kitware/trame-vtklocal/commit/0d0cd02505e0d5b188dc8d65ae9ce7eeee2e01f5))
+
 ## v0.4.0 (2024-08-23)
 
 ### Feature

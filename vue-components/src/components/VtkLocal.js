@@ -1,6 +1,31 @@
 import { inject, ref, unref, onMounted, onBeforeUnmount } from "vue";
 import { createModule } from "../utils";
 
+function idToState(sceneManager, cid) {
+  sceneManager.updateStateFromObject(cid);
+  return sceneManager.getState(cid);
+}
+
+function createExtractCallback(trame, sceneManager, extractInfo) {
+  return function () {
+    for (const [name, objIds] of Object.entries(extractInfo)) {
+      const value = {};
+      for (const [objId, props] of Object.entries(objIds)) {
+        const state = idToState(sceneManager, objId);
+        if (typeof props === "string") {
+          value[props] = state;
+        } else {
+          // extract and remap
+          for (const [k, v] of Object.entries(props)) {
+            value[v] = state[k];
+          }
+        }
+      }
+      trame.state.set(name, value);
+    }
+  };
+}
+
 export default {
   emits: ["updated", "memory-vtk", "memory-arrays", "camera"],
   props: {
@@ -17,6 +42,22 @@ export default {
     },
     wsClient: {
       type: Object,
+    },
+    listeners: {
+      type: Object,
+      // {
+      //    cid: {
+      //       ModifiedEvent: {
+      //          varName: {
+      //             objId: {
+      //                "PropName": "keyInJS_varName",
+      //                "PropName2": "key2InJS_varName",
+      //             },
+      //             objId: "keyInJS_fullState",
+      //          },
+      //       },
+      //    }
+      // }
     },
   },
   setup(props, { emit }) {
@@ -263,6 +304,20 @@ export default {
             emit("camera", cameraState);
           }),
         ]);
+      }
+
+      // Other listeners
+      for (const [cid, eventMap] of Object.entries(props.listeners || {})) {
+        for (const [eventName, extractInfo] of Object.entries(eventMap || {})) {
+          observerTags.push([
+            cid,
+            sceneManager.addObserver(
+              cid,
+              eventName,
+              createExtractCallback(trame, sceneManager, extractInfo)
+            ),
+          ]);
+        }
       }
 
       sceneManager.startEventLoop(props.renderWindow);

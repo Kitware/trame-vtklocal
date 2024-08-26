@@ -3,15 +3,15 @@ from pathlib import Path
 
 from trame.app import get_server
 from trame.ui.html import DivLayout
-from trame.widgets import html, client, vtk as vtk_widgets
+from trame.widgets import html, client
 from trame_vtklocal.widgets import vtklocal
+from trame.decorators import TrameApp, change
 
 # Required for vtk factory
 import vtkmodules.vtkRenderingOpenGL2  # noqa
 from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
 
 from vtkmodules.vtkCommonColor import vtkNamedColors
-from vtkmodules.vtkCommonCore import vtkCommand
 from vtkmodules.vtkCommonDataModel import vtkPlane
 from vtkmodules.vtkFiltersCore import vtkClipPolyData
 from vtkmodules.vtkFiltersSources import vtkSphereSource
@@ -28,8 +28,6 @@ from vtkmodules.vtkRenderingCore import (
     vtkRenderWindowInteractor,
     vtkRenderer,
 )
-
-WASM = True  # "USE_WASM" in os.environ
 
 
 def create_vtk_pipeline(file_to_load):
@@ -97,31 +95,17 @@ def create_vtk_pipeline(file_to_load):
     )
     rep.SetNormal(plane.GetNormal())
     rep.SetOrigin(plane.GetOrigin())
-    print(input_bounds)
 
     plane_widget = vtkImplicitPlaneWidget2()
     plane_widget.SetInteractor(iren)
     plane_widget.SetRepresentation(rep)
-
-    if not WASM:
-        my_callback = IPWCallback(plane)
-        plane_widget.AddObserver(vtkCommand.InteractionEvent, my_callback)
 
     renderer.ResetCamera(input_bounds)
     ren_win.Render()
 
     plane_widget.On()
 
-    return ren_win, plane_widget
-
-
-class IPWCallback:
-    def __init__(self, plane):
-        self.plane = plane
-
-    def __call__(self, caller, ev):
-        rep = caller.GetRepresentation()
-        rep.GetPlane(self.plane)
+    return ren_win, plane_widget, plane
 
 
 # -----------------------------------------------------------------------------
@@ -129,6 +113,7 @@ class IPWCallback:
 # -----------------------------------------------------------------------------
 
 
+@TrameApp()
 class App:
     def __init__(self, server=None):
         self.server = get_server(server, client_type="vue3")
@@ -138,9 +123,47 @@ class App:
 
         self.server.cli.add_argument("--data")
         args, _ = self.server.cli.parse_known_args()
-        self.render_window, self.widget = create_vtk_pipeline(args.data)
+        self.render_window, self.widget, self.plane = create_vtk_pipeline(args.data)
+
         self.html_view = None
         self.ui = self._ui()
+
+    def register_widget_listeners(self):
+        self.html_view.register_widget(self.widget)
+
+        # extract wasm ids
+        widget_id = self.html_view.get_wasm_id(self.widget)
+        rep_id = self.html_view.get_wasm_id(self.widget.representation)
+
+        # init state vars and listener properties
+        self.server.state.plane_widget = None
+        self.html_view.listeners = (
+            "wasm_listeners",
+            {
+                widget_id: {
+                    "InteractionEvent": {
+                        "plane_widget": {
+                            rep_id: {
+                                "Normal": "normal",
+                                "Origin": "origin",
+                            }
+                        }
+                    }
+                }
+            },
+        )
+
+    @change("plane_widget")
+    def _on_widget_update(self, plane_widget, **_):
+        if plane_widget is None:
+            return
+
+        # update cutting plane
+        self.plane.SetNormal(plane_widget.get("normal"))
+        self.plane.SetOrigin(plane_widget.get("origin"))
+
+        # prevent requesting geometry too often
+        self.html_view.render_throttle()
 
     def _ui(self):
         with DivLayout(self.server) as layout:
@@ -148,11 +171,11 @@ class App:
             with html.Div(
                 style="position: absolute; left: 0; top: 0; width: 100vw; height: 100vh;"
             ):
-                if WASM:
-                    self.html_view = vtklocal.LocalView(self.render_window)
-                    self.html_view.register_widget(self.widget)
-                else:
-                    self.html_view = vtk_widgets.VtkRemoteView(self.render_window)
+                self.html_view = vtklocal.LocalView(
+                    self.render_window,
+                    throttle_rate=20,
+                )
+                self.register_widget_listeners()
 
         return layout
 

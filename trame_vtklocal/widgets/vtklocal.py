@@ -4,7 +4,8 @@ import zipfile
 import base64
 from pathlib import Path
 from trame_client.widgets.core import AbstractElement
-from .. import module
+from trame_vtklocal import module
+from trame_vtklocal.utils.throttle import Throttle
 
 try:
     import zlib  # noqa
@@ -46,7 +47,7 @@ def get_version():
 class LocalView(HtmlElement):
     _next_id = 0
 
-    def __init__(self, render_window, **kwargs):
+    def __init__(self, render_window, throttle_rate=10, **kwargs):
         super().__init__(
             "vtk-local",
             **kwargs,
@@ -70,6 +71,7 @@ class LocalView(HtmlElement):
         self._attr_names += [
             ("cache_size", "cacheSize"),
             ("eager_sync", "eagerSync"),
+            "listeners",  # only processed at mount time for now
         ]
         self._event_names += [
             "updated",
@@ -78,25 +80,34 @@ class LocalView(HtmlElement):
             ("camera", "camera"),
         ]
 
+        # Generate throttle update function
+        self.render_throttle = Throttle(self.update)
+        self.render_throttle.rate = throttle_rate
+
     @property
     def api(self):
+        """Return API from helper"""
         return module.get_helper(self.server).api
 
     @property
     def object_manager(self):
+        """Return object_manager"""
         return self.api.vtk_object_manager
 
     def update(self, push_camera=False):
+        """Sync view by pushing updates to client"""
         self.api.update(push_camera=push_camera)
         self.server.js_call(self.__ref, "update")
 
     def register_widget(self, w):
+        """Register external element (i.e. widget) into the scene so it can be managed"""
         if w not in self.__registered_obj:
             self.api.register_widget(self._render_window, w)
             self.__registered_obj.append(w)
             self.api.update()
 
     def uregister_widgets(self):
+        """Unregister external element (i.e. widget) from the scene so it can removed from tracking"""
         for w in self.__registered_obj:
             self.api.unregister(self._render_window, w)
 
@@ -136,6 +147,7 @@ class LocalView(HtmlElement):
             return zip_buffer.getvalue()
 
     def reset_camera(self, renderer_or_render_window=None, **kwargs):
+        """Reset camera by making the call on the client side"""
         if renderer_or_render_window is None:
             renderer_or_render_window = self._render_window
 
@@ -150,7 +162,9 @@ class LocalView(HtmlElement):
 
     @property
     def ref_name(self):
+        """Return the assigned name as a vue.js ref"""
         return self.__ref
 
     def get_wasm_id(self, vtk_object):
+        """Return vtkObject id used within WASM scene manager"""
         return self.object_manager.GetId(vtk_object)

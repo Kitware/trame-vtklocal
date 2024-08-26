@@ -125,33 +125,16 @@ class App:
         args, _ = self.server.cli.parse_known_args()
         self.render_window, self.widget, self.plane = create_vtk_pipeline(args.data)
 
+        # Allocation state variable for widget state
+        self.state.plane_widget = None
+
+        # Build UI
         self.html_view = None
         self.ui = self._ui()
 
-    def register_widget_listeners(self):
-        self.html_view.register_widget(self.widget)
-
-        # extract wasm ids
-        widget_id = self.html_view.get_wasm_id(self.widget)
-        rep_id = self.html_view.get_wasm_id(self.widget.representation)
-
-        # init state vars and listener properties
-        self.server.state.plane_widget = None
-        self.html_view.listeners = (
-            "wasm_listeners",
-            {
-                widget_id: {
-                    "InteractionEvent": {
-                        "plane_widget": {
-                            rep_id: {
-                                "Normal": "normal",
-                                "Origin": "origin",
-                            }
-                        }
-                    }
-                }
-            },
-        )
+    @property
+    def state(self):
+        return self.server.state
 
     @change("plane_widget")
     def _on_widget_update(self, plane_widget, **_):
@@ -165,17 +148,60 @@ class App:
         # prevent requesting geometry too often
         self.html_view.render_throttle()
 
+    def toggle_listeners(self):
+        if self.state.wasm_listeners is not None and len(self.state.wasm_listeners):
+            self.state.wasm_listeners = {}
+        else:
+            widget_id = self.html_view.get_wasm_id(self.widget)
+            rep_id = self.html_view.get_wasm_id(self.widget.representation)
+            self.state.wasm_listeners = {
+                widget_id: {
+                    "InteractionEvent": {
+                        "plane_widget": {
+                            rep_id: {
+                                "Normal": "normal",
+                                "Origin": "origin",
+                            }
+                        }
+                    }
+                }
+            }
+
+    def one_time_update(self):
+        rep_id = self.html_view.get_wasm_id(self.widget.representation)
+        self.html_view.eval(
+            {
+                "plane_widget": {
+                    rep_id: {
+                        "Normal": "normal",
+                        "Origin": "origin",
+                    }
+                }
+            }
+        )
+
     def _ui(self):
         with DivLayout(self.server) as layout:
             client.Style("body { margin: 0; }")
+            html.Button(
+                "Toggle listeners",
+                click=self.toggle_listeners,
+                style="position: absolute; left: 1rem; top: 1rem; z-index: 10;",
+            )
+            html.Button(
+                "Update cut",
+                click=self.one_time_update,
+                style="position: absolute; right: 1rem; top: 1rem; z-index: 10;",
+            )
             with html.Div(
                 style="position: absolute; left: 0; top: 0; width: 100vw; height: 100vh;"
             ):
                 self.html_view = vtklocal.LocalView(
                     self.render_window,
                     throttle_rate=20,
+                    listeners=("wasm_listeners", {}),
                 )
-                self.register_widget_listeners()
+                self.html_view.register_widget(self.widget)
 
         return layout
 

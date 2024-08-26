@@ -1,9 +1,18 @@
-import { inject, ref, unref, onMounted, onBeforeUnmount } from "vue";
+import {
+  inject,
+  ref,
+  unref,
+  onMounted,
+  onBeforeUnmount,
+  toRef,
+  watchEffect,
+} from "vue";
 import { createModule } from "../utils";
 
 function idToState(sceneManager, cid) {
-  sceneManager.updateStateFromObject(cid);
-  return sceneManager.getState(cid);
+  const wasmId = Number(cid);
+  sceneManager.updateStateFromObject(wasmId);
+  return sceneManager.getState(wasmId);
 }
 
 function createExtractCallback(trame, sceneManager, extractInfo) {
@@ -64,7 +73,8 @@ export default {
     const trame = inject("trame");
     const wasmURL = trame.state.get("__trame_vtklocal_wasm_url");
     const cameraIds = [];
-    const observerTags = [];
+    const cameraTags = [];
+    const listenersTags = [];
     const container = ref(null);
     const canvas = ref(null);
     const client = props.wsClient || trame?.client;
@@ -72,6 +82,7 @@ export default {
     const hashesMTime = {};
     const pendingArrays = {};
     const currentMTime = ref(1);
+    const listeners = toRef(props, "listeners");
     let sceneManager = null;
     let updateInProgress = 0;
     let subscription = null;
@@ -238,7 +249,6 @@ export default {
 
         // For listeners
         cameraIds.push(...serverStatus.cameras);
-        // interactorId = serverStatus.interactor;
 
         serverStatus.ignore_ids.forEach((vtkId) => {
           sceneManager.unRegisterState(vtkId);
@@ -295,29 +305,13 @@ export default {
 
       // Camera listener
       for (let i = 0; i < cameraIds.length; i++) {
-        const cid = cameraIds[i];
-        observerTags.push([
+        const cid = Number(cameraIds[i]);
+        cameraTags.push([
           cid,
           sceneManager.addObserver(cid, "ModifiedEvent", () => {
-            sceneManager.updateStateFromObject(cid);
-            const cameraState = sceneManager.getState(cid);
-            emit("camera", cameraState);
+            emit("camera", idToState(sceneManager, cid));
           }),
         ]);
-      }
-
-      // Other listeners
-      for (const [cid, eventMap] of Object.entries(props.listeners || {})) {
-        for (const [eventName, extractInfo] of Object.entries(eventMap || {})) {
-          observerTags.push([
-            cid,
-            sceneManager.addObserver(
-              cid,
-              eventName,
-              createExtractCallback(trame, sceneManager, extractInfo)
-            ),
-          ]);
-        }
       }
 
       sceneManager.startEventLoop(props.renderWindow);
@@ -332,8 +326,12 @@ export default {
       }
 
       // Camera listeners
-      while (observerTags.length) {
-        const [cid, tag] = observerTags.pop();
+      while (cameraTags.length) {
+        const [cid, tag] = cameraTags.pop();
+        sceneManager.removeObserver(cid, tag);
+      }
+      while (listenersTags.length) {
+        const [cid, tag] = listenersTags.pop();
         sceneManager.removeObserver(cid, tag);
       }
 
@@ -345,12 +343,42 @@ export default {
       }
     });
 
+    // Dynamic props ----------------------------------------------------------
+
+    watchEffect(() => {
+      while (listenersTags.length) {
+        const [cid, tag] = listenersTags.pop();
+        sceneManager.removeObserver(cid, tag);
+      }
+
+      for (const [cid, eventMap] of Object.entries(listeners.value || {})) {
+        const wasmId = Number(cid);
+        for (const [eventName, extractInfo] of Object.entries(eventMap || {})) {
+          const fn = createExtractCallback(trame, sceneManager, extractInfo);
+          listenersTags.push([
+            wasmId,
+            sceneManager.addObserver(wasmId, eventName, fn),
+          ]);
+
+          // Push update at registration
+          fn();
+        }
+      }
+    });
+
     // Public -----------------------------------------------------------------
+
+    function evalStateExtract(definition) {
+      console.log("definition", definition);
+      createExtractCallback(trame, sceneManager, definition)();
+    }
+
     return {
       container,
       canvas,
       update,
       resetCamera,
+      evalStateExtract,
     };
   },
   template: `

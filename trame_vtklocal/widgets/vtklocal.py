@@ -71,7 +71,7 @@ class LocalView(HtmlElement):
         self._attr_names += [
             ("cache_size", "cacheSize"),
             ("eager_sync", "eagerSync"),
-            "listeners",  # only processed at mount time for now
+            ("listeners", ":listeners"),
         ]
         self._event_names += [
             "updated",
@@ -93,6 +93,24 @@ class LocalView(HtmlElement):
     def object_manager(self):
         """Return object_manager"""
         return self.api.vtk_object_manager
+
+    def eval(self, state_mapping):
+        """Evaluate WASM state extract and map it onto trame state variables
+
+        state_mapping = {
+            trame_state_name: {
+                wasm_id1: {
+                    wasm_state_prop_name: js_name_in_trame_state_name_obj1
+                    wasm_state_prop_name2: js_name2_in_trame_state_name_obj1
+                },
+                wasm_id2: {
+                    wasm_state_prop_name: js_name_in_trame_state_name_obj2
+                    wasm_state_prop_name2: js_name2_in_trame_state_name_obj2
+                },
+            }
+        }
+        """
+        self.server.js_call(self.__ref, "evalStateExtract", state_mapping)
 
     def update(self, push_camera=False):
         """Sync view by pushing updates to client"""

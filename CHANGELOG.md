@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.5.1 (2024-08-26)
+
+### Fix
+
+* **listeners:** Allow dynamic update ([`ab3b640`](https://github.com/Kitware/trame-vtklocal/commit/ab3b640e0d5af761efdd9a554117c91a3b45be2e))
+
 ## v0.5.0 (2024-08-26)
 
 ### Feature

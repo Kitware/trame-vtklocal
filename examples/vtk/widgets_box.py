@@ -10,7 +10,7 @@ from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
 
 from vtkmodules.vtkCommonColor import vtkNamedColors
 from vtkmodules.vtkFiltersSources import vtkConeSource
-from vtkmodules.vtkInteractionWidgets import vtkBoxWidget
+from vtkmodules.vtkInteractionWidgets import vtkBoxWidget2
 from vtkmodules.vtkCommonTransforms import vtkTransform
 from vtkmodules.vtkRenderingCore import (
     vtkActor,
@@ -23,10 +23,10 @@ from vtkmodules.vtkRenderingCore import (
 WASM = "USE_WASM" in os.environ
 
 
-def boxCallback(obj, event):
+def box_callback(obj, event):
     t = vtkTransform()
-    obj.GetTransform(t)
-    obj.GetProp3D().SetUserTransform(t)
+    obj.representation.GetTransform(t)
+    box_callback.actor.user_transform = t
 
 
 def create_vtk_pipeline():
@@ -40,6 +40,7 @@ def create_vtk_pipeline():
     coneActor = vtkActor()
     coneActor.SetMapper(coneMapper)
     coneActor.GetProperty().SetColor(colors.GetColor3d("BurlyWood"))
+    coneMapper.Update()
 
     # A renderer and render window
     renderer = vtkRenderer()
@@ -56,16 +57,17 @@ def create_vtk_pipeline():
     interactor.GetInteractorStyle().SetCurrentStyleToTrackballCamera()
 
     # A Box widget
-    boxWidget = vtkBoxWidget()
+    boxWidget = vtkBoxWidget2()
     boxWidget.SetInteractor(interactor)
-    boxWidget.SetProp3D(coneActor)
-    boxWidget.SetPlaceFactor(1.25)  # Make the box 1.25x larger than the actor
-    boxWidget.PlaceWidget()
+    boxWidget.representation.SetPlaceFactor(1.0)
+    boxWidget.representation.PlaceWidget(coneActor.bounds)
+
     boxWidget.On()
 
     # Connect the event to a function
     if not WASM:
-        boxWidget.AddObserver("InteractionEvent", boxCallback)
+        box_callback.actor = coneActor
+        boxWidget.AddObserver("InteractionEvent", box_callback)
 
     return renwin, boxWidget
 
@@ -96,7 +98,9 @@ class App:
                     self.html_view = vtklocal.LocalView(self.render_window)
                     self.html_view.register_widget(self.widget)
                 else:
-                    self.html_view = vtk_widgets.VtkRemoteView(self.render_window)
+                    self.html_view = vtk_widgets.VtkRemoteView(
+                        self.render_window, interactive_ratio=1
+                    )
 
         return layout
 

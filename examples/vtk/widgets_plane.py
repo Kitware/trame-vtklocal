@@ -150,6 +150,7 @@ class App:
             ):
                 if WASM:
                     self.html_view = vtklocal.LocalView(self.render_window)
+                    self.html_view.register_widget(self.widget)
                 else:
                     self.html_view = vtk_widgets.VtkRemoteView(self.render_window)
 

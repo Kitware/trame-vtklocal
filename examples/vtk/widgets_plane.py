@@ -79,6 +79,7 @@ def create_vtk_pipeline(file_to_load):
 
     rep = vtkImplicitPlaneRepresentation(
         place_factor=1.25,
+        outline_translation=False,
     )
     rep.PlaceWidget(input_bounds)
     rep.normal = plane.normal

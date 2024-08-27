@@ -1,6 +1,6 @@
 from pathlib import Path
-from .wasm import register_wasm
-from .protocol import ObjectManagerHelper
+from trame_vtklocal.module.wasm import register_wasm
+from trame_vtklocal.module.protocol import ObjectManagerHelper
 
 __all__ = [
     "serve",

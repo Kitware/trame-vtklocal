@@ -113,7 +113,6 @@ export default {
     function handleMessage([event]) {
       if (event.type === "state") {
         const { mtime, content, id } = event;
-        sceneManager.unRegisterState(id);
         sceneManager.registerState(content);
         stateMTimes[id] = mtime;
       }
@@ -173,7 +172,6 @@ export default {
       if (serverState.length > 0) {
         stateMTimes[vtkId] = JSON.parse(serverState).MTime;
         // console.log(`vtkLocal::state(${vtkId})`);
-        sceneManager.unRegisterState(vtkId);
         sceneManager.registerState(serverState);
       } else {
         console.log(`Server returned empty state for ${vtkId}`);

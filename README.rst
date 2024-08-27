@@ -41,12 +41,18 @@ Install the library
 
     pip install -e .
 
-Optionally, you can develop with bleeding edge VTK by following these steps
+Optionally, you can develop with bleeding edge VTK by following these steps. Make sure you've these tools
+1. git
+2. CMake
+3. Ninja
+4. Python
+5. NodeJS >= 22.0.0: https://nodejs.org/en/download/package-manager
+6. Emscripten SDK: See https://emscripten.org/docs/getting_started/downloads.html#download-and-install
 
 .. code-block:: console
 
     # Compile VTK for wasm32 architecture using emscripten. Build artifacts can be found in dev/vtk/build/wasm
-    docker run --rm -it -v$PWD:/work kitware/vtk:ci-fedora39-20240731 /bin/bash -c "cd /work && ./utils/build_vtk.sh -u https://gitlab.kitware.com/vtk/vtk.git -b master -t wasm32 -p RelWithDebInfo"
+    ./utils/build_vtk.sh -u https://gitlab.kitware.com/vtk/vtk.git -b master -t wasm32 -p RelWithDebInfo
 
     # Compile VTK with python wrappings using system C++ compiler. Build artifacts can be found in dev/vtk/build/py
     ./utils/build_vtk.sh -u https://gitlab.kitware.com/vtk/vtk.git -b master -t py -p RelWithDebInfo

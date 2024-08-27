@@ -15,20 +15,41 @@ function idToState(sceneManager, cid) {
   return sceneManager.getState(wasmId);
 }
 
+function createStateHelper(sceneManager) {
+  const cache = {};
+
+  return function getState(wasm_id) {
+    if (!cache[wasm_id]) {
+      cache[wasm_id] = idToState(sceneManager, wasm_id);
+    }
+    return cache[wasm_id];
+  };
+}
+
+function getStatePathToValue(getStateFn, statePath) {
+  const expression = Array.isArray(statePath) ? statePath : [statePath];
+  let value = null;
+  for (let i = 0; i < expression.length; i++) {
+    const token = expression[i];
+    if (i === 0) {
+      value = getStateFn(token);
+    } else {
+      value = value[token];
+      if (value.Id) {
+        value = getStateFn(value.Id);
+      }
+    }
+  }
+  return value;
+}
+
 function createExtractCallback(trame, sceneManager, extractInfo) {
   return function () {
-    for (const [name, objIds] of Object.entries(extractInfo)) {
+    const getState = createStateHelper(sceneManager);
+    for (const [name, props] of Object.entries(extractInfo)) {
       const value = {};
-      for (const [objId, props] of Object.entries(objIds)) {
-        const state = idToState(sceneManager, objId);
-        if (typeof props === "string") {
-          value[props] = state;
-        } else {
-          // extract and remap
-          for (const [k, v] of Object.entries(props)) {
-            value[v] = state[k];
-          }
-        }
+      for (const [propName, statePath] of Object.entries(props)) {
+        value[propName] = getStatePathToValue(getState, statePath);
       }
       trame.state.set(name, value);
     }
@@ -369,7 +390,6 @@ export default {
     // Public -----------------------------------------------------------------
 
     function evalStateExtract(definition) {
-      console.log("definition", definition);
       createExtractCallback(trame, sceneManager, definition)();
     }
 

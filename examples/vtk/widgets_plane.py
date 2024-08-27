@@ -32,10 +32,6 @@ from vtkmodules.vtkRenderingCore import (
 
 def create_vtk_pipeline(file_to_load):
     colors = vtkNamedColors()
-    sphere_source = vtkSphereSource()
-    sphere_source.SetRadius(10.0)
-    sphere_source.Update()
-    input_bounds = sphere_source.GetOutput().GetBounds()
 
     fp = None
     if file_to_load:
@@ -46,59 +42,49 @@ def create_vtk_pipeline(file_to_load):
             return
 
     # Setup a visualization pipeline.
-    plane = vtkPlane()
-    clipper = vtkClipPolyData()
-    clipper.SetClipFunction(plane)
-    clipper.InsideOutOn()
-    if file_to_load:
-        reader = vtkXMLPolyDataReader()
-        reader.SetFileName(fp)
-        reader.Update()
+    source = (
+        vtkXMLPolyDataReader(file_name=fp)
+        if file_to_load
+        else vtkSphereSource(radius=10.0)
+    )
+    source.Update()
 
-        input_bounds = reader.GetOutput().GetBounds()
-        clipper.SetInputConnection(reader.GetOutputPort())
-    else:
-        clipper.SetInputConnection(sphere_source.GetOutputPort())
+    input_bounds = source.output.bounds
+    plane = vtkPlane(
+        origin=(
+            0.5 * (input_bounds[0] + input_bounds[1]),
+            0.5 * (input_bounds[2] + input_bounds[3]),
+            0.5 * (input_bounds[4] + input_bounds[5]),
+        )
+    )
+
+    clipper = vtkClipPolyData(
+        clip_function=plane, inside_out=1, input_connection=source.output_port
+    )
 
     # Create a mapper and actor.
-    mapper = vtkPolyDataMapper()
-    mapper.SetInputConnection(clipper.GetOutputPort())
-    actor = vtkActor()
-    actor.SetMapper(mapper)
-
-    back_faces = vtkProperty()
-    back_faces.SetDiffuseColor(colors.GetColor3d("Gold"))
-
-    actor.SetBackfaceProperty(back_faces)
+    mapper = vtkPolyDataMapper(input_connection=clipper.output_port)
+    back_faces = vtkProperty(diffuse_color=colors.GetColor3d("Gold"))
+    actor = vtkActor(mapper=mapper, backface_property=back_faces)
 
     # A renderer and render window
-    renderer = vtkRenderer()
+    renderer = vtkRenderer(background=colors.GetColor3d("SlateGray"))
+    renderer.AddActor(actor)
     ren_win = vtkRenderWindow()
     ren_win.AddRenderer(renderer)
-    ren_win.SetWindowName("ImplicitPlaneWidget2")
-
-    renderer.AddActor(actor)
-    renderer.SetBackground(colors.GetColor3d("SlateGray"))
 
     # An interactor
-    iren = vtkRenderWindowInteractor()
+    iren = vtkRenderWindowInteractor(render_window=ren_win)
     iren.GetInteractorStyle().SetCurrentStyleToTrackballCamera()
-    iren.SetRenderWindow(ren_win)
 
-    rep = vtkImplicitPlaneRepresentation()
-    rep.SetPlaceFactor(1.25)  # This must be set prior to placing the widget
-    rep.PlaceWidget(input_bounds)
-    plane.SetOrigin(
-        0.5 * (input_bounds[0] + input_bounds[1]),
-        0.5 * (input_bounds[2] + input_bounds[3]),
-        0.5 * (input_bounds[4] + input_bounds[5]),
+    rep = vtkImplicitPlaneRepresentation(
+        place_factor=1.25,
     )
-    rep.SetNormal(plane.GetNormal())
-    rep.SetOrigin(plane.GetOrigin())
+    rep.PlaceWidget(input_bounds)
+    rep.normal = plane.normal
+    rep.origin = plane.origin
 
-    plane_widget = vtkImplicitPlaneWidget2()
-    plane_widget.SetInteractor(iren)
-    plane_widget.SetRepresentation(rep)
+    plane_widget = vtkImplicitPlaneWidget2(interactor=iren, representation=rep)
 
     renderer.ResetCamera(input_bounds)
     ren_win.Render()
@@ -142,8 +128,8 @@ class App:
             return
 
         # update cutting plane
-        self.plane.SetNormal(plane_widget.get("normal"))
-        self.plane.SetOrigin(plane_widget.get("origin"))
+        self.plane.normal = plane_widget.get("normal")
+        self.plane.origin = plane_widget.get("origin")
 
         # prevent requesting geometry too often
         self.html_view.render_throttle()
@@ -152,30 +138,31 @@ class App:
         if self.state.wasm_listeners is not None and len(self.state.wasm_listeners):
             self.state.wasm_listeners = {}
         else:
-            widget_id = self.html_view.get_wasm_id(self.widget)
-            rep_id = self.html_view.get_wasm_id(self.widget.representation)
             self.state.wasm_listeners = {
-                widget_id: {
+                self.widget_id: {
                     "InteractionEvent": {
                         "plane_widget": {
-                            rep_id: {
-                                "Normal": "normal",
-                                "Origin": "origin",
-                            }
+                            "normal": (
+                                self.widget_id,
+                                "WidgetRepresentation",
+                                "Normal",
+                            ),
+                            "origin": (
+                                self.widget_id,
+                                "WidgetRepresentation",
+                                "Origin",
+                            ),
                         }
                     }
                 }
             }
 
     def one_time_update(self):
-        rep_id = self.html_view.get_wasm_id(self.widget.representation)
         self.html_view.eval(
             {
                 "plane_widget": {
-                    rep_id: {
-                        "Normal": "normal",
-                        "Origin": "origin",
-                    }
+                    "origin": (self.widget_id, "WidgetRepresentation", "Origin"),
+                    "normal": (self.widget_id, "WidgetRepresentation", "Normal"),
                 }
             }
         )
@@ -201,7 +188,7 @@ class App:
                     throttle_rate=20,
                     listeners=("wasm_listeners", {}),
                 )
-                self.html_view.register_widget(self.widget)
+                self.widget_id = self.html_view.register_widget(self.widget)
 
         return layout
 

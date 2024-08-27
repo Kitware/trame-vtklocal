@@ -45,6 +45,34 @@ def get_version():
 
 
 class LocalView(HtmlElement):
+    """
+    LocalView allow to mirror a server side vtkRenderWindow on the client side using VTK.wasm.
+
+    Parameters
+
+    :param render_window: Specify the VTK window to mirror
+    :type vtkRenderWindow:
+    :param throttle_rate: Number of update per second the render_throttle() method will actually perform.
+    :type number:
+
+    Properties
+
+    :param cache_size: Size of client side cache for geometry and arrays in Bytes.
+    :type number:
+    :param eager_sync: If enabled, the server will push states rather than waiting for the client to request them. Usually improve fast update behavior.
+    :type bool:
+    :param listeners: Dynamic structure describing what to observe and how to map internal WASM state to trame state variable.
+    :type dict:
+
+    Events
+
+    :param updated: Emitted after each completed client side update.
+    :param memory_vtk: Event which provides the current memory used by vtk object structures.
+    :param memory_arrays: Event which provides the current memory used by vtk arrays.
+    :param camera: Event emitted when any camera is changed. The actual state of the camera is passed as arg.
+
+    """
+
     _next_id = 0
 
     def __init__(self, render_window, throttle_rate=10, **kwargs):
@@ -75,9 +103,9 @@ class LocalView(HtmlElement):
         ]
         self._event_names += [
             "updated",
+            "camera",
             ("memory_vtk", "memory-vtk"),
             ("memory_arrays", "memory-arrays"),
-            ("camera", "camera"),
         ]
 
         # Generate throttle update function
@@ -99,14 +127,9 @@ class LocalView(HtmlElement):
 
         state_mapping = {
             trame_state_name: {
-                wasm_id1: {
-                    wasm_state_prop_name: js_name_in_trame_state_name_obj1
-                    wasm_state_prop_name2: js_name2_in_trame_state_name_obj1
-                },
-                wasm_id2: {
-                    wasm_state_prop_name: js_name_in_trame_state_name_obj2
-                    wasm_state_prop_name2: js_name2_in_trame_state_name_obj2
-                },
+                prop_name1: (wasm_id, "PropName"),
+                origin: (wasm_id, "WidgetRepresentation", "origin"),
+                widget_state: widget_id,
             }
         }
         """
@@ -118,11 +141,13 @@ class LocalView(HtmlElement):
         self.server.js_call(self.__ref, "update")
 
     def register_widget(self, w):
-        """Register external element (i.e. widget) into the scene so it can be managed"""
+        """Register external element (i.e. widget) into the scene so it can be managed and return its wasm_id"""
         if w not in self.__registered_obj:
             self.api.register_widget(self._render_window, w)
             self.__registered_obj.append(w)
             self.api.update()
+
+        return self.get_wasm_id(w)
 
     def uregister_widgets(self):
         """Unregister external element (i.e. widget) from the scene so it can removed from tracking"""

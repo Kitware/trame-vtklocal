@@ -82,9 +82,10 @@ Some will default for remote rendering but if you want to force them to use WASM
 SharedArrayBuffer
 ----------------------------------------
 
-To enable SharedArrayBuffer within trame you can run the following.
+To enable SharedArrayBuffer within trame you can just set the following on the server
 
 .. code-block:: console
 
-    export WSLINK_HTTP_HEADERS=./http_headers.json
-    python ./examples/vtk/cone.py
+    server.http_headers.shared_array_buffer = True
+
+This will download the threaded WASM version. Otherwise, the non-threaded version will be used as it does not require SharedArrayBuffer.

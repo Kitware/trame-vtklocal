@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.5.2 (2024-08-27)
+
+### Fix
+
+* **api:** Update listeners structure ([`f2a89c9`](https://github.com/Kitware/trame-vtklocal/commit/f2a89c9e4b829c3710a10d5961aa350d552be05d))
+
 ## v0.5.1 (2024-08-26)
 
 ### Fix

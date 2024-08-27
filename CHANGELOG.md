@@ -2,6 +2,16 @@
 
 <!--next-version-placeholder-->
 
+## v0.5.3 (2024-08-27)
+
+### Fix
+
+* **client:** Remove unnecessary calls to unregister state ([`e33f958`](https://github.com/Kitware/trame-vtklocal/commit/e33f958250fee0a417af6550ff8ee54269eced5c))
+
+### Documentation
+
+* **widget:** Update example to be less annoying ([`fcf8a4a`](https://github.com/Kitware/trame-vtklocal/commit/fcf8a4a49fb18486c65bde71ab8af65e700071ab))
+
 ## v0.5.2 (2024-08-27)
 
 ### Fix

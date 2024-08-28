@@ -77,7 +77,7 @@ class DemoApp:
     @change("resolution")
     def on_resolution_change(self, resolution, **kwargs):
         self.cone.SetResolution(int(resolution))
-        self.html_view.render_throttle()
+        self.html_view.update_throttle()
 
     def _ui(self):
         with DivLayout(self.server) as layout:

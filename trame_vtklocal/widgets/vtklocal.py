@@ -104,8 +104,8 @@ class LocalView(HtmlElement):
         ]
 
         # Generate throttle update function
-        self.render_throttle = Throttle(self.update)
-        self.render_throttle.rate = throttle_rate
+        self._update_throttle = Throttle(self.update)
+        self._update_throttle.rate = throttle_rate
 
     @property
     def api(self):
@@ -120,15 +120,24 @@ class LocalView(HtmlElement):
     def eval(self, state_mapping):
         """Evaluate WASM state extract and map it onto trame state variables
 
-        state_mapping = {
-            trame_state_name: {
-                prop_name1: (wasm_id, "PropName"),
-                origin: (wasm_id, "WidgetRepresentation", "origin"),
-                widget_state: widget_id,
-            }
-        }
+        >>> html_view.eval({
+        ...    "trame_state_name": {
+        ...        "prop_name1": (wasm_id, "PropName"),
+        ...        "origin": (wasm_id, "WidgetRepresentation", "origin"),
+        ...        "widget_state": widget_id,
+        ...    }
+        ... }
         """
         self.server.js_call(self.__ref, "evalStateExtract", state_mapping)
+
+    @property
+    def update_throttle(self):
+        """Throttled update method on which you can update its rate by doing
+
+        >>> html_view.update_throttle.rate = 15 # time per second
+        >>> html_view.update_throttle()
+        """
+        return self._update_throttle
 
     def update(self, push_camera=False):
         """Sync view by pushing updates to client"""

@@ -133,7 +133,7 @@ class App:
         self.plane.origin = plane_widget.get("origin")
 
         # prevent requesting geometry too often
-        self.html_view.render_throttle()
+        self.html_view.update_throttle()
 
     def toggle_listeners(self):
         if self.state.wasm_listeners is not None and len(self.state.wasm_listeners):

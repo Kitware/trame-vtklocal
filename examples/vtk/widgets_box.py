@@ -94,7 +94,7 @@ class App:
         print(f"{widget_state=}")
 
         self.actor.user_transform.SetMatrix(widget_state.get("transform"))
-        self.html_view.render_throttle()
+        self.html_view.update_throttle()
 
     def toggle_listeners(self):
         if self.state.wasm_listeners is not None and len(self.state.wasm_listeners):

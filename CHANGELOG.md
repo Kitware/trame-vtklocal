@@ -2,6 +2,17 @@
 
 <!--next-version-placeholder-->
 
+## v0.5.5 (2024-08-28)
+
+### Fix
+
+* **api:** Render_throttle replaced by update_throttle ([`d70e1bc`](https://github.com/Kitware/trame-vtklocal/commit/d70e1bcfacfddc95d4ea988d3c6f84115638f9c8))
+
+### Documentation
+
+* **example:** Update cone ([`6de605b`](https://github.com/Kitware/trame-vtklocal/commit/6de605b487539a90f4216dc44bbb466f75f33eb4))
+* **example:** Update cone ([`4ee78ee`](https://github.com/Kitware/trame-vtklocal/commit/4ee78eeb73a403a1869853e072bd1b59bc8d5111))
+
 ## v0.5.4 (2024-08-28)
 
 ### Fix

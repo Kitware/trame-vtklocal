@@ -78,8 +78,7 @@ class DemoApp:
     def on_resolution_change(self, resolution, **kwargs):
         if int(resolution) != 6:
             self.cone.SetResolution(int(resolution))
-            self.render_window.Render()
-            self.html_view.update()
+            self.html_view.render_throttle()
 
     def _ui(self):
         with DivLayout(self.server) as layout:
@@ -89,6 +88,7 @@ class DemoApp:
             ):
                 self.html_view = vtklocal.LocalView(
                     self.render_window,
+                    throttle_rate=20,
                     cache_size=("cache", 0),
                     memory_vtk="mem_vtk = $event",
                     memory_arrays="mem_blob = $event",

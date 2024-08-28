@@ -2,6 +2,17 @@
 
 <!--next-version-placeholder-->
 
+## v0.5.4 (2024-08-28)
+
+### Fix
+
+* **doc:** Update doc string ([`80b2644`](https://github.com/Kitware/trame-vtklocal/commit/80b26447a48ee27847d4d7174416d9ba8c6af2d5))
+
+### Documentation
+
+* **widget:** Update box example ([`30215ea`](https://github.com/Kitware/trame-vtklocal/commit/30215eaa008c18ce28a3a8a1bcdf63f09e967050))
+* **readme:** Update shared array buffer section ([`07220e4`](https://github.com/Kitware/trame-vtklocal/commit/07220e438a2a3c9cbf9177f69a95ff572a20c01b))
+
 ## v0.5.3 (2024-08-27)
 
 ### Fix

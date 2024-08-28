@@ -1,8 +1,8 @@
-import os
 from trame.app import get_server
 from trame.ui.html import DivLayout
-from trame.widgets import html, client, vtk as vtk_widgets
+from trame.widgets import html, client
 from trame_vtklocal.widgets import vtklocal
+from trame.decorators import TrameApp, change
 
 # Required for vtk factory
 import vtkmodules.vtkRenderingOpenGL2  # noqa
@@ -10,8 +10,7 @@ from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
 
 from vtkmodules.vtkCommonColor import vtkNamedColors
 from vtkmodules.vtkFiltersSources import vtkConeSource
-from vtkmodules.vtkInteractionWidgets import vtkBoxWidget2
-from vtkmodules.vtkCommonTransforms import vtkTransform
+from vtkmodules.vtkInteractionWidgets import vtkBoxWidget2, vtkBoxRepresentation
 from vtkmodules.vtkRenderingCore import (
     vtkActor,
     vtkPolyDataMapper,
@@ -19,14 +18,6 @@ from vtkmodules.vtkRenderingCore import (
     vtkRenderWindowInteractor,
     vtkRenderer,
 )
-
-WASM = "USE_WASM" in os.environ
-
-
-def box_callback(obj, event):
-    t = vtkTransform()
-    obj.representation.GetTransform(t)
-    box_callback.actor.user_transform = t
 
 
 def create_vtk_pipeline():
@@ -40,7 +31,9 @@ def create_vtk_pipeline():
     coneActor = vtkActor()
     coneActor.SetMapper(coneMapper)
     coneActor.GetProperty().SetColor(colors.GetColor3d("BurlyWood"))
-    coneMapper.Update()
+
+    cone.Update()
+    input_bounds = cone.output.bounds
 
     # A renderer and render window
     renderer = vtkRenderer()
@@ -49,7 +42,6 @@ def create_vtk_pipeline():
 
     renwin = vtkRenderWindow()
     renwin.AddRenderer(renderer)
-    renwin.SetWindowName("BoxWidget")
 
     # An interactor
     interactor = vtkRenderWindowInteractor()
@@ -57,19 +49,17 @@ def create_vtk_pipeline():
     interactor.GetInteractorStyle().SetCurrentStyleToTrackballCamera()
 
     # A Box widget
-    boxWidget = vtkBoxWidget2()
-    boxWidget.SetInteractor(interactor)
-    boxWidget.representation.SetPlaceFactor(1.0)
-    boxWidget.representation.PlaceWidget(coneActor.bounds)
+    rep = vtkBoxRepresentation(place_factor=2)
+    rep.PlaceWidget(input_bounds)
+
+    boxWidget = vtkBoxWidget2(interactor=interactor, representation=rep)
+
+    renderer.ResetCamera()
+    renwin.Render()
 
     boxWidget.On()
 
-    # Connect the event to a function
-    if not WASM:
-        box_callback.actor = coneActor
-        boxWidget.AddObserver("InteractionEvent", box_callback)
-
-    return renwin, boxWidget
+    return renwin, boxWidget, coneActor
 
 
 # -----------------------------------------------------------------------------
@@ -77,6 +67,7 @@ def create_vtk_pipeline():
 # -----------------------------------------------------------------------------
 
 
+@TrameApp()
 class App:
     def __init__(self, server=None):
         self.server = get_server(server, client_type="vue3")
@@ -84,23 +75,80 @@ class App:
         # enable shared array buffer
         self.server.http_headers.shared_array_buffer = True
 
-        self.render_window, self.widget = create_vtk_pipeline()
+        # Allocation state variable for widget state
+        self.state.widget_state = None
+
+        self.render_window, self.widget, self.actor = create_vtk_pipeline()
         self.html_view = None
         self.ui = self._ui()
+
+    @property
+    def state(self):
+        return self.server.state
+
+    @change("widget_state")
+    def _on_widget_update(self, widget_state, **_):
+        if widget_state is None:
+            return
+
+        print(f"{widget_state=}")
+
+        self.actor.user_transform.SetMatrix(widget_state.get("transform"))
+        self.html_view.render_throttle()
+
+    def toggle_listeners(self):
+        if self.state.wasm_listeners is not None and len(self.state.wasm_listeners):
+            self.state.wasm_listeners = {}
+        else:
+            self.state.wasm_listeners = {
+                self.widget_id: {
+                    "InteractionEvent": {
+                        "widget_state": {
+                            "transform": (
+                                self.widget_id,
+                                "WidgetRepresentation",
+                                "Transform",
+                            ),
+                        }
+                    }
+                }
+            }
+
+    def one_time_update(self):
+        self.html_view.eval(
+            {
+                "widget_state": {
+                    "transform": (
+                        self.widget_id,
+                        "WidgetRepresentation",
+                        "Transform",
+                    ),
+                }
+            }
+        )
 
     def _ui(self):
         with DivLayout(self.server) as layout:
             client.Style("body { margin: 0; }")
+            html.Button(
+                "Toggle listeners",
+                click=self.toggle_listeners,
+                style="position: absolute; left: 1rem; top: 1rem; z-index: 10;",
+            )
+            html.Button(
+                "Update cut",
+                click=self.one_time_update,
+                style="position: absolute; right: 1rem; top: 1rem; z-index: 10;",
+            )
             with html.Div(
                 style="position: absolute; left: 0; top: 0; width: 100vw; height: 100vh;"
             ):
-                if WASM:
-                    self.html_view = vtklocal.LocalView(self.render_window)
-                    self.html_view.register_widget(self.widget)
-                else:
-                    self.html_view = vtk_widgets.VtkRemoteView(
-                        self.render_window, interactive_ratio=1
-                    )
+                self.html_view = vtklocal.LocalView(
+                    self.render_window,
+                    throttle_rate=20,
+                    listeners=("wasm_listeners", {}),
+                )
+                self.widget_id = self.html_view.register_widget(self.widget)
 
         return layout
 

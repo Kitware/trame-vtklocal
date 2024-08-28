@@ -22,11 +22,6 @@ class HtmlElement(AbstractElement):
             self.server.enable_module(module)
 
 
-__all__ = [
-    "LocalView",
-]
-
-
 def encode_blobs(blob_map):
     result = {}
     for key in blob_map:
@@ -211,3 +206,8 @@ class LocalView(HtmlElement):
     def get_wasm_id(self, vtk_object):
         """Return vtkObject id used within WASM scene manager"""
         return self.object_manager.GetId(vtk_object)
+
+
+__all__ = [
+    "LocalView",
+]

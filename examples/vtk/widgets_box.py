@@ -9,6 +9,7 @@ import vtkmodules.vtkRenderingOpenGL2  # noqa
 from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
 
 from vtkmodules.vtkCommonColor import vtkNamedColors
+from vtkmodules.vtkCommonTransforms import vtkTransform
 from vtkmodules.vtkFiltersSources import vtkConeSource
 from vtkmodules.vtkInteractionWidgets import vtkBoxWidget2, vtkBoxRepresentation
 from vtkmodules.vtkRenderingCore import (
@@ -28,7 +29,7 @@ def create_vtk_pipeline():
     cone.SetResolution(20)
     coneMapper = vtkPolyDataMapper()
     coneMapper.SetInputConnection(cone.GetOutputPort())
-    coneActor = vtkActor()
+    coneActor = vtkActor(user_transform=vtkTransform())
     coneActor.SetMapper(coneMapper)
     coneActor.GetProperty().SetColor(colors.GetColor3d("BurlyWood"))
 
@@ -40,7 +41,7 @@ def create_vtk_pipeline():
     renderer.SetBackground(colors.GetColor3d("Blue"))
     renderer.AddActor(coneActor)
 
-    renwin = vtkRenderWindow()
+    renwin = vtkRenderWindow(off_screen_rendering=True)
     renwin.AddRenderer(renderer)
 
     # An interactor
@@ -91,9 +92,11 @@ class App:
         if widget_state is None:
             return
 
-        print(f"{widget_state=}")
+        # Get new widget corners from state.
+        self.widget.representation.corners = widget_state.get("corners")
+        # Compute user transform for the actor from the new corners.
+        self.widget.representation.GetTransform(self.actor.user_transform)
 
-        self.actor.user_transform.SetMatrix(widget_state.get("transform"))
         self.html_view.update_throttle()
 
     def toggle_listeners(self):
@@ -104,10 +107,10 @@ class App:
                 self.widget_id: {
                     "InteractionEvent": {
                         "widget_state": {
-                            "transform": (
+                            "corners": (
                                 self.widget_id,
                                 "WidgetRepresentation",
-                                "Transform",
+                                "Corners",
                             ),
                         }
                     }
@@ -118,10 +121,10 @@ class App:
         self.html_view.eval(
             {
                 "widget_state": {
-                    "transform": (
+                    "corners": (
                         self.widget_id,
                         "WidgetRepresentation",
-                        "Transform",
+                        "Corners",
                     ),
                 }
             }
@@ -136,7 +139,7 @@ class App:
                 style="position: absolute; left: 1rem; top: 1rem; z-index: 10;",
             )
             html.Button(
-                "Update cut",
+                "Update transformation matrix",
                 click=self.one_time_update,
                 style="position: absolute; right: 1rem; top: 1rem; z-index: 10;",
             )

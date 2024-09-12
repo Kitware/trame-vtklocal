@@ -2,6 +2,16 @@
 
 <!--next-version-placeholder-->
 
+## v0.5.6 (2024-09-12)
+
+### Fix
+
+* **listeners:** Delay binding after update ([`a3b7e3e`](https://github.com/Kitware/trame-vtklocal/commit/a3b7e3ec63133721a3419d9d139811b9e9ba1bc5))
+
+### Documentation
+
+* **widget:** Update box example listener with corners property ([`4325647`](https://github.com/Kitware/trame-vtklocal/commit/432564793ca825846ec55b07dcaf76f1cc2e499a))
+
 ## v0.5.5 (2024-08-28)
 
 ### Fix

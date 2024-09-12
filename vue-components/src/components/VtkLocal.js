@@ -333,6 +333,30 @@ export default {
         ]);
       }
 
+      // Attach listeners
+      watchEffect(() => {
+        while (listenersTags.length) {
+          const [cid, tag] = listenersTags.pop();
+          sceneManager.removeObserver(cid, tag);
+        }
+
+        for (const [cid, eventMap] of Object.entries(listeners.value || {})) {
+          const wasmId = Number(cid);
+          for (const [eventName, extractInfo] of Object.entries(
+            eventMap || {}
+          )) {
+            const fn = createExtractCallback(trame, sceneManager, extractInfo);
+            listenersTags.push([
+              wasmId,
+              sceneManager.addObserver(wasmId, eventName, fn),
+            ]);
+
+            // Push update at registration
+            fn();
+          }
+        }
+      });
+
       sceneManager.startEventLoop(props.renderWindow);
       if (resizeObserver) {
         resizeObserver.observe(unref(container));
@@ -359,29 +383,6 @@ export default {
       if (resizeObserver) {
         resizeObserver.disconnect();
         resizeObserver = null;
-      }
-    });
-
-    // Dynamic props ----------------------------------------------------------
-
-    watchEffect(() => {
-      while (listenersTags.length) {
-        const [cid, tag] = listenersTags.pop();
-        sceneManager.removeObserver(cid, tag);
-      }
-
-      for (const [cid, eventMap] of Object.entries(listeners.value || {})) {
-        const wasmId = Number(cid);
-        for (const [eventName, extractInfo] of Object.entries(eventMap || {})) {
-          const fn = createExtractCallback(trame, sceneManager, extractInfo);
-          listenersTags.push([
-            wasmId,
-            sceneManager.addObserver(wasmId, eventName, fn),
-          ]);
-
-          // Push update at registration
-          fn();
-        }
       }
     });
 

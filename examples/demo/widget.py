@@ -141,9 +141,8 @@ class App:
         self.seed.SetPoint1(p1)
         self.seed.SetPoint2(p2)
 
-        # # prevent requesting geometry too often
-        # BUG the widget REP go in the wrong spot on the WASM side
-        # self.ctrl.view_update()
+        # prevent requesting geometry too often
+        self.ctrl.view_update()
 
     def _build_ui(self):
         with DivLayout(self.server):

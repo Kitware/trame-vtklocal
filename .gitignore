@@ -5,6 +5,10 @@ node_modules
 .venv-pv
 .pyvista
 
+bike.vtp
+seeds.jpg
+tunnel.vtu
+
 # local env files
 .env.local
 .env.*.local

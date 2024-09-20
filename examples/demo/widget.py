@@ -1,19 +1,26 @@
+# pip install trame trame-vtklocal trame-vuetify trame-components
 import vtk
 
 from trame.app import get_server
 from trame.ui.html import DivLayout
-from trame.widgets import html, client, vtklocal
+from trame.widgets import html, client, vtklocal, trame as tw, vuetify3 as v3
 from trame.decorators import TrameApp, change
 from trame.assets.remote import HttpFile
+from trame.assets.local import to_url
 
 FULL_SCREEN = "position:absolute; left:0; top:0; width:100vw; height:100vh;"
 K_RANGE = [0.0, 15.6]
+P1 = [-0.4, 0, 0.05]
+P2 = [-0.4, 0, 1.5]
 
 BIKE = HttpFile(
     "bike.vtp", "https://github.com/Kitware/trame-app-bike/raw/master/data/bike.vtp"
 )
 TUNNEL = HttpFile(
     "tunnel.vtu", "https://github.com/Kitware/trame-app-bike/raw/master/data/tunnel.vtu"
+)
+IMAGE = HttpFile(
+    "seeds.jpg", "https://github.com/Kitware/trame-app-bike/raw/master/data/seeds.jpg"
 )
 
 if not BIKE.local:
@@ -22,11 +29,12 @@ if not BIKE.local:
 if not TUNNEL.local:
     TUNNEL.fetch()
 
+if not IMAGE.local:
+    IMAGE.fetch()
+
 
 def create_vtk_pipeline():
     resolution = 50
-    point1 = [-0.4, 0, 0.05]
-    point2 = [-0.4, 0, 1.5]
 
     renderer = vtk.vtkRenderer()
     renderWindow = vtk.vtkRenderWindow()
@@ -45,18 +53,15 @@ def create_vtk_pipeline():
     tunnelReader.Update()
 
     lineSeed = vtk.vtkLineSource()
-    lineSeed.SetPoint1(*point1)
-    lineSeed.SetPoint2(*point2)
+    lineSeed.SetPoint1(*P1)
+    lineSeed.SetPoint2(*P2)
     lineSeed.SetResolution(resolution)
     lineSeed.Update()
 
-    input_bounds = tunnelReader.output.bounds
-    print(input_bounds)
-
     lineWidget = vtk.vtkLineWidget2()
     lineWidgetRep = lineWidget.GetRepresentation()
-    lineWidgetRep.SetPoint1WorldPosition(point1)
-    lineWidgetRep.SetPoint2WorldPosition(point2)
+    lineWidgetRep.SetPoint1WorldPosition(P1)
+    lineWidgetRep.SetPoint2WorldPosition(P2)
     lineWidget.SetInteractor(renderWindowInteractor)
 
     streamTracer = vtk.vtkStreamTracer()
@@ -120,7 +125,8 @@ class App:
         self._build_ui()
 
         # reserve state variable for widget update
-        self.state.line_widget = None
+        self.state.line_widget = {"p1": P1, "p2": P2}
+        self.state.trame__title = "trame + VTK.wasm"
 
     @property
     def state(self):
@@ -141,12 +147,27 @@ class App:
         self.seed.SetPoint1(p1)
         self.seed.SetPoint2(p2)
 
+        if line_widget.get("widget_update", False):
+            self.widget.representation.point1_world_position = p1
+            self.widget.representation.point2_world_position = p2
+
         # prevent requesting geometry too often
         self.ctrl.view_update()
 
     def _build_ui(self):
         with DivLayout(self.server):
             client.Style("body { margin: 0; }")
+            with v3.VCard(
+                style="position: absolute; top: 1rem; left: 1rem; width: 20vw; height: calc(20vw + 4rem); z-index: 1;"
+            ):
+                tw.LineSeed(
+                    image=to_url(IMAGE.path),
+                    point_1=("line_widget.p1",),
+                    point_2=("line_widget.p2",),
+                    bounds=("[-0.399, 1.80, -1.12, 1.11, -0.43, 1.79]",),
+                    update_seed="line_widget = { ...$event, widget_update: 1 }",
+                    n_sliders=2,
+                )
             with html.Div(style=FULL_SCREEN):
                 with vtklocal.LocalView(self.rw) as view:
                     view.update_throttle.rate = 20

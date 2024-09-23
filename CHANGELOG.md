@@ -2,6 +2,19 @@
 
 <!--next-version-placeholder-->
 
+## v0.5.7 (2024-09-23)
+
+### Fix
+
+* **threaded:** Remove threaded option selection ([`f654055`](https://github.com/Kitware/trame-vtklocal/commit/f654055b67573ba85fcbddf718707990b7af8163))
+
+### Documentation
+
+* **example:** Update streamline example ([`01625d1`](https://github.com/Kitware/trame-vtklocal/commit/01625d13e11aeee04bcfb86acf82f0b4e65ceca3))
+* **example:** Update streamline widget example ([`acc568d`](https://github.com/Kitware/trame-vtklocal/commit/acc568d382d337af490e6bd3d22c340f98f9ef56))
+* **issue:** Add examples/issues/14.py ([`191227c`](https://github.com/Kitware/trame-vtklocal/commit/191227ced175af5463e5b775c13b7afa63bdf6e2))
+* **example:** Add more examples ([`c3bfb11`](https://github.com/Kitware/trame-vtklocal/commit/c3bfb11f94d8e9cae83e27ecaa4ce4a205b8c5b1))
+
 ## v0.5.6 (2024-09-12)
 
 ### Fix

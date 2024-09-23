@@ -137,9 +137,6 @@ class DemoApp:
     def __init__(self, server=None):
         self.server = get_server(server, client_type=CLIENT_TYPE)
 
-        # enable shared array buffer
-        self.server.http_headers.shared_array_buffer = True
-
         self.render_window = create_vtk_pipeline()
         self.html_view = None
         self.ui = self._ui()

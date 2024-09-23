@@ -30,6 +30,4 @@ def get_helper(server):
 def setup(trame_server, **kwargs):
     global HELPERS_PER_SERVER
     HELPERS_PER_SERVER[trame_server.name] = ObjectManagerHelper(trame_server)
-    trame_server.enable_module(
-        register_wasm(serve_path, trame_server.http_headers.shared_array_buffer)
-    )
+    trame_server.enable_module(register_wasm(serve_path))

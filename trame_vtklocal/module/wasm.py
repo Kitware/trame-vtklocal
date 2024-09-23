@@ -58,22 +58,19 @@ async def setup_wasm_directory(target_directory, wasm_url):
     Path(dest_file).unlink()
 
 
-def get_wasm_info(use_thread=False):
+def get_wasm_info():
     from vtkmodules.vtkCommonCore import vtkVersion
 
     vtk_version = vtkVersion()
     wasm_bits = "wasm32"
     version = vtk_version.GetVTKVersion()
-    url_addon = "-threads" if use_thread else ""
-    url = f"https://gitlab.kitware.com/api/v4/projects/13/packages/generic/vtk-{wasm_bits}-emscripten{url_addon}/{version}/vtk-{version}-{wasm_bits}-emscripten{url_addon}.tar.gz"
-    if use_thread:
-        version += "-threads"
+    url = f"https://gitlab.kitware.com/api/v4/projects/13/packages/generic/vtk-{wasm_bits}-emscripten/{version}/vtk-{version}-{wasm_bits}-emscripten.tar.gz"
 
     return version, url
 
 
-def register_wasm(serve_path, use_thread=False):
-    version, wasm_url = get_wasm_info(use_thread)
+def register_wasm(serve_path):
+    version, wasm_url = get_wasm_info()
     BASE_URL = f"__trame_vtklocal/wasm/{version}"
     dest_directory = Path(serve_path) / "wasm" / version
 

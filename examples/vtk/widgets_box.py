@@ -73,9 +73,6 @@ class App:
     def __init__(self, server=None):
         self.server = get_server(server, client_type="vue3")
 
-        # enable shared array buffer
-        self.server.http_headers.shared_array_buffer = True
-
         # Allocation state variable for widget state
         self.state.widget_state = None
 

@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.6.0 (2024-09-23)
+
+### Feature
+
+* **js:** Enable generic JS library as core ([`22aabae`](https://github.com/Kitware/trame-vtklocal/commit/22aabae31fd51beb0fa867deaa171bfc96db3887))
+
 ## v0.5.7 (2024-09-23)
 
 ### Fix

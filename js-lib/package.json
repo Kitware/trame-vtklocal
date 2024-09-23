@@ -1,0 +1,29 @@
+{
+    "name": "@kitware/trame-vtklocal",
+    "version": "0.0.1",
+    "license": "Apache-2.0",
+    "main": "./dist/trame-vtklocal.umd.js",
+    "unpkg": "./dist/trame-vtklocal.umd.js",
+    "module": "./dist/trame-vtklocal.mjs",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/Kitware/trame-vtklocal.git"
+    },
+    "publishConfig": {
+      "access": "public"
+    },
+    "scripts": {
+      "build": "vite build --emptyOutDir",
+      "debug": "vite build --sourcemap -m dev",
+      "lint": "eslint . --ext .js --fix --ignore-path .gitignore --ignore-pattern public"
+    },
+    "devDependencies": {
+      "eslint": "^8.33.0",
+      "prettier": "^2.7.1",
+      "vite": "^4.1.0"
+    },
+    "files": [
+      "dist/**/*",
+      "src/**/*"
+    ]
+  }

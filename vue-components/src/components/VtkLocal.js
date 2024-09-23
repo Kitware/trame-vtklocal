@@ -7,52 +7,19 @@ import {
   toRef,
   watchEffect,
 } from "vue";
-import { createModule } from "../utils";
+import { VtkWASMHandler } from "../core";
 
-function idToState(sceneManager, cid) {
-  const wasmId = Number(cid);
-  sceneManager.updateStateFromObject(wasmId);
-  return sceneManager.getState(wasmId);
-}
-
-function createStateHelper(sceneManager) {
-  const cache = {};
-
-  return function getState(wasm_id) {
-    if (!cache[wasm_id]) {
-      cache[wasm_id] = idToState(sceneManager, wasm_id);
-    }
-    return cache[wasm_id];
-  };
-}
-
-function getStatePathToValue(getStateFn, statePath) {
-  const expression = Array.isArray(statePath) ? statePath : [statePath];
-  let value = null;
-  for (let i = 0; i < expression.length; i++) {
-    const token = expression[i];
-    if (i === 0) {
-      value = getStateFn(token);
-    } else {
-      value = value[token];
-      if (value.Id) {
-        value = getStateFn(value.Id);
-      }
-    }
-  }
-  return value;
-}
-
-function createExtractCallback(trame, sceneManager, extractInfo) {
+function createExtractCallback(trame, wasmManager, extractInfo) {
   return function () {
-    const getState = createStateHelper(sceneManager);
+    wasmManager.clearStateCache();
     for (const [name, props] of Object.entries(extractInfo)) {
       const value = {};
       for (const [propName, statePath] of Object.entries(props)) {
-        value[propName] = getStatePathToValue(getState, statePath);
+        value[propName] = wasmManager.getStateValue(statePath, true);
       }
       trame.state.set(name, value);
     }
+    wasmManager.clearStateCache();
   };
 }
 
@@ -93,42 +60,45 @@ export default {
   setup(props, { emit }) {
     const trame = inject("trame");
     const wasmURL = trame.state.get("__trame_vtklocal_wasm_url");
-    const cameraIds = [];
     const cameraTags = [];
     const listenersTags = [];
     const container = ref(null);
     const canvas = ref(null);
     const client = props.wsClient || trame?.client;
-    const stateMTimes = {};
-    const hashesMTime = {};
-    const pendingArrays = {};
-    const currentMTime = ref(1);
     const listeners = toRef(props, "listeners");
-    let sceneManager = null;
-    let updateInProgress = 0;
+    const wasmManager = new VtkWASMHandler();
     let subscription = null;
+
+    // network connector ------------------------------------------------------
+
+    async function netFetchState(vtkId) {
+      const session = client.getConnection().getSession();
+      return await session.call("vtklocal.get.state", [vtkId]);
+    }
+
+    async function netFetchBlob(hash) {
+      const session = client.getConnection().getSession();
+      const content = await session.call("vtklocal.get.hash", [hash]);
+      // handle either blob or TypedArray
+      const array = content.arrayBuffer
+        ? new Uint8Array(await content.arrayBuffer())
+        : content;
+      return array;
+    }
+
+    async function netFetchStatus(vtkId) {
+      const session = client.getConnection().getSession();
+      return await session.call("vtklocal.get.status", [vtkId]);
+    }
 
     // Subscription handling --------------------------------------------------
 
     function handleMessage([event]) {
       if (event.type === "state") {
-        const { mtime, content, id } = event;
-        sceneManager.registerState(content);
-        stateMTimes[id] = mtime;
+        wasmManager.pushState(event.content);
       }
       if (event.type === "blob") {
-        const { hash, content } = event;
-        pendingArrays[hash] = new Promise((resolve) => {
-          if (content.arrayBuffer) {
-            content.arrayBuffer().then((buffer) => {
-              sceneManager.registerBlob(hash, new Uint8Array(buffer));
-              resolve();
-            });
-          } else {
-            sceneManager.registerBlob(hash, content);
-            resolve();
-          }
-        });
+        wasmManager.pushHash(event.hash, event.content);
       }
     }
 
@@ -154,190 +124,74 @@ export default {
       const w = Math.floor(width * window.devicePixelRatio + 0.5);
       const h = Math.floor(height * window.devicePixelRatio + 0.5);
       const canvasDOM = unref(canvas);
-      if (canvasDOM && sceneManager && props.renderWindow) {
+      if (canvasDOM && wasmManager.loaded && props.renderWindow) {
         canvasDOM.width = w;
         canvasDOM.height = h;
         // console.log(`vtkLocal::resize ${width}x${height}`);
-        sceneManager.setSize(props.renderWindow, w, h);
-        sceneManager.render(props.renderWindow);
+        wasmManager.sceneManager.setSize(props.renderWindow, w, h);
+        wasmManager.sceneManager.render(props.renderWindow);
       }
     }
     let resizeObserver = new ResizeObserver(resize);
 
-    // Fetch ------------------------------------------------------------------
-
-    async function fetchState(vtkId) {
-      const session = client.getConnection().getSession();
-      const serverState = await session.call("vtklocal.get.state", [vtkId]);
-      if (serverState.length > 0) {
-        stateMTimes[vtkId] = JSON.parse(serverState).MTime;
-        // console.log(`vtkLocal::state(${vtkId})`);
-        sceneManager.registerState(serverState);
-      } else {
-        console.log(`Server returned empty state for ${vtkId}`);
-        // throw new Error(`Server returned empty state for ${vtkId}`);
-      }
-      return serverState;
-    }
-
-    async function fetchHash(hash) {
-      if (pendingArrays[hash]) {
-        await pendingArrays[hash];
-        hashesMTime[hash] = unref(currentMTime);
-        delete pendingArrays[hash];
-        return;
-      }
-      const session = client.getConnection().getSession();
-      // console.log(`vtkLocal::hash(${hash}) - before`);
-      const content = await session.call("vtklocal.get.hash", [hash]);
-      const array = content.arrayBuffer
-        ? new Uint8Array(await content.arrayBuffer())
-        : content;
-      sceneManager.registerBlob(hash, array);
-      hashesMTime[hash] = unref(currentMTime);
-      return array;
-    }
-
     // Memory -----------------------------------------------------------------
 
     function checkMemory() {
-      const memVtk = sceneManager.getTotalVTKDataObjectMemoryUsage();
-      const memArrays = sceneManager.getTotalBlobMemoryUsage();
-      const threshold = Number(props.cacheSize) + memVtk;
-
-      if (memArrays > threshold) {
-        // Need to remove old blobs
-        const tsMap = {};
-        let mtimeToFree = unref(currentMTime);
-        Object.entries(hashesMTime).forEach(([hash, mtime]) => {
-          if (mtime < mtimeToFree) {
-            mtimeToFree = mtime;
-          }
-          const sMtime = mtime.toString();
-          if (tsMap[sMtime]) {
-            tsMap[sMtime].push(hash);
-          } else {
-            tsMap[sMtime] = [hash];
-          }
-        });
-
-        // Remove blobs starting by the old ones
-        while (sceneManager.getTotalBlobMemoryUsage() > threshold) {
-          const hashesToDelete = tsMap[mtimeToFree];
-          if (hashesToDelete) {
-            for (let i = 0; i < hashesToDelete.length; i++) {
-              // console.log(
-              //   `Delete hash(${hashesToDelete[i]}) - mtime: ${mtimeToFree}`
-              // );
-              sceneManager.unRegisterBlob(hashesToDelete[i]);
-              delete hashesMTime[hashesToDelete[i]];
-            }
-          }
-          mtimeToFree++;
-        }
-      }
-      emit("memory-vtk", sceneManager.getTotalVTKDataObjectMemoryUsage());
-      emit("memory-arrays", sceneManager.getTotalBlobMemoryUsage());
+      wasmManager.freeMemory(props.cacheSize);
+      emit(
+        "memory-vtk",
+        wasmManager.sceneManager.getTotalVTKDataObjectMemoryUsage()
+      );
+      emit("memory-arrays", wasmManager.sceneManager.getTotalBlobMemoryUsage());
     }
 
     // Update -----------------------------------------------------------------
 
     async function update() {
-      updateInProgress++;
-      if (updateInProgress !== 1) {
-        // console.error("Skip concurrent update");
+      if (!wasmManager.loaded) {
         return;
       }
 
-      try {
-        // console.log("vtkLocal::update(begin)");
-        const session = client.getConnection().getSession();
-        const serverStatus = await session.call("vtklocal.get.status", [
-          props.renderWindow,
-        ]);
-        const pendingRequests = [];
-        // console.log("ids", serverStatus.ids);
-        serverStatus.ids.forEach(([vtkId, mtime]) => {
-          if (!stateMTimes[vtkId] || stateMTimes[vtkId] < mtime) {
-            // console.log("fetch", vtkId);
-            pendingRequests.push(fetchState(vtkId));
-          } else {
-            // console.log("skip", vtkId);
-          }
-        });
-
-        // For listeners
-        cameraIds.push(...serverStatus.cameras);
-
-        serverStatus.ignore_ids.forEach((vtkId) => {
-          sceneManager.unRegisterState(vtkId);
-        });
-        serverStatus.hashes.forEach((hash) => {
-          if (!hashesMTime[hash]) {
-            pendingRequests.push(fetchHash(hash));
-          }
-          hashesMTime[hash] = unref(currentMTime);
-        });
-        await Promise.all(pendingRequests);
-        currentMTime.value++;
-        try {
-          sceneManager.updateObjectsFromStates();
-          // typically, server side framebuffer is arbitrary size, not synchronized with canvas size.
-          // render after deserialization so that the server-side size gets seen by VTK's OpenGL cache.
-          sceneManager.render(props.renderWindow);
-          // now resize to fit canvas, the previous render is required otherwise, VTK's OpenGL cache
-          // thinks a resize is not necessary because the size is same as before state update.
-          resize();
-        } catch (e) {
-          console.error("WASM update failed");
-          console.log(e);
-        }
-        emit("updated");
-        checkMemory();
-      } catch (e) {
-        console.error("Error in update", e);
-      } finally {
-        updateInProgress--;
-        if (updateInProgress) {
-          updateInProgress = 0;
-          await update();
-        }
-      }
+      await wasmManager.update(props.renderWindow);
+      wasmManager.sceneManager.render(props.renderWindow);
+      resize();
+      emit("updated");
+      checkMemory();
     }
 
     // resetCamera ------------------------------------------------------------
 
     function resetCamera(rendererId) {
-      sceneManager.resetCamera(rendererId);
-      sceneManager.render(props.renderWindow);
+      wasmManager.sceneManager.resetCamera(rendererId);
+      wasmManager.sceneManager.render(props.renderWindow);
     }
 
     // Life Cycles ------------------------------------------------------------
 
     onMounted(async () => {
       // console.log("vtkLocal::mounted");
-      sceneManager = await createModule(unref(canvas), wasmURL);
+      wasmManager.bindNetwork(netFetchState, netFetchBlob, netFetchStatus);
+      await wasmManager.load(wasmURL, unref(canvas));
       if (props.eagerSync) {
         subscribe();
       }
       await update();
 
       // Camera listener
-      for (let i = 0; i < cameraIds.length; i++) {
-        const cid = Number(cameraIds[i]);
+      wasmManager.cameraIds.forEach((cid) => {
         cameraTags.push([
           cid,
-          sceneManager.addObserver(cid, "ModifiedEvent", () => {
-            emit("camera", idToState(sceneManager, cid));
+          wasmManager.sceneManager.addObserver(cid, "ModifiedEvent", () => {
+            emit("camera", wasmManager.getState(cid));
           }),
         ]);
-      }
+      });
 
       // Attach listeners
       watchEffect(() => {
         while (listenersTags.length) {
           const [cid, tag] = listenersTags.pop();
-          sceneManager.removeObserver(cid, tag);
+          wasmManager.sceneManager.removeObserver(cid, tag);
         }
 
         for (const [cid, eventMap] of Object.entries(listeners.value || {})) {
@@ -345,10 +199,10 @@ export default {
           for (const [eventName, extractInfo] of Object.entries(
             eventMap || {}
           )) {
-            const fn = createExtractCallback(trame, sceneManager, extractInfo);
+            const fn = createExtractCallback(trame, wasmManager, extractInfo);
             listenersTags.push([
               wasmId,
-              sceneManager.addObserver(wasmId, eventName, fn),
+              wasmManager.sceneManager.addObserver(wasmId, eventName, fn),
             ]);
 
             // Push update at registration
@@ -357,7 +211,7 @@ export default {
         }
       });
 
-      sceneManager.startEventLoop(props.renderWindow);
+      wasmManager.sceneManager.startEventLoop(props.renderWindow);
       if (resizeObserver) {
         resizeObserver.observe(unref(container));
       }
@@ -371,15 +225,15 @@ export default {
       // Camera listeners
       while (cameraTags.length) {
         const [cid, tag] = cameraTags.pop();
-        sceneManager.removeObserver(cid, tag);
+        wasmManager.sceneManager.removeObserver(cid, tag);
       }
       while (listenersTags.length) {
         const [cid, tag] = listenersTags.pop();
-        sceneManager.removeObserver(cid, tag);
+        wasmManager.sceneManager.removeObserver(cid, tag);
       }
 
       // console.log("vtkLocal::unmounted");
-      sceneManager.stopEventLoop(props.renderWindow);
+      wasmManager.sceneManager.stopEventLoop(props.renderWindow);
       if (resizeObserver) {
         resizeObserver.disconnect();
         resizeObserver = null;
@@ -389,7 +243,7 @@ export default {
     // Public -----------------------------------------------------------------
 
     function evalStateExtract(definition) {
-      createExtractCallback(trame, sceneManager, definition)();
+      createExtractCallback(trame, wasmManager, definition)();
     }
 
     return {

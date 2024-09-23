@@ -85,6 +85,6 @@ def register_wasm(serve_path):
         run_async(setup_wasm_directory(dest_directory, wasm_url))
 
     return dict(
-        module_scripts=[f"{BASE_URL}/vtkWasmSceneManager.mjs"],
-        state={"__trame_vtklocal_wasm_url": f"{BASE_URL}/vtkWasmSceneManager.wasm"},
+        # module_scripts=[f"{BASE_URL}/vtkWasmSceneManager.mjs"],
+        state={"__trame_vtklocal_wasm_url": BASE_URL},
     )

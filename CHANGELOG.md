@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.6.1 (2024-10-07)
+
+### Fix
+
+* **wasm:** Add support for many canvas ([`cba9985`](https://github.com/Kitware/trame-vtklocal/commit/cba9985ec1b916f1b7ccfba2ed836d3db0365242))
+
 ## v0.6.0 (2024-09-23)
 
 ### Feature

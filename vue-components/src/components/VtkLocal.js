@@ -63,7 +63,6 @@ export default {
     const cameraTags = [];
     const listenersTags = [];
     const container = ref(null);
-    const canvas = ref(null);
     const client = props.wsClient || trame?.client;
     const listeners = toRef(props, "listeners");
     const wasmManager = new VtkWASMHandler();
@@ -123,7 +122,9 @@ export default {
       const { width, height } = container.value.getBoundingClientRect();
       const w = Math.floor(width * window.devicePixelRatio + 0.5);
       const h = Math.floor(height * window.devicePixelRatio + 0.5);
-      const canvasDOM = unref(canvas);
+      const canvasDOM = unref(container).querySelector(
+        wasmManager.getCanvasSelector(props.renderWindow)
+      );
       if (canvasDOM && wasmManager.loaded && props.renderWindow) {
         canvasDOM.width = w;
         canvasDOM.height = h;
@@ -171,7 +172,17 @@ export default {
     onMounted(async () => {
       // console.log("vtkLocal::mounted");
       wasmManager.bindNetwork(netFetchState, netFetchBlob, netFetchStatus);
-      await wasmManager.load(wasmURL, unref(canvas));
+      await wasmManager.load(wasmURL);
+      const selector = wasmManager.bindCanvasToDOM(
+        props.renderWindow,
+        unref(container)
+      );
+      unref(container)
+        .querySelector(selector)
+        .setAttribute(
+          "style",
+          "position: absolute; left: 0; top: 0; width: 100%; height: 100%;"
+        );
       if (props.eagerSync) {
         subscribe();
       }
@@ -238,6 +249,9 @@ export default {
         resizeObserver.disconnect();
         resizeObserver = null;
       }
+
+      // unbind canvas
+      wasmManager.unbindCanvasToDOM(props.renderWindow);
     });
 
     // Public -----------------------------------------------------------------
@@ -248,23 +262,10 @@ export default {
 
     return {
       container,
-      canvas,
       update,
       resetCamera,
       evalStateExtract,
     };
   },
-  template: `
-        <div ref="container" style="position: relative; width: 100%; height: 100%;">
-          <canvas 
-            id="canvas"
-            ref="canvas" 
-            style="position: absolute; left: 0; top: 0; width: 100%; height: 100%;" 
-            tabindex="0"
-            
-            @contextmenu.prevent
-            @click="canvas.focus()"
-            @mouseenter="canvas.focus()"
-          />
-        </div>`,
+  template: `<div ref="container" style="position: relative; width: 100%; height: 100%;"></div>`,
 };

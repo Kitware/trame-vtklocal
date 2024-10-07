@@ -3,12 +3,11 @@ import vtk
 from trame.app import get_server
 from trame.ui.html import DivLayout
 from trame.widgets import html, client, vtklocal
-from trame.decorators import TrameApp, change
+from trame.decorators import TrameApp, change, trigger
 
 FULL_SCREEN = "position:absolute; left:0; top:0; width:100vw; height:100vh;"
 TOP_RIGHT = "position: absolute; top: 1rem; right: 1rem; z-index: 10;"
 TOP_LEFT = "position: absolute; top: 1rem; left: 1rem; z-index: 10;"
-TOP_CENTER = "position: absolute; top: 1rem; left: 50%; z-index: 10; transform: translateX(-50%);"
 
 
 def create_vtk_pipeline():
@@ -43,8 +42,19 @@ class WasmApp:
 
     @change("resolution")
     def on_resolution_change(self, resolution, **_):
+        print(f"{resolution=}")
         self.cone.SetResolution(int(resolution))
         self.ctrl.view_update()
+
+    @trigger("reset_camera")
+    def reset_camera(self):
+        print("reset_camera from JS")
+        self.ctrl.view_reset_camera()
+
+    @trigger("reset_resolution")
+    def reset_resolution(self):
+        print("reset_resolution from JS")
+        self.server.state.resolution = 6
 
     def _build_ui(self):
         with DivLayout(self.server):
@@ -54,11 +64,6 @@ class WasmApp:
                 "Reset Camera",
                 click=self.ctrl.view_reset_camera,
                 style=TOP_RIGHT,
-            )
-            html.Button(
-                "Toggle component",
-                click="enable_view = !enable_view",
-                style=TOP_CENTER,
             )
             html.Input(
                 type="range",
@@ -70,10 +75,7 @@ class WasmApp:
             )
 
             with html.Div(style=FULL_SCREEN):
-                with vtklocal.LocalView(
-                    self.render_window,
-                    v_if=("enable_view", True),
-                ) as view:
+                with vtklocal.LocalView(self.render_window) as view:
                     view.update_throttle.rate = 20  # max update rate
                     self.ctrl.view_update = view.update_throttle
                     self.ctrl.view_reset_camera = view.reset_camera

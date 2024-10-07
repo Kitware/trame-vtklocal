@@ -1,3 +1,5 @@
+import "./style.css";
+
 const LOADED_URLS = [];
 
 function loadScriptAsModule(url) {
@@ -29,6 +31,14 @@ export class VtkWASMHandler {
     this.networkFetchStatus = null;
     this.cameraIds = new Set();
     this.stateCache = {};
+    // FIXME - to remove once API available on C++ side
+    this.renderWindowIds = new Set();
+    this.renderWindowIdToInteractorId = new Map();
+
+    // Canvas management
+    this.offlineCanvasContainer = document.createElement("div");
+    this.offlineCanvasContainer.setAttribute("class", "unused-canvas");
+    document.body.appendChild(this.offlineCanvasContainer);
   }
 
   /**
@@ -38,7 +48,7 @@ export class VtkWASMHandler {
    *
    * @param {str} wasmBaseURL
    */
-  async load(wasmBaseURL, canvas) {
+  async load(wasmBaseURL) {
     if (this.loaded) {
       return;
     }
@@ -47,20 +57,7 @@ export class VtkWASMHandler {
     await loadScriptAsModule(jsModuleURL);
 
     // Load WASM
-    const wasmModuleURL = `${wasmBaseURL}/vtkWasmSceneManager.wasm`;
-    const module = {
-      canvas,
-      locateFile() {
-        return wasmModuleURL;
-      },
-      print() {
-        console.info(Array.prototype.slice.call(arguments).join(" "));
-      },
-      printErr() {
-        console.error(Array.prototype.slice.call(arguments).join(" "));
-      },
-    };
-    const objectManager = await window.createVTKWasmSceneManager(module);
+    const objectManager = await window.createVTKWasmSceneManager();
     objectManager.initialize();
 
     // Capture objects
@@ -139,7 +136,30 @@ export class VtkWASMHandler {
       const stateObj = JSON.parse(state);
       const { Id, MTime } = stateObj;
       this.stateMTimes[Id] = MTime;
-      this.sceneManager.registerState(state);
+
+      let registrationNeeded = true;
+
+      // RenderWindow - to remove once API available on C++ side
+      if (this.renderWindowIds.has(Id) && stateObj?.Interactor?.Id) {
+        this.renderWindowIdToInteractorId.set(stateObj.Interactor.Id, Id);
+        stateObj.CanvasSelector = this.getCanvasSelector(Id);
+        this.sceneManager.registerState(JSON.stringify(stateObj));
+        registrationNeeded = false;
+      }
+
+      // Interactor - to remove once API available on C++ side
+      if (this.renderWindowIdToInteractorId.has(Id)) {
+        stateObj.CanvasSelector = this.getCanvasSelector(
+          this.renderWindowIdToInteractorId.get(Id)
+        );
+        this.sceneManager.registerState(JSON.stringify(stateObj));
+        registrationNeeded = false;
+      }
+
+      // Everything else
+      if (registrationNeeded) {
+        this.sceneManager.registerState(state);
+      }
     }
   }
 
@@ -192,6 +212,9 @@ export class VtkWASMHandler {
    * @param {int} vtkId
    */
   async update(vtkId) {
+    // FIXME - to remove once API available on C++ side
+    this.renderWindowIds.add(vtkId);
+
     this.updateInProgress++;
     if (this.updateInProgress !== 1) {
       // console.error("Skip concurrent update");
@@ -295,5 +318,53 @@ export class VtkWASMHandler {
       }
     }
     return value;
+  }
+
+  /**
+   * Return canvas selector based on renderWindowId
+   *
+   * @param {int} renderWindowId
+   * @returns the selector string to find the given canvas
+   */
+  getCanvasSelector(renderWindowId) {
+    return `.vtk-wasm-${renderWindowId}`;
+  }
+
+  /**
+   * Create canvas if missing and add it to the provided targetElement container.
+   *
+   * @param {int} renderWindowId
+   * @param {HTMLElement} targetElement
+   * @returns the canvas selector string
+   */
+  bindCanvasToDOM(renderWindowId, targetElement) {
+    const canvasSelector = this.getCanvasSelector(renderWindowId);
+    let canvas = this.offlineCanvasContainer.querySelector(canvasSelector);
+
+    if (!canvas) {
+      // Create it
+      canvas = document.createElement("canvas");
+      canvas.setAttribute("class", canvasSelector.substring(1));
+      canvas.setAttribute("tabindex", "0");
+      // @contextmenu.prevent
+      // @click="canvas.focus()"
+      // @mouseenter="canvas.focus()"
+    }
+
+    targetElement.appendChild(canvas);
+    return canvasSelector;
+  }
+
+  /**
+   * Remove canvas from its current container but keep it for possible followup usage.
+   *
+   * @param {int} renderWindowId
+   */
+  unbindCanvasToDOM(renderWindowId) {
+    const canvasSelector = this.getCanvasSelector(renderWindowId);
+    const canvas = document.querySelector(canvasSelector);
+    if (canvas) {
+      this.offlineCanvasContainer.appendChild(canvas);
+    }
   }
 }

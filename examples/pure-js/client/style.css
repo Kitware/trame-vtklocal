@@ -1,0 +1,41 @@
+body {
+    margin: 0;
+}
+
+.fullScreen {
+    position:absolute; 
+    left:0; 
+    top:0;
+     width:100vw; 
+     height:100vh;
+}
+
+.resolution {
+    position: absolute; 
+    top: 1rem; 
+    left: 1rem; 
+    z-index: 10;
+}
+.resetCamera {
+    position: absolute; 
+    top: 1rem; 
+    right: 1rem; 
+    z-index: 10;
+}
+
+.resetResolution {
+    position: absolute; 
+    top: 1rem; 
+    left: 50%; 
+    z-index: 10;
+    transform: translateX(-50%);
+}
+
+.wasmContent {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    top: 0;
+    background-color: blueviolet;
+}

@@ -31,15 +31,17 @@ This step aims to build the JS code and serve it inplace of the default trame cl
 Technically, this is not required but for simplicity we are suggesting that path.
 
 ```bash
-# This will build the client side
+# This will build the client side into ./dist
 cd client
 npm install
 npm run build
 
-# This will start the trame server while serving the current JS
+# Copy the WASM code into ./dist/wasm (may need to fix the src path)
 cp -r ../wasm-lib/9.3.20241005 ./dist/wasm
-python ../server.py --content ./dist
 
-# trame server but no GUI
-python ../server_nogui.py --content ./dist
+# Start the trame server with our JS client
+python ../server.py --content ./dist --port 0
+
+# Start the trame server that don't define a GUI
+python ../server_nogui.py --content ./dist --port 0
 ```

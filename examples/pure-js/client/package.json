@@ -6,13 +6,20 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "lint": "eslint main.js",
+    "format": "prettier . --write",
     "preview": "vite preview"
   },
   "devDependencies": {
-    "vite": "^5.4.8"
+    "@eslint/js": "^9.12.0",
+    "eslint": "^9.12.0",
+    "globals": "^15.10.0",
+    "prettier": "3.3.3",
+    "vite": "^5.4.8",
+    "vite-plugin-eslint": "^1.8.1"
   },
   "dependencies": {
     "@kitware/trame": "^0.0.5",
-    "@kitware/trame-vtklocal": "^0.0.1"
+    "@kitware/trame-vtklocal": "^0.6.1"
   }
 }

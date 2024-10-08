@@ -37,6 +37,9 @@ npm install
 npm run build
 
 # This will start the trame server while serving the current JS
-ln -s ../wasm-lib/9.3.20241005 ./dist/wasm
+cp -r ../wasm-lib/9.3.20241005 ./dist/wasm
 python ../server.py --content ./dist
+
+# trame server but no GUI
+python ../server_nogui.py --content ./dist
 ```

@@ -1,13 +1,8 @@
 import vtk
 
 from trame.app import get_server
-from trame.ui.html import DivLayout
-from trame.widgets import html, client, vtklocal
+from trame.widgets import vtklocal
 from trame.decorators import TrameApp, change, trigger
-
-FULL_SCREEN = "position:absolute; left:0; top:0; width:100vw; height:100vh;"
-TOP_RIGHT = "position: absolute; top: 1rem; right: 1rem; z-index: 10;"
-TOP_LEFT = "position: absolute; top: 1rem; left: 1rem; z-index: 10;"
 
 
 def create_vtk_pipeline():
@@ -34,7 +29,16 @@ class WasmApp:
     def __init__(self, server=None):
         self.server = get_server(server)
         self.render_window, self.cone = create_vtk_pipeline()
-        self._build_ui()
+
+        # Server side helper for WASM view handling
+        view = vtklocal.LocalView(self.render_window, trame_server=self.server)
+        view.update_throttle.rate = 20  # max update rate
+        self.ctrl.view_update = view.update_throttle
+        self.ctrl.view_reset_camera = view.reset_camera
+
+        # Share info tor pure JS client
+        self.state.wasm_render_window_id = view.get_wasm_id(self.render_window)
+        self.state.wasm_render_window_ref = view.ref_name
 
     @property
     def ctrl(self):
@@ -59,35 +63,6 @@ class WasmApp:
     def reset_resolution(self):
         print("reset_resolution from JS")
         self.state.resolution = 6
-
-    def _build_ui(self):
-        with DivLayout(self.server):
-            client.Style("body { margin: 0; }")
-
-            html.Button(
-                "Reset Camera",
-                click=self.ctrl.view_reset_camera,
-                style=TOP_RIGHT,
-            )
-            html.Input(
-                type="range",
-                v_model=("resolution", 6),
-                min=3,
-                max=60,
-                step=1,
-                style=TOP_LEFT,
-            )
-
-            with html.Div(style=FULL_SCREEN):
-                with vtklocal.LocalView(self.render_window) as view:
-                    view.update_throttle.rate = 20  # max update rate
-                    self.ctrl.view_update = view.update_throttle
-                    self.ctrl.view_reset_camera = view.reset_camera
-                    # For pure JS client
-                    self.state.wasm_render_window_id = view.get_wasm_id(
-                        self.render_window
-                    )
-                    self.state.wasm_render_window_ref = view.ref_name
 
 
 def main():

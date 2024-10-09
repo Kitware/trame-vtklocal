@@ -8,6 +8,7 @@ from trame.decorators import TrameApp, change, trigger
 def create_vtk_pipeline():
     renderer = vtk.vtkRenderer()
     rw = vtk.vtkRenderWindow()
+    # rw.OffScreenRenderingOn()
     rw.AddRenderer(renderer)
     rwi = vtk.vtkRenderWindowInteractor(render_window=rw)
     rwi.interactor_style.SetCurrentStyleToTrackballCamera()

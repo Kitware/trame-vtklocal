@@ -22,6 +22,7 @@ def setup_pyvista():
     p.reset_camera()
     p.show_axes()
     widgets = [r.axes_widget for r in p.renderers if hasattr(r, "axes_widget")]
+    # p.ren_win.OffScreenRenderingOn()
 
     return p.ren_win, widgets
 

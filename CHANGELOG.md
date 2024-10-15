@@ -2,6 +2,19 @@
 
 <!--next-version-placeholder-->
 
+## v0.6.2 (2024-10-15)
+
+### Fix
+
+* **update:** Prevent intermixed render with wrong size ([`180e1e4`](https://github.com/Kitware/trame-vtklocal/commit/180e1e48d7e7bae78e686d44b06f19d5d447274f))
+
+### Documentation
+
+* **js-lib:** Update example with new api ([`d0e638e`](https://github.com/Kitware/trame-vtklocal/commit/d0e638e452bfecbee829e5598b9f44d5c3157656))
+* **offscreen:** Update examples ([`0fbb786`](https://github.com/Kitware/trame-vtklocal/commit/0fbb7864880298a8ef9678dd4fe18815970ea9a3))
+* **example:** Update readme ([`491962f`](https://github.com/Kitware/trame-vtklocal/commit/491962f25b9093610d3f9a5d2a0b97087539dffe))
+* **js-only:** Add example js-only ([`dfe79eb`](https://github.com/Kitware/trame-vtklocal/commit/dfe79eb6abdc857321e4cc9667fc5cdc17c07ee0))
+
 ## v0.6.1 (2024-10-07)
 
 ### Fix

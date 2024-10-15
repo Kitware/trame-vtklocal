@@ -53,8 +53,6 @@ class WasmView {
       return;
     }
     await this.wasm.update(this.rwId);
-    this.wasm.sceneManager.render(this.rwId);
-    this.resize();
     this.checkMemory();
   }
 
@@ -62,15 +60,7 @@ class WasmView {
     const { width, height } = this.container.getBoundingClientRect();
     const w = Math.floor(width * window.devicePixelRatio + 0.5);
     const h = Math.floor(height * window.devicePixelRatio + 0.5);
-    const canvasDOM = this.container.querySelector(
-      this.wasm.getCanvasSelector(this.rwId),
-    );
-    if (canvasDOM && this.wasm.loaded && this.rwId) {
-      canvasDOM.width = w;
-      canvasDOM.height = h;
-      this.wasm.sceneManager.setSize(this.rwId, w, h);
-      this.wasm.sceneManager.render(this.rwId);
-    }
+    this.wasm.setSize(this.rwId, w, h);
   }
 
   checkMemory() {

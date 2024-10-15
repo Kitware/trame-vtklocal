@@ -34,6 +34,7 @@ export class VtkWASMHandler {
     // FIXME - to remove once API available on C++ side
     this.renderWindowIds = new Set();
     this.renderWindowIdToInteractorId = new Map();
+    this.renderWindowSizes = {};
 
     // Canvas management
     this.offlineCanvasContainer = document.createElement("div");
@@ -122,8 +123,7 @@ export class VtkWASMHandler {
    */
   async fetchState(vtkId) {
     const serverState = await this.networkFetchState(vtkId);
-    this.pushState(serverState);
-    return serverState;
+    return this.patchState(serverState);
   }
 
   /**
@@ -131,20 +131,21 @@ export class VtkWASMHandler {
    *
    * @param {str} state
    */
-  pushState(state) {
+  patchState(state) {
     if (state.length > 0) {
       const stateObj = JSON.parse(state);
       const { Id, MTime } = stateObj;
       this.stateMTimes[Id] = MTime;
 
-      let registrationNeeded = true;
-
       // RenderWindow - to remove once API available on C++ side
       if (this.renderWindowIds.has(Id) && stateObj?.Interactor?.Id) {
         this.renderWindowIdToInteractorId.set(stateObj.Interactor.Id, Id);
         stateObj.CanvasSelector = this.getCanvasSelector(Id);
-        this.sceneManager.registerState(JSON.stringify(stateObj));
-        registrationNeeded = false;
+        delete stateObj["Size"];
+        if (this.renderWindowSizes[Id]) {
+          stateObj.Size = this.renderWindowSizes[Id];
+        }
+        return JSON.stringify(stateObj);
       }
 
       // Interactor - to remove once API available on C++ side
@@ -152,14 +153,10 @@ export class VtkWASMHandler {
         stateObj.CanvasSelector = this.getCanvasSelector(
           this.renderWindowIdToInteractorId.get(Id)
         );
-        this.sceneManager.registerState(JSON.stringify(stateObj));
-        registrationNeeded = false;
+        return JSON.stringify(stateObj);
       }
 
-      // Everything else
-      if (registrationNeeded) {
-        this.sceneManager.registerState(state);
-      }
+      return state;
     }
   }
 
@@ -223,19 +220,20 @@ export class VtkWASMHandler {
 
     try {
       const serverStatus = await this.networkFetchStatus(vtkId);
-      const pendingRequests = [];
+      const pendingHashes = [];
+      const pendingStates = [];
 
       // Fetch any state that needs update
       serverStatus.ids.forEach(([vtkId, mtime]) => {
         if (!this.stateMTimes[vtkId] || this.stateMTimes[vtkId] < mtime) {
-          pendingRequests.push(this.fetchState(vtkId));
+          pendingStates.push(this.fetchState(vtkId));
         }
       });
 
       // Fetch any blob that is missing
       serverStatus.hashes.forEach((hash) => {
         if (!this.hashesMTime[hash]) {
-          pendingRequests.push(this.fetchHash(hash));
+          pendingHashes.push(this.fetchHash(hash));
         }
         this.hashesMTime[hash] = this.currentMTime;
       });
@@ -249,17 +247,27 @@ export class VtkWASMHandler {
       );
 
       // Ensure completion of all network calls
-      await Promise.all(pendingRequests);
+      await Promise.all(pendingHashes);
       await Promise.all(Object.values(this.pendingArrays));
+      const statesToRegister = await Promise.all(pendingStates);
       this.currentMTime++;
+
+      // Register states in a synchronous manner to prevent intermixed render from interactor
+      while (statesToRegister.length) {
+        const state = statesToRegister.pop();
+        if (state) {
+          this.sceneManager.registerState(state);
+        }
+      }
 
       // Bump local mtime and process states to reflect server state
       try {
         this.sceneManager.updateObjectsFromStates();
+        const [w, h] = this.renderWindowSizes[vtkId];
+        this.sceneManager.setSize(vtkId, w, h);
+        this.sceneManager.render(vtkId);
         // TODO outside:
-        // 1. render: server side framebuffer is arbitrary size, not synchronized with canvas size.
-        // 2. resize: to fit canvas
-        // 3. freeMemory: to keep memory in check
+        // - freeMemory: to keep memory in check
       } catch (e) {
         console.error("WASM update failed");
         console.log(e);
@@ -270,7 +278,7 @@ export class VtkWASMHandler {
       this.updateInProgress--;
       if (this.updateInProgress) {
         this.updateInProgress = 0;
-        await this.update();
+        await this.update(vtkId);
       }
     }
   }
@@ -365,6 +373,26 @@ export class VtkWASMHandler {
     const canvas = document.querySelector(canvasSelector);
     if (canvas) {
       this.offlineCanvasContainer.appendChild(canvas);
+    }
+  }
+
+  /**
+   * Set size to the given RenderWindow
+   *
+   * @param {int} renderWindowId
+   * @param {int} width
+   * @param {int} height
+   */
+  setSize(renderWindowId, width, height) {
+    this.renderWindowSizes[renderWindowId] = [width, height];
+    const canvasSelector = this.getCanvasSelector(renderWindowId);
+    const canvas = document.querySelector(canvasSelector);
+    if (canvas) {
+      canvas.width = width;
+      canvas.height = height;
+
+      this.sceneManager.setSize(renderWindowId, width, height);
+      this.sceneManager.render(renderWindowId);
     }
   }
 }

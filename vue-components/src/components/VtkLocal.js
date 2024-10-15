@@ -122,16 +122,7 @@ export default {
       const { width, height } = container.value.getBoundingClientRect();
       const w = Math.floor(width * window.devicePixelRatio + 0.5);
       const h = Math.floor(height * window.devicePixelRatio + 0.5);
-      const canvasDOM = unref(container).querySelector(
-        wasmManager.getCanvasSelector(props.renderWindow)
-      );
-      if (canvasDOM && wasmManager.loaded && props.renderWindow) {
-        canvasDOM.width = w;
-        canvasDOM.height = h;
-        // console.log(`vtkLocal::resize ${width}x${height}`);
-        wasmManager.sceneManager.setSize(props.renderWindow, w, h);
-        wasmManager.sceneManager.render(props.renderWindow);
-      }
+      wasmManager.setSize(props.renderWindow, w, h);
     }
     let resizeObserver = new ResizeObserver(resize);
 
@@ -154,8 +145,6 @@ export default {
       }
 
       await wasmManager.update(props.renderWindow);
-      wasmManager.sceneManager.render(props.renderWindow);
-      resize();
       emit("updated");
       checkMemory();
     }
@@ -186,6 +175,12 @@ export default {
       if (props.eagerSync) {
         subscribe();
       }
+
+      // Figure out size
+      if (resizeObserver) {
+        resizeObserver.observe(unref(container));
+      }
+
       await update();
 
       // Camera listener
@@ -223,9 +218,6 @@ export default {
       });
 
       wasmManager.sceneManager.startEventLoop(props.renderWindow);
-      if (resizeObserver) {
-        resizeObserver.observe(unref(container));
-      }
     });
 
     onBeforeUnmount(() => {

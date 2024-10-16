@@ -20,7 +20,7 @@ Installation
     # We need a VTK that has its wasm counterpart
     # This is the first version available with it
     # For ParaView (not yet supported), VTK don't need to be installed
-    pip install "vtk==9.3.20241005.dev0" --extra-index-url https://wheels.vtk.org
+    pip install "vtk==9.4.0rc2" --extra-index-url https://wheels.vtk.org
 
 
 Development

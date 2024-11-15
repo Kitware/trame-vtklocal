@@ -145,6 +145,10 @@ export class VtkWASMHandler {
         if (this.renderWindowSizes[Id]) {
           stateObj.Size = this.renderWindowSizes[Id];
         }
+
+        // Need to patch classname to allow OSMesa server to work
+        stateObj.ClassName = "vtkCocoaRenderWindow";
+
         return JSON.stringify(stateObj);
       }
 

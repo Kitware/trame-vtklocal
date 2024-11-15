@@ -2,6 +2,17 @@
 
 <!--next-version-placeholder-->
 
+## v0.6.3 (2024-11-15)
+
+### Fix
+
+* **jslib:** Use default window size ([`d90a033`](https://github.com/Kitware/trame-vtklocal/commit/d90a0338c419f37ef8d82ecfcc80b9124d11e936))
+
+### Documentation
+
+* **README:** Update vtk version to use 9.4 ([`8a3fc72`](https://github.com/Kitware/trame-vtklocal/commit/8a3fc72637917a157ae416771914884b2cc2eabd))
+* **js-lib:** Update version in dep ([`f9c8fb5`](https://github.com/Kitware/trame-vtklocal/commit/f9c8fb53f3329bc5ce57cb801dd7bb2a269764d1))
+
 ## v0.6.2 (2024-10-15)
 
 ### Fix

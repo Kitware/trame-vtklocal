@@ -263,7 +263,7 @@ export class VtkWASMHandler {
       // Bump local mtime and process states to reflect server state
       try {
         this.sceneManager.updateObjectsFromStates();
-        const [w, h] = this.renderWindowSizes[vtkId];
+        const [w, h] = this.renderWindowSizes[vtkId] || [10, 10];
         this.sceneManager.setSize(vtkId, w, h);
         this.sceneManager.render(vtkId);
         // TODO outside:

@@ -2,6 +2,17 @@
 
 <!--next-version-placeholder-->
 
+## v0.6.4 (2024-11-15)
+
+### Fix
+
+* **osmesa:** Allow server to use osmesa ([`cd77285`](https://github.com/Kitware/trame-vtklocal/commit/cd77285a2f9e35f9b908d17c0cd6423c52f0dc64))
+
+### Documentation
+
+* **examples:** Add VTK polydata file viewer ([`d8e18eb`](https://github.com/Kitware/trame-vtklocal/commit/d8e18ebd6ce8cf2f23d04b85836d408946718115))
+* **examples:** Bump trame-vtklocal version to 0.6.3 ([`d342c3a`](https://github.com/Kitware/trame-vtklocal/commit/d342c3a72534b5410779403d4aba7c8b11b1c896))
+
 ## v0.6.3 (2024-11-15)
 
 ### Fix

@@ -7,6 +7,8 @@ from vtkmodules.vtkSerializationManager import vtkObjectManager
 
 def map_id_mtime(object_manager, vtk_id):
     vtk_obj = object_manager.GetObjectAtId(vtk_id)
+    if vtk_obj is None:
+        return (vtk_id, 0)
     return (vtk_id, vtk_obj.GetMTime())
 
 

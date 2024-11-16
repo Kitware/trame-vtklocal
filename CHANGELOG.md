@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.6.5 (2024-11-16)
+
+### Fix
+
+* **mtime:** Prevent raise condition ([`68b7dcf`](https://github.com/Kitware/trame-vtklocal/commit/68b7dcf054ead3cdde613996926bc6294e8b45e4))
+
 ## v0.6.4 (2024-11-15)
 
 ### Fix

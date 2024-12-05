@@ -68,7 +68,7 @@ case "$build_target" in
             -DBUILD_SHARED_LIBS=OFF \
             -DVTK_WRAP_SERIALIZATION=ON \
             -DVTK_BUILD_TESTING=ON \
-            -DVTK_ENABLE_LOGGING=OFF \
+            -DVTK_ENABLE_LOGGING=ON \
             -DVTK_BUILD_EXAMPLES=OFF \
             -DVTK_MODULE_ENABLE_VTK_RenderingLICOpenGL2=NO
 

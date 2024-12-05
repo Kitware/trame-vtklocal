@@ -70,7 +70,7 @@ Running examples
     # We need a VTK that has its wasm counterpart
     # This is the first version available with it
     # For ParaView (not yet supported), VTK don't need to be installed
-    pip install "vtk==9.3.20240810.dev0" --extra-index-url https://wheels.vtk.org
+    pip install "vtk==9.4.20241123.dev0" --extra-index-url https://wheels.vtk.org
 
     # regular trame app
     python ./examples/vtk/cone.py 

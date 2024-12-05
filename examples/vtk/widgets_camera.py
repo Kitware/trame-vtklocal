@@ -68,7 +68,7 @@ def create_vtk_pipeline(path):
 
     ren_win.Render()
 
-    return ren_win
+    return ren_win, cam_orient_manipulator
 
 
 # -----------------------------------------------------------------------------
@@ -82,7 +82,7 @@ class App:
 
         self.server.cli.add_argument("--data")
         args, _ = self.server.cli.parse_known_args()
-        self.render_window = create_vtk_pipeline(args.data)
+        self.render_window, self.widget = create_vtk_pipeline(args.data)
         self.html_view = None
         self.ui = self._ui()
 
@@ -94,6 +94,7 @@ class App:
             ):
                 if WASM:
                     self.html_view = vtklocal.LocalView(self.render_window)
+                    self.widget_id = self.html_view.register_widget(self.widget)
                 else:
                     self.html_view = vtk_widgets.VtkRemoteView(self.render_window)
 

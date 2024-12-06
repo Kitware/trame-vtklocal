@@ -2,6 +2,19 @@
 
 <!--next-version-placeholder-->
 
+## v0.6.6 (2024-12-06)
+
+### Fix
+
+* **dep:** Add vtk as optional dep ([`7caa200`](https://github.com/Kitware/trame-vtklocal/commit/7caa200e441d9d3fe8734225113591c1d31596f1))
+
+### Documentation
+
+* **readme:** Improve readme ([`06991ca`](https://github.com/Kitware/trame-vtklocal/commit/06991ca191dac2f05bcf3b8729a1bead9b514dbb))
+* **readme:** Improve readme ([`f7bca26`](https://github.com/Kitware/trame-vtklocal/commit/f7bca269e6e6cd12a9acbc366e177343a54545e9))
+* **readme:** Improve readme ([`20d1881`](https://github.com/Kitware/trame-vtklocal/commit/20d1881065bc5409427baba5b4bde6fccd18cb40))
+* **examples:** Register camera orientation widget with vtk scene manager ([`d2eb35c`](https://github.com/Kitware/trame-vtklocal/commit/d2eb35c69472cff52790e82c3860df6b8dfab7d4))
+
 ## v0.6.5 (2024-11-16)
 
 ### Fix

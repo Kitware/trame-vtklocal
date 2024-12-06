@@ -124,6 +124,7 @@ The documented API can be found `here (vtkWasmSceneManager) <https://gitlab.kitw
 For the moment we rely on manual testing for when we change the network and/or API at the trame-vtklocal by going over a specific set of `examples <https://github.com/Kitware/trame-vtklocal/tree/master/examples>`_.
 
 Currently the WASM implementation is used in the following set of projects:
+
 - `Pan3D <https://github.com/Kitware/pan3d/>`_: Pan3D aims to be an utility package for viewing and processing a wide variety of multidimensional datasets. Any dataset that can be interpreted with xarray can be explored and rendered with Pan3D.
 
 

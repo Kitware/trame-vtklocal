@@ -122,3 +122,14 @@ Then the WASM module API can be find `here <https://gitlab.kitware.com/vtk/vtk/-
 The documented API can be found `here (vtkWasmSceneManager) <https://gitlab.kitware.com/vtk/vtk/-/blob/master/Web/WebAssembly/vtkWasmSceneManager.h>`_ and `here (vtkObjectManager parent of vtkWasmSceneManager) <https://gitlab.kitware.com/vtk/vtk/-/blob/master/Serialization/Manager/vtkObjectManager.h>`_
 
 For the moment we rely on manual testing for when we change the network and/or API at the trame-vtklocal by going over a specific set of `examples <https://github.com/Kitware/trame-vtklocal/tree/master/examples>`_.
+
+Currently the WASM implementation is used in the following set of projects:
+- `Pan3D <https://github.com/Kitware/pan3d/>`_: Pan3D aims to be an utility package for viewing and processing a wide variety of multidimensional datasets. Any dataset that can be interpreted with xarray can be explored and rendered with Pan3D.
+
+
+Professional Support
+--------------------------------------------------------------------------
+
+* `Training <https://www.kitware.com/courses/trame/>`_: Learn how to confidently use trame from the expert developers at Kitware.
+* `Support <https://www.kitware.com/trame/support/>`_: Our experts can assist your team as you build your web application and establish in-house expertise.
+* `Custom Development <https://www.kitware.com/trame/support/>`_: Leverage Kitware’s 25+ years of experience to quickly build your web application.

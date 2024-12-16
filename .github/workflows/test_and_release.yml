@@ -34,14 +34,14 @@ jobs:
             name: "Linux",
             os: ubuntu-latest
           }
-        - {
-            name: "MacOSX",
-            os: macos-latest
-          }
-        - {
-            name: "Windows",
-            os: windows-latest
-          }
+        # - {
+        #     name: "MacOSX",
+        #     os: macos-latest
+        #   }
+        # - {
+        #     name: "Windows",
+        #     os: windows-latest
+        #   }
 
     defaults:
       run:
@@ -55,7 +55,11 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-
+    
+    - name: Install OSMesa for Linux
+      if: matrix.config.os == 'ubuntu-latest'
+      run: sudo apt-get install -y libosmesa6-dev
+    
     - name: Install dependencies
       run: |
         pip install .[vtk]

@@ -9,6 +9,13 @@ bike.vtp
 seeds.jpg
 tunnel.vtu
 
+.coverage
+dev
+.dev-seb.md
+visual_baseline/**/*.txt
+visual_baseline/**/baseline.png
+visual_baseline/**/baseline_diff_*
+
 # local env files
 .env.local
 .env.*.local

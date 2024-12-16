@@ -56,12 +56,33 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Install and Run Tests
+    - name: Install dependencies
       run: |
-        pip install . --extra-index-url https://wheels.vtk.org
+        pip install .[vtk]
         pip install -r tests/requirements.txt
-        pytest -s ./tests
+        pip install coverage
+    
+    - name: Run Tests
+      run: |
+          # Run the tests with coverage so we get a coverage report too
+          coverage run --source . -m pytest ./tests --firefox --headless --html=report-${{ matrix.config.name }}-${{ matrix.python-version }}.html
+          # Print the coverage report
+          coverage report -m
 
+          - name: Upload Coverage to Codecov
+          uses: codecov/codecov-action@v3
+    
+    - name: Upload pytest test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: pytest-results-${{  matrix.config.name }}
+        path: |
+          visual_baseline/**/*.png
+          assets/**
+          report-*.html
+        retention-days: 1
+        
   test-npm-build:
     runs-on: ubuntu-latest
 

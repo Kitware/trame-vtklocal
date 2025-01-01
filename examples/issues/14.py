@@ -34,7 +34,6 @@ def create_text_actor(myText):
 
 
 def setup_vtk():
-
     colors = vtkNamedColors()
 
     plane_source = vtkPlaneSource()

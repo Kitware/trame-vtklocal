@@ -1,1 +1,7 @@
 graft trame_vtklocal/module/serve
+prune examples
+prune js-lib
+prune tests
+prune utils
+prune visual_baseline
+prune vue-components

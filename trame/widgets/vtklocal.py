@@ -1,4 +1,4 @@
-from trame_vtklocal.widgets.vtklocal import *
+from trame_vtklocal.widgets.vtklocal import *  # noqa F403
 
 
 def initialize(server):

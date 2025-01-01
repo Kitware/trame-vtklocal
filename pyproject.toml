@@ -10,7 +10,6 @@ dependencies = [
 ]
 requires-python = ">=3.9"
 readme = "README.rst"
-long_description_content_type = "text/x-rst"
 license = {text = "Apache Software License"}
 keywords = ["Python", "Interactive", "Web", "Application", "Framework"]
 classifiers = [

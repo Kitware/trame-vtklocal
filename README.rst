@@ -1,5 +1,7 @@
+.. |pypi_download| image:: https://img.shields.io/pypi/dm/trame-vtklocal
+
 ==============
-trame-vtklocal
+trame-vtklocal  |pypi_download|
 ==============
 
 VTK Local Rendering using VTK/WASM to match server side rendering pipeline on the client side.

@@ -41,30 +41,32 @@ def get_version():
 
 class LocalView(HtmlElement):
     """
-    LocalView allow to mirror a server side vtkRenderWindow on the client side using VTK.wasm.
+    LocalView allow to mirror a server side vtkRenderWindow
+    on the client side using VTK.wasm.
 
-    Parameters
-
-    :param render_window: Specify the VTK window to mirror
-    :type vtkRenderWindow:
-    :param throttle_rate: Number of update per second the render_throttle() method will actually perform.
-    :type number:
-
-    Properties
-
-    :param cache_size: Size of client side cache for geometry and arrays in Bytes.
-    :type number:
-    :param eager_sync: If enabled, the server will push states rather than waiting for the client to request them. Usually improve fast update behavior.
-    :type bool:
-    :param listeners: Dynamic structure describing what to observe and how to map internal WASM state to trame state variable.
-    :type dict:
-
-    Events
-
-    :param updated: Emitted after each completed client side update.
-    :param memory_vtk: Event which provides the current memory used by vtk object structures.
-    :param memory_arrays: Event which provides the current memory used by vtk arrays.
-    :param camera: Event emitted when any camera is changed. The actual state of the camera is passed as arg.
+    Args:
+        render_window (vtkRenderWindow):
+            Specify the VTK window to mirror
+        throttle_rate (number):
+            Number of update per second the render_throttle()
+            method will actually perform.
+        cache_size (number):
+            Size of client side cache for geometry and arrays in Bytes.
+        eager_sync (bool):
+            If enabled, the server will push states rather than waiting
+            for the client to request them. Usually improve fast update behavior.
+        listeners (dict):
+            Dynamic structure describing what to observe and how to map internal
+            WASM state to trame state variable.
+        updated (event):
+            Emitted after each completed client side update.
+        memory_vtk (event):
+            Event which provides the current memory used by vtk object structures.
+        memory_arrays (event):
+            Event which provides the current memory used by vtk arrays.
+        camera (event):
+            Event emitted when any camera is changed. The actual state of
+            the camera is passed as arg.
 
     """
 
@@ -134,7 +136,7 @@ class LocalView(HtmlElement):
     def update_throttle(self):
         """Throttled update method on which you can update its rate by doing
 
-        >>> html_view.update_throttle.rate = 15 # time per second
+        >>> html_view.update_throttle.rate = 15  # time per second
         >>> html_view.update_throttle()
         """
         return self._update_throttle

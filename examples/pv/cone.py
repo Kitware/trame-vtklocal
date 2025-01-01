@@ -46,8 +46,13 @@ class DemoApp:
                     memory_arrays="mem_blob = $event",
                 )
             html.Div(
-                "Scene: {{ (mem_vtk / 1024).toFixed(1) }}KB - Arrays: {{ (mem_blob / 1024).toFixed(1) }}KB - cache: {{ (cache/1024).toFixed(1) }}KB ",
-                style="position: absolute; top: 1rem; left: 1rem; z-index: 10; background: white; padding: 1rem; border-radius: 1rem;",
+                "Scene: {{ (mem_vtk / 1024).toFixed(1) }}KB - "
+                "Arrays: {{ (mem_blob / 1024).toFixed(1) }}KB - "
+                "cache: {{ (cache/1024).toFixed(1) }}KB ",
+                style=(
+                    "position: absolute; top: 1rem; left: 1rem; z-index: 10;"
+                    "background: white; padding: 1rem; border-radius: 1rem;"
+                ),
             )
             html.Input(
                 type="range",

@@ -111,18 +111,18 @@ This include a JavaScript section for the browser and a Python section for the s
 
 The server include a definition of a custom network protocol over our WebSocket (wslink/trame) and some helper class to ease the vtkRenderWindow binding with a web component in the browser.
 While the Python package include a Vue.js component for a seamless integration with trame, we also publish a `npm package <https://www.npmjs.com/package/@kitware/trame-vtklocal>`_.
-That pure JavaScript library let you still use the trame infrastructure on the server side but with your own stack on the client side. A usage example of that pure JavaScript option is covered `here <https://github.com/Kitware/trame-vtklocal/tree/master/examples/pure-js>`_.
+That pure JavaScript library let you still use the trame infrastructure on the server side but with your own stack on the client side. A usage example of that pure JavaScript option is covered `in that directory <https://github.com/Kitware/trame-vtklocal/tree/master/examples/pure-js>`_.
 
-For the pure Python trame usage, you can find the documented API `here <https://trame.readthedocs.io/en/latest/trame.widgets.vtklocal.html>`_.
+For the pure Python trame usage, you can find the `documented API <https://trame.readthedocs.io/en/latest/trame.widgets.vtklocal.html>`_.
 
 By design there is a nice separation between VTK/WASM and trame-vtklocal which should make trame-vtklocal fairly independent of VTK/WASM version. 
 But since we are still building capabilities, when the C++ API expend, we will also expand the Python/JavaScript component properties/methods. 
 Hopefully we should be able to evolve trame-vtklocal with some reasonable fallback when the version of VTK is not in par with what is exposed in trame-vtklocal.
 
 Also most the testing of VTK/WASM is in VTK repository as many validation can be done in pure C++ or `Python <https://gitlab.kitware.com/vtk/vtk/-/tree/master/Serialization/Manager/Testing/Python>`_. 
-Then the WASM module API can be find `here <https://gitlab.kitware.com/vtk/vtk/-/blob/master/Web/WebAssembly/vtkWasmSceneManagerEmBinding.cxx>`_  with its `node/chrome testing <https://gitlab.kitware.com/vtk/vtk/-/tree/master/Web/WebAssembly/Testing/JavaScript>`_.
+Then we have `the WASM module API <https://gitlab.kitware.com/vtk/vtk/-/blob/master/Web/WebAssembly/vtkWasmSceneManagerEmBinding.cxx>`_  with its `node/chrome testing <https://gitlab.kitware.com/vtk/vtk/-/tree/master/Web/WebAssembly/Testing/JavaScript>`_.
 
-The documented API can be found `here (vtkWasmSceneManager) <https://vtk.org/doc/nightly/html/classvtkWasmSceneManager.html>`_ and `here (vtkObjectManager parent of vtkWasmSceneManager) <https://vtk.org/doc/nightly/html/classvtkObjectManager.html>`_
+The documented API of `vtkWasmSceneManager <https://vtk.org/doc/nightly/html/classvtkWasmSceneManager.html>`_ and `vtkObjectManager parent of vtkWasmSceneManager <https://vtk.org/doc/nightly/html/classvtkObjectManager.html>`_
 
 For the moment we rely on manual testing for when we change the network and/or API at the trame-vtklocal by going over a specific set of `examples <https://github.com/Kitware/trame-vtklocal/tree/master/examples>`_.
 

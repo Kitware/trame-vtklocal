@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.6.9 (2025-01-01)
+
+### Bug Fixes
+
+- **readme**: Try to fix syntax
+  ([`8aa8c9e`](https://github.com/Kitware/trame-vtklocal/commit/8aa8c9eb615d987883f8f4f4eafd7ae85a51a556))
+
+
 ## v0.6.8 (2025-01-01)
 
 ### Bug Fixes

@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v0.6.8 (2025-01-01)
+
+### Bug Fixes
+
+- **pyproject**: Fix long description error
+  ([`19889bb`](https://github.com/Kitware/trame-vtklocal/commit/19889bb70a1ebc7ac5b766b9fd0de52eb7500745))
+
+### Continuous Integration
+
+- Pyproject syntax error
+  ([`3945194`](https://github.com/Kitware/trame-vtklocal/commit/39451942b2f9e52f88aef6052fcaaf7b1c0841b6))
+
+
 ## v0.6.7 (2025-01-01)
 
 ### Bug Fixes

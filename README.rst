@@ -74,6 +74,7 @@ Optionally, you can develop with bleeding edge VTK by following these steps. Mak
     # Set environment variables
     source ./utils/dev_environment.sh -b master -p RelWithDebInfo
 
+
 Running examples
 ----------------------------------------
 
@@ -97,6 +98,7 @@ This option is not required anymore but still available if needed.
 .. code-block:: console
 
     server.http_headers.shared_array_buffer = True
+
 
 This will download the threaded WASM version. Otherwise, the non-threaded version will be used as it does not require SharedArrayBuffer.
 

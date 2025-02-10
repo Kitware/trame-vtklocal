@@ -58,6 +58,7 @@ Install the library
     pip install -e .
 
 Optionally, you can develop with bleeding edge VTK by following these steps. Make sure you've these tools
+
 1. git
 2. CMake
 3. Ninja

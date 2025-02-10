@@ -69,13 +69,16 @@ Optionally, you can develop with bleeding edge VTK by following these steps. Mak
 .. code-block:: console
 
     # Compile VTK for wasm32 architecture using emscripten. Build artifacts can be found in dev/vtk/build/wasm
-    ./utils/build_vtk.sh -u https://gitlab.kitware.com/vtk/vtk.git -b master -t wasm32 -p RelWithDebInfo
+    python ./utils/build_vtk.py -u https://gitlab.kitware.com/vtk/vtk.git -b master -t wasm32 -c RelWithDebInfo
 
     # Compile VTK with python wrappings using system C++ compiler. Build artifacts can be found in dev/vtk/build/py
-    ./utils/build_vtk.sh -u https://gitlab.kitware.com/vtk/vtk.git -b master -t py -p RelWithDebInfo
+    python ./utils/build_vtk.py -u https://gitlab.kitware.com/vtk/vtk.git -b master -t py -c RelWithDebInfo
 
-    # Set environment variables
-    source ./utils/dev_environment.sh -b master -p RelWithDebInfo
+    # Windows: Set environment variables
+    ./utils/dev_environment.ps1 -b master -c RelWithDebInfo
+    
+    # Unix: Set environemt variables
+    source ./utils/dev_environment.sh -b master -c RelWithDebInfo
 
 
 Running examples

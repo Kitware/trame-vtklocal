@@ -40,6 +40,7 @@ def check_tool_version(command, shell=False):
         print(f"{command} version: {version}")
     except subprocess.CalledProcessError as e:
         print(f"{command} not found or failed to get version.")
+        print(e)
         sys.exit(1)
 
 
@@ -89,9 +90,7 @@ def main():
         os.makedirs("dev")
 
     if not os.path.exists(git_clone_dir):
-        subprocess.run(
-            ["git", "clone", url, git_clone_dir], check=True
-        )
+        subprocess.run(["git", "clone", url, git_clone_dir], check=True)
 
     subprocess.run(
         [
@@ -108,23 +107,17 @@ def main():
     os.chdir(git_clone_dir)
     # Checkout branch and update submodules
     subprocess.run(["git", "checkout", branch], check=True)
-    subprocess.run(
-        ["git", "submodule", "update", "--init"], check=True
-    )
+    subprocess.run(["git", "submodule", "update", "--init"], check=True)
 
     # Ensure required tools are available.
     check_tool_version("cmake")
     check_tool_version("ninja")
 
     if target == "wasm32":
-        use_shell_for_emscripten_tools = (
-            platform.system() == "Windows"
-        )
+        use_shell_for_emscripten_tools = platform.system() == "Windows"
         # Ensure Node.js and emcc are available
         check_tool_version("node")
-        check_tool_version(
-            "emcc", shell=use_shell_for_emscripten_tools
-        )
+        check_tool_version("emcc", shell=use_shell_for_emscripten_tools)
 
         # Build vtk.wasm binaries
         subprocess.run(
@@ -182,8 +175,7 @@ def main():
 
     else:
         print(
-            f"Unknown build target {target}. "
-            "Only 'wasm32' and 'py' are supported",
+            f"Unknown build target {target}. " "Only 'wasm32' and 'py' are supported",
             file=sys.stderr,
         )
         sys.exit(1)

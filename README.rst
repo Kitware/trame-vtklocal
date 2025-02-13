@@ -1,8 +1,8 @@
 .. |pypi_download| image:: https://img.shields.io/pypi/dm/trame-vtklocal
 
-==============
+========================================================
 trame-vtklocal  |pypi_download|
-==============
+========================================================
 
 Local Rendering using VTK.wasm to match server side rendering pipeline on the client side.
 The current code base is still at its infancy but we aim to make it the default implementation for local rendering using VTK/ParaView with trame.

@@ -142,6 +142,7 @@ class ObjectManagerAPI(LinkProtocol):
         ids_mtime = [map_id_mtime(self.vtk_object_manager, v) for v in ids]
         ignore_ids = []
         cameras = []
+        force_push = []
         if renderWindow:
             interactor = self.vtk_object_manager.GetId(renderWindow.interactor)
             renderers = renderWindow.GetRenderers()
@@ -150,12 +151,15 @@ class ObjectManagerAPI(LinkProtocol):
                 cid = self.vtk_object_manager.GetId(activeCamera)
                 if not self._push_camera:
                     ignore_ids.append(cid)
+                else:
+                    force_push.append(cid)
                 cameras.append(cid)
         return dict(
             ids=ids_mtime,
             hashes=hashes,
             ignore_ids=ignore_ids,
             cameras=cameras,
+            force_push=force_push,
             interactor=interactor,
         )
 

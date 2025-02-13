@@ -2,6 +2,12 @@ import "./style.css";
 
 const LOADED_URLS = [];
 
+/**
+ * Add script tag with provided URL with type="module"
+ *
+ * @param {string} url
+ * @return {Promise<void>} to know when the script is ready
+ */
 function loadScriptAsModule(url) {
   return new Promise(function (resolve, reject) {
     if (LOADED_URLS.indexOf(url) === -1) {
@@ -18,6 +24,13 @@ function loadScriptAsModule(url) {
   });
 }
 
+/**
+ * VtkWASMHandler type definition
+ *
+ * @typedef {Object} VtkWASMHandler
+ * @property {Boolean} loaded
+ * @property {Set<int>} cameraIds
+ */
 export class VtkWASMHandler {
   constructor() {
     this.updateInProgress = 0;
@@ -44,8 +57,6 @@ export class VtkWASMHandler {
 
   /**
    * Load VTK WASM library using the base url provided
-   *
-   * FIXME: canvas should not be provided here
    *
    * @param {str} wasmBaseURL
    */
@@ -227,6 +238,12 @@ export class VtkWASMHandler {
       const pendingHashes = [];
       const pendingStates = [];
 
+      // Handle forcepush if any
+      const resetIds = serverStatus.force_push || [];
+      for (let i = 0; i < resetIds.length; i++) {
+        delete this.stateMTimes[resetIds[i]];
+      }
+
       // Fetch any state that needs update
       serverStatus.ids.forEach(([vtkId, mtime]) => {
         if (!this.stateMTimes[vtkId] || this.stateMTimes[vtkId] < mtime) {
@@ -243,7 +260,7 @@ export class VtkWASMHandler {
       });
 
       // Capture cameras
-      serverStatus.cameras.forEach((v) => Number(this.cameraIds.add(v)));
+      serverStatus.cameras.forEach((v) => this.cameraIds.add(Number(v)));
 
       // Remove state that should be ignored
       serverStatus.ignore_ids.forEach((vtkId) =>

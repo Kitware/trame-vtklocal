@@ -175,7 +175,7 @@ def main():
 
     else:
         print(
-            f"Unknown build target {target}. " "Only 'wasm32' and 'py' are supported",
+            f"Unknown build target {target}. Only 'wasm32' and 'py' are supported",
             file=sys.stderr,
         )
         sys.exit(1)

@@ -2,6 +2,7 @@ import io
 import json
 import zipfile
 import base64
+import warnings
 from pathlib import Path
 from trame_client.widgets.core import AbstractElement
 from trame_vtklocal import module
@@ -146,21 +147,42 @@ class LocalView(HtmlElement):
         self.api.update(push_camera=push_camera)
         self.server.js_call(self.__ref, "update")
 
-    def register_widget(self, w):
+    def register_vtk_object(self, vtk_instance):
         """Register external element (i.e. widget) into the scene so it can be managed and return its wasm_id"""
-        if w not in self.__registered_obj:
-            self.api.register_widget(self._render_window, w)
-            self.__registered_obj.append(w)
+        if vtk_instance not in self.__registered_obj:
+            self.api.register_widget(self._render_window, vtk_instance)
+            self.__registered_obj.append(vtk_instance)
             self.api.update()
 
-        return self.get_wasm_id(w)
+        return self.get_wasm_id(vtk_instance)
 
-    def uregister_widgets(self):
+    def register_widget(self, w):
+        """Register external element (i.e. widget) into the scene so it can be managed and return its wasm_id"""
+        warnings.warn(
+            "register_widget() is deprecated, use register_vtk_object() instead"
+        )
+        return self.register_vtk_object(w)
+
+    def unregister_vtk_object(self, vtk_instance):
         """Unregister external element (i.e. widget) from the scene so it can removed from tracking"""
-        for w in self.__registered_obj:
-            self.api.unregister(self._render_window, w)
+        if vtk_instance in self.__registered_obj:
+            self.api.unregister(self._render_window, vtk_instance)
+            return True
 
-        self.__registered_obj.clear()
+        return False
+
+    def unregister_all_vtk_objects(self):
+        """Unregister all external element (i.e. widget) from the scene"""
+        for vtk_instance in self.__registered_obj:
+            self.api.unregister(self._render_window, vtk_instance)
+            self.__registered_obj.remove(vtk_instance)
+
+    def unregister_widgets(self):
+        """Unregister all external element (i.e. widget) from the scene"""
+        warnings.warn(
+            "unregister_widgets() is deprecated, use unregister_all_vtk_objects() instead"
+        )
+        self.unregister_all_vtk_objects()
 
     def export(self, format="zip", **kwargs):
         """Export standalone scene for WASMViewer
@@ -217,6 +239,13 @@ class LocalView(HtmlElement):
     def get_wasm_id(self, vtk_object):
         """Return vtkObject id used within WASM scene manager"""
         return self.object_manager.GetId(vtk_object)
+
+    def vtk_update_from_state(self, state_obj):
+        """Use a state from WASM to update a VTK object"""
+        if isinstance(state_obj, dict):
+            state_obj = json.dumps(state_obj)
+
+        self.object_manager.UpdateObjectFromState(state_obj)
 
 
 __all__ = [

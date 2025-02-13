@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.7.1 (2025-02-13)
+
+### Bug Fixes
+
+- **readme**: Fix syntax for pypi
+  ([`cddb3a1`](https://github.com/Kitware/trame-vtklocal/commit/cddb3a11cd4c31a23db19ddddf7e16635d3fe1b1))
+
+
 ## v0.7.0 (2025-02-13)
 
 ### Features

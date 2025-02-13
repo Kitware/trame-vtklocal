@@ -1,6 +1,51 @@
 # CHANGELOG
 
 
+## v0.6.10 (2025-02-13)
+
+### Bug Fixes
+
+- **camera**: Clear mtime when push_camera=True
+  ([`20b5069`](https://github.com/Kitware/trame-vtklocal/commit/20b50695b7c09093e8516e9841181ca7eab08985))
+
+- **js**: Update dep version
+  ([`a119073`](https://github.com/Kitware/trame-vtklocal/commit/a119073b471ece3ac76527089a17504725caf524))
+
+### Code Style
+
+- **ruff**: Fix ruff warming
+  ([`0ecde2e`](https://github.com/Kitware/trame-vtklocal/commit/0ecde2e09ef423c9dfb54bec69a4494581a22e1b))
+
+### Continuous Integration
+
+- Update upload-artifact
+  ([`38143c1`](https://github.com/Kitware/trame-vtklocal/commit/38143c1df50db2e315dea8a943fbc910571fc17c))
+
+### Documentation
+
+- Update dev tools for cross platform building
+  ([`3c4d8c2`](https://github.com/Kitware/trame-vtklocal/commit/3c4d8c208f086c4870eb5663f7918011a4c78b2b))
+
+- New cross platform `build_vtk.py` to clone and building VTK from source. - The `build_vtk.py`
+  replaces `build_vtk.sh`. - New `dev_environment.ps1` to set python, wasm env vars in windows.
+
+- Update README.rst
+  ([`14b0f2f`](https://github.com/Kitware/trame-vtklocal/commit/14b0f2fab1ab36ed1fe6a592c56e79e06fb30d05))
+
+fix rst rendering of the list items
+
+- Update README.rst
+  ([`ce94ec9`](https://github.com/Kitware/trame-vtklocal/commit/ce94ec91e59777a0a7e746a5417abfe53f8c18bd))
+
+Rename VTK/WASM to VTK.wasm
+
+- Update README.rst
+  ([`6e5a995`](https://github.com/Kitware/trame-vtklocal/commit/6e5a995116c1d10415236500048492208d717813))
+
+- **docker**: Add example for multi-user
+  ([`74ceca3`](https://github.com/Kitware/trame-vtklocal/commit/74ceca3f4f93c3ffae68153348dc183ca8a1c1e4))
+
+
 ## v0.6.9 (2025-01-01)
 
 ### Bug Fixes

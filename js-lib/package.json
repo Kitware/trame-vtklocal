@@ -1,6 +1,6 @@
 {
     "name": "@kitware/trame-vtklocal",
-    "version": "0.6.4",
+    "version": "0.6.5",
     "license": "Apache-2.0",
     "main": "./dist/trame-vtklocal.umd.js",
     "unpkg": "./dist/trame-vtklocal.umd.js",

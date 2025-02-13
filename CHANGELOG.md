@@ -1,6 +1,17 @@
 # CHANGELOG
 
 
+## v0.7.0 (2025-02-13)
+
+### Features
+
+- **py-api**: Extend python api
+  ([`627acfe`](https://github.com/Kitware/trame-vtklocal/commit/627acfea190e7be79aaa8b61864a85672fea289a))
+
+fix issue 683 in trame repo Add method to update vtk class from wasm state (vtk_update_from_state)
+  Rename widget method to be more generic
+
+
 ## v0.6.10 (2025-02-13)
 
 ### Bug Fixes

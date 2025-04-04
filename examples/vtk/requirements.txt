@@ -1,3 +1,7 @@
+--extra-index-url https://wheels.vtk.org
+
 trame-vuetify
 trame-vtk
 trame-server>=3.1
+
+vtk==9.4.20250403.dev0 # for method call

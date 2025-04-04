@@ -1,3 +1,4 @@
+import asyncio
 import io
 import json
 import zipfile
@@ -74,6 +75,10 @@ class LocalView(HtmlElement):
     _next_id = 0
 
     def __init__(self, render_window, throttle_rate=10, **kwargs):
+        # Register response callback if not overridden
+        kwargs.setdefault("invoke_response", (self._on_invoke_response, "[$event]"))
+        self._pending_invoke_result = None
+
         super().__init__(
             "vtk-local",
             **kwargs,
@@ -104,11 +109,17 @@ class LocalView(HtmlElement):
             "camera",
             ("memory_vtk", "memory-vtk"),
             ("memory_arrays", "memory-arrays"),
+            ("invoke_response", "invoke-response"),
         ]
 
         # Generate throttle update function
         self._update_throttle = Throttle(self.update)
         self._update_throttle.rate = throttle_rate
+
+    def _on_invoke_response(self, response):
+        if self._pending_invoke_result is None:
+            return
+        self._pending_invoke_result.set_result(response)
 
     @property
     def api(self):
@@ -240,12 +251,29 @@ class LocalView(HtmlElement):
         """Return vtkObject id used within WASM scene manager"""
         return self.object_manager.GetId(vtk_object)
 
+    def get_vtk_obj(self, wasm_id):
+        """Return corresponding VTK object"""
+        return self.object_manager.GetObjectAtId(wasm_id)
+
     def vtk_update_from_state(self, state_obj):
         """Use a state from WASM to update a VTK object"""
         if isinstance(state_obj, dict):
             state_obj = json.dumps(state_obj)
 
         self.object_manager.UpdateObjectFromState(state_obj)
+
+    async def invoke(self, vtk_obj, method, *args):
+        wasm_id = vtk_obj
+        if hasattr(vtk_obj, "IsA"):  # vtkObject
+            wasm_id = self.get_wasm_id(vtk_obj)
+
+        self._pending_invoke_result = asyncio.get_running_loop().create_future()
+        self.server.js_call(self.__ref, "invoke", wasm_id, method, args)
+        await self._pending_invoke_result
+        return self._pending_invoke_result.result()
+
+    def print_scene_manager_information(self):
+        self.server.js_call(self.__ref, "printSceneManagerInformation")
 
 
 __all__ = [

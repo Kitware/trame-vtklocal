@@ -1,6 +1,6 @@
 # ParaView support
 
-Not Supported yet but we hope to get it working with 5.14 or nightly after 5.13 release.
+Not Supported yet but we hope to get it working with v6.
 
 ## Setup 
 

@@ -37,44 +37,6 @@ colors = vtkNamedColors()
 NUMBER_OF_SPHERES = 10
 
 
-class MouseInteractorHighLightActor(vtkInteractorStyleTrackballCamera):
-    def __init__(self, parent=None):
-        self.AddObserver("LeftButtonPressEvent", self.leftButtonPressEvent)
-
-        self.LastPickedActor = None
-        self.LastPickedProperty = vtkProperty()
-
-    def leftButtonPressEvent(self, obj, event):
-        clickPos = self.GetInteractor().GetEventPosition()
-
-        picker = vtkPropPicker()
-        picker.Pick(clickPos[0], clickPos[1], 0, self.GetDefaultRenderer())
-
-        # get the new
-        self.NewPickedActor = picker.GetActor()
-
-        # If something was selected
-        if self.NewPickedActor:
-            # If we picked something before, reset its property
-            if self.LastPickedActor:
-                self.LastPickedActor.GetProperty().DeepCopy(self.LastPickedProperty)
-
-            # Save the property of the picked actor so that we can
-            # restore it next time
-            self.LastPickedProperty.DeepCopy(self.NewPickedActor.GetProperty())
-            # Highlight the picked actor by changing its properties
-            self.NewPickedActor.GetProperty().SetColor(colors.GetColor3d("Red"))
-            self.NewPickedActor.GetProperty().SetDiffuse(1.0)
-            self.NewPickedActor.GetProperty().SetSpecular(0.0)
-            self.NewPickedActor.GetProperty().EdgeVisibilityOn()
-
-            # save the last picked actor
-            self.LastPickedActor = self.NewPickedActor
-
-        self.OnLeftButtonDown()
-        return
-
-
 @TrameApp()
 class ActorPicker:
     def __init__(self, server=None):

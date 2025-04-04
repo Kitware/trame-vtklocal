@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.8.0 (2025-04-04)
+
+### Features
+
+- **method**: Enable method call from Python and JS
+  ([`8f45337`](https://github.com/Kitware/trame-vtklocal/commit/8f453375be5d36416a317c059e325bf9eb9a9897))
+
+
 ## v0.7.1 (2025-02-13)
 
 ### Bug Fixes

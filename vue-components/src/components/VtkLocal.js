@@ -24,7 +24,7 @@ function createExtractCallback(trame, wasmManager, extractInfo) {
 }
 
 export default {
-  emits: ["updated", "memory-vtk", "memory-arrays", "camera"],
+  emits: ["updated", "memory-vtk", "memory-arrays", "camera", "invoke-response"],
   props: {
     renderWindow: {
       type: Number,
@@ -39,6 +39,16 @@ export default {
     },
     wsClient: {
       type: Object,
+    },
+    verbosity: {
+      type: Object,
+      default: () => ({
+        // "INFO", "WARNING", "TRACE", "ERROR"
+        objectManager: null,
+        invoker: null,
+        deserializer: null,
+        serializer: null,
+      }),
     },
     listeners: {
       type: Object,
@@ -156,6 +166,27 @@ export default {
       wasmManager.sceneManager.render(props.renderWindow);
     }
 
+    // invoke ------------------------------------------------------------
+
+    async function invoke(objId, method, args) {
+      const result = await wasmManager.sceneManager.invoke(objId, method, args);
+
+      // Extract object state if object is returned
+      if (result.Id && result.Success) {
+        result.Value = wasmManager.getState(result.Id)
+      }
+
+      emit("invoke-response", result);
+
+      return result
+    }
+
+    // debug ------------------------------------------------------------
+
+    function printSceneManagerInformation() {
+      wasmManager.sceneManager.printSceneManagerInformation();
+    }
+
     // Life Cycles ------------------------------------------------------------
 
     onMounted(async () => {
@@ -217,6 +248,23 @@ export default {
         }
       });
 
+      // Update loggers
+      watchEffect(() => {
+        const settings = props.verbosity;
+        if (settings.objectManager && wasmManager.sceneManager.setObjectManagerLogVerbosity) {
+          wasmManager.sceneManager.setObjectManagerLogVerbosity(settings.objectManager);
+        }
+        if (settings.invoker && wasmManager.sceneManager.setInvokerLogVerbosity) {
+          wasmManager.sceneManager.setInvokerLogVerbosity(settings.invoker);
+        }
+        if (settings.deserializer && wasmManager.sceneManager.setDeserializerLogVerbosity) {
+          wasmManager.sceneManager.setDeserializerLogVerbosity(settings.deserializer);
+        }
+        if (settings.serializer && wasmManager.sceneManager.setSerializerLogVerbosity) {
+          wasmManager.sceneManager.setSerializerLogVerbosity(settings.serializer);
+        }
+      });
+
       wasmManager.sceneManager.startEventLoop(props.renderWindow);
     });
 
@@ -257,6 +305,8 @@ export default {
       update,
       resetCamera,
       evalStateExtract,
+      invoke,
+      printSceneManagerInformation,
     };
   },
   template: `<div ref="container" style="position: relative; width: 100%; height: 100%;"></div>`,

@@ -97,6 +97,9 @@ class LocalView(HtmlElement):
             }
         emit_memory (bool):
             Emit memory information events. By default it is skipped.
+        auto_resize (bool):
+            Enabled by default. If disabled, the render window will not
+            automatically resize when the canvas is resized.
         updated (event):
             Emitted after each completed client side update.
         memory_vtk (event):
@@ -149,6 +152,7 @@ class LocalView(HtmlElement):
             ("progress_enabled", "progressEnabled"),
             ("progress_delay", "progressDelay"),
             ("emit_memory", "emitMemory"),
+            ("auto_resize", "autoResize"),
         ]
         self._event_names += [
             "updated",

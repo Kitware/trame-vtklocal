@@ -84,6 +84,10 @@ export default {
       //    }
       // }
     },
+    autoResize: {
+      type: Boolean,
+      default: true,
+    }
   },
   setup(props, { emit }) {
     // Create global WASM handler if missing
@@ -159,7 +163,7 @@ export default {
       const h = Math.floor(height * window.devicePixelRatio + 0.5);
       await wasmManager.setSize(props.renderWindow, w, h);
     }
-    let resizeObserver = new ResizeObserver(resize);
+    let resizeObserver = props.autoResize && new ResizeObserver(resize);
 
     // Memory -----------------------------------------------------------------
 

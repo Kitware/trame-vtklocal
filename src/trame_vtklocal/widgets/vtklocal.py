@@ -86,6 +86,9 @@ class LocalView(HtmlElement):
                rendering: 'webgpu' or 'webgl',
                exec: 'sync' or 'async',
             }
+        auto_resize (bool):
+            Enabled by default. If disabled, the render window will not
+            automatically resize when the canvas is resized.
         updated (event):
             Emitted after each completed client side update.
         memory_vtk (event):
@@ -132,6 +135,7 @@ class LocalView(HtmlElement):
             "verbosity",
             ("listeners", ":listeners"),
             ("config", ":config"),
+            ("auto_resize", "autoResize"),
         ]
         self._event_names += [
             "updated",

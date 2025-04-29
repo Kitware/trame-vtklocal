@@ -308,6 +308,23 @@ class LocalView(HtmlElement):
             id_to_reset_camera = self.get_wasm_id(renderer_or_render_window)
             self.server.js_call(self.__ref, "resetCamera", id_to_reset_camera)
 
+    def startWebXR(self, mode=1, required_features=1, optional_features=2):
+        """Start WebXR session
+
+        :param mode: 0 (inline), 1 (VR) or 2 (AR)
+        """
+        if not is_vtk_version_newer(9, 6, 20260326):
+            raise NotImplementedError("You need VTK>=9.7 to use WebXR (>=9.6.20260327)")
+        self.server.js_call(
+            self.__ref, "startWebXR", mode, required_features, optional_features
+        )
+
+    def stopWebXR(self):
+        """Stop WebXR session"""
+        if not is_vtk_version_newer(9, 6, 20260326):
+            raise NotImplementedError("You need VTK>=9.7 to use WebXR (>=9.6.20260327)")
+        self.server.js_call(self.__ref, "stopWebXR")
+
     @property
     def ref_name(self):
         """Return the assigned name as a vue.js ref"""

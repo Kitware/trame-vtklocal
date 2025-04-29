@@ -212,6 +212,18 @@ export default {
       wasmManager.sceneManager.printSceneManagerInformation();
     }
 
+    // startXR ----------------------------------------------------------------
+
+    function startXR(mode, requiredFeatures, optionalFeatures) {
+      wasmManager.sceneManager.startXR(mode, requiredFeatures, optionalFeatures);
+    }
+
+    // stopXR ----------------------------------------------------------------
+
+    function stopXR() {
+      wasmManager.sceneManager.stopXR();
+    }
+
     // Life Cycles ------------------------------------------------------------
 
     onMounted(async () => {
@@ -412,6 +424,8 @@ export default {
       printSceneManagerInformation,
       detachHandler,
       getVtkObject,
+      startXR,
+      stopXR,
     };
   },
   template: `<div ref="container" style="position: relative; width: 100%; height: 100%;"></div>`,

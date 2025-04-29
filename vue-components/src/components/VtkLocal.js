@@ -213,7 +213,7 @@ export default {
 
     function handleMessage([event]) {
       if (event.type === "state") {
-        wasmManager.pushState(event.content);
+        wasmManager.patchState(event.content);
       }
       if (event.type === "blob") {
         wasmManager.pushHash(event.hash, event.content);

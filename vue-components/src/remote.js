@@ -196,7 +196,9 @@ export class RemoteSession {
           }
 
           // Need to patch classname to allow OSMesa server to work
-          stateObj.ClassName = "vtkCocoaRenderWindow";
+          if (stateObj.ClassName !== "vtkWebXRRenderWindow") {
+            stateObj.ClassName = "vtkCocoaRenderWindow";
+          }
 
           return JSON.stringify(stateObj);
         }

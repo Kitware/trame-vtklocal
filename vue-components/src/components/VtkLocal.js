@@ -307,6 +307,18 @@ export default {
       wasmManager.sceneManager.printSceneManagerInformation();
     }
 
+    // startWebXR ----------------------------------------------------------------
+
+    function startWebXR(mode, requiredFeatures, optionalFeatures) {
+      wasmManager.sceneManager.startWebXR(mode, requiredFeatures, optionalFeatures);
+    }
+
+    // stopWebXR ----------------------------------------------------------------
+
+    function stopWebXR() {
+      wasmManager.sceneManager.stopWebXR();
+    }
+
     // Life Cycles ------------------------------------------------------------
 
     onMounted(async () => {
@@ -529,6 +541,8 @@ export default {
       statePercent,
       hashPercent,
       wasmLoading,
+      startWebXR,
+      stopWebXR,
     };
   },
   template: `<div ref="container" style="position: relative; width: 100%; height: 100%;">

@@ -45,7 +45,7 @@ def create_vtk_pipeline():
     renderer.SetBackground(0.1, 0.2, 0.4)
     renderer.ResetCamera()
 
-    return renderWindow, cone
+    return renderWindow, cone, actor
 
 
 # -----------------------------------------------------------------------------
@@ -58,7 +58,7 @@ class DemoApp:
     def __init__(self, server=None):
         self.server = get_server(server, client_type=CLIENT_TYPE)
 
-        self.render_window, self.cone = create_vtk_pipeline()
+        self.render_window, self.cone, self.actor = create_vtk_pipeline()
         self.server.state.update(dict(mem_blob=0, mem_vtk=0))
         self.html_view = None
         self.ui = self._ui()
@@ -74,6 +74,11 @@ class DemoApp:
     @change("resolution")
     def on_resolution_change(self, resolution, **kwargs):
         self.cone.SetResolution(int(resolution))
+        self.html_view.update_throttle()
+
+    @change("opacity")
+    def on_opacity_change(self, opacity, **kwargs):
+        self.actor.property.opacity = float(opacity)
         self.html_view.update_throttle()
 
     def _ui(self):
@@ -106,6 +111,14 @@ class DemoApp:
                 max=60,
                 step=1,
                 style="position: absolute; top: 1rem; right: 1rem; z-index: 10;",
+            )
+            html.Input(
+                type="range",
+                v_model=("opacity", 1),
+                min=0.01,
+                max=1,
+                step=0.01,
+                style="position: absolute; top: 5rem; right: 1rem; z-index: 10;",
             )
             html.Input(
                 type="range",

@@ -1,6 +1,16 @@
 import "./style.css";
 
 const LOADED_URLS = [];
+const PROMISES = {};
+
+function createFuture() {
+  let resolve, reject;
+  const promise = new Promise((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return { promise, resolve, reject };
+}
 
 /**
  * Add script tag with provided URL with type="module"
@@ -9,7 +19,11 @@ const LOADED_URLS = [];
  * @return {Promise<void>} to know when the script is ready
  */
 function loadScriptAsModule(url) {
-  return new Promise(function (resolve, reject) {
+  if (PROMISES[url]) {
+    return PROMISES[url];
+  }
+
+  PROMISES[url] = new Promise(function (resolve, reject) {
     if (LOADED_URLS.indexOf(url) === -1) {
       LOADED_URLS.push(url);
       var newScriptTag = document.createElement("script");
@@ -22,6 +36,8 @@ function loadScriptAsModule(url) {
       resolve(false);
     }
   });
+
+  return PROMISES[url];
 }
 
 /**
@@ -44,6 +60,7 @@ export class VtkWASMHandler {
     this.networkFetchStatus = null;
     this.cameraIds = new Set();
     this.stateCache = {};
+    this.loadingPending = null;
     // FIXME - to remove once API available on C++ side
     this.renderWindowIds = new Set();
     this.renderWindowIdToInteractorId = new Map();
@@ -64,17 +81,26 @@ export class VtkWASMHandler {
     if (this.loaded) {
       return;
     }
-    // Load JS
-    const jsModuleURL = `${wasmBaseURL}/vtkWasmSceneManager.mjs`;
-    await loadScriptAsModule(jsModuleURL);
 
-    // Load WASM
-    const objectManager = await window.createVTKWasmSceneManager();
-    objectManager.initialize();
+    if (!this.loadingPending) {
+      const { promise, resolve } = createFuture();
+      this.loadingPending = promise;
 
-    // Capture objects
-    this.loaded = true;
-    this.sceneManager = objectManager;
+      // Load JS
+      const jsModuleURL = `${wasmBaseURL}/vtkWasmSceneManager.mjs`;
+      await loadScriptAsModule(jsModuleURL);
+
+      // Load WASM
+      const objectManager = await window.createVTKWasmSceneManager();
+      objectManager.initialize();
+      this.sceneManager = objectManager;
+
+      // Capture objects
+      this.loaded = true;
+      resolve();
+    } else {
+      await this.loadingPending;
+    }
   }
 
   /**

@@ -9,6 +9,8 @@ import {
 } from "vue";
 import { VtkWASMHandler } from "../core";
 
+const SHARED_WASM_HANDLER = new VtkWASMHandler();
+
 function createExtractCallback(trame, wasmManager, extractInfo) {
   return function () {
     wasmManager.clearStateCache();
@@ -24,8 +26,18 @@ function createExtractCallback(trame, wasmManager, extractInfo) {
 }
 
 export default {
-  emits: ["updated", "memory-vtk", "memory-arrays", "camera", "invoke-response"],
+  emits: [
+    "updated",
+    "memory-vtk",
+    "memory-arrays",
+    "camera",
+    "invoke-response",
+  ],
   props: {
+    useSharedHandler: {
+      type: Boolean,
+      default: false,
+    },
     renderWindow: {
       type: Number,
     },
@@ -75,7 +87,9 @@ export default {
     const container = ref(null);
     const client = props.wsClient || trame?.client;
     const listeners = toRef(props, "listeners");
-    const wasmManager = new VtkWASMHandler();
+    const wasmManager = props.useSharedHandler
+      ? SHARED_WASM_HANDLER
+      : new VtkWASMHandler();
     let subscription = null;
 
     // network connector ------------------------------------------------------
@@ -173,12 +187,12 @@ export default {
 
       // Extract object state if object is returned
       if (result.Id && result.Success) {
-        result.Value = wasmManager.getState(result.Id)
+        result.Value = wasmManager.getState(result.Id);
       }
 
       emit("invoke-response", result);
 
-      return result
+      return result;
     }
 
     // debug ------------------------------------------------------------
@@ -192,7 +206,9 @@ export default {
     onMounted(async () => {
       // console.log("vtkLocal::mounted");
       wasmManager.bindNetwork(netFetchState, netFetchBlob, netFetchStatus);
-      await wasmManager.load(wasmURL);
+      if (!wasmManager.loaded) {
+        await wasmManager.load(wasmURL);
+      }
       const selector = wasmManager.bindCanvasToDOM(
         props.renderWindow,
         unref(container)
@@ -251,17 +267,35 @@ export default {
       // Update loggers
       watchEffect(() => {
         const settings = props.verbosity;
-        if (settings.objectManager && wasmManager.sceneManager.setObjectManagerLogVerbosity) {
-          wasmManager.sceneManager.setObjectManagerLogVerbosity(settings.objectManager);
+        if (
+          settings.objectManager &&
+          wasmManager.sceneManager.setObjectManagerLogVerbosity
+        ) {
+          wasmManager.sceneManager.setObjectManagerLogVerbosity(
+            settings.objectManager
+          );
         }
-        if (settings.invoker && wasmManager.sceneManager.setInvokerLogVerbosity) {
+        if (
+          settings.invoker &&
+          wasmManager.sceneManager.setInvokerLogVerbosity
+        ) {
           wasmManager.sceneManager.setInvokerLogVerbosity(settings.invoker);
         }
-        if (settings.deserializer && wasmManager.sceneManager.setDeserializerLogVerbosity) {
-          wasmManager.sceneManager.setDeserializerLogVerbosity(settings.deserializer);
+        if (
+          settings.deserializer &&
+          wasmManager.sceneManager.setDeserializerLogVerbosity
+        ) {
+          wasmManager.sceneManager.setDeserializerLogVerbosity(
+            settings.deserializer
+          );
         }
-        if (settings.serializer && wasmManager.sceneManager.setSerializerLogVerbosity) {
-          wasmManager.sceneManager.setSerializerLogVerbosity(settings.serializer);
+        if (
+          settings.serializer &&
+          wasmManager.sceneManager.setSerializerLogVerbosity
+        ) {
+          wasmManager.sceneManager.setSerializerLogVerbosity(
+            settings.serializer
+          );
         }
       });
 

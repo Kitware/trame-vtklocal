@@ -9,7 +9,7 @@ import {
 } from "vue";
 import { VtkWASMHandler } from "../core";
 
-const SHARED_WASM_HANDLER = new VtkWASMHandler();
+const WASM_HANDLERS = {};
 
 function createExtractCallback(trame, wasmManager, extractInfo) {
   return function () {
@@ -34,9 +34,8 @@ export default {
     "invoke-response",
   ],
   props: {
-    useSharedHandler: {
-      type: Boolean,
-      default: false,
+    useHandler: {
+      type: String,
     },
     renderWindow: {
       type: Number,
@@ -80,6 +79,11 @@ export default {
     },
   },
   setup(props, { emit }) {
+    // Create global WASM handler if missing
+    if (props.useHandler && !WASM_HANDLERS[props.useHandler]) {
+      WASM_HANDLERS[props.useHandler] = new VtkWASMHandler();
+    }
+
     const trame = inject("trame");
     const wasmURL = trame.state.get("__trame_vtklocal_wasm_url");
     const cameraTags = [];
@@ -87,8 +91,8 @@ export default {
     const container = ref(null);
     const client = props.wsClient || trame?.client;
     const listeners = toRef(props, "listeners");
-    const wasmManager = props.useSharedHandler
-      ? SHARED_WASM_HANDLER
+    const wasmManager = props.useHandler
+      ? WASM_HANDLERS[props.useHandler]
       : new VtkWASMHandler();
     let subscription = null;
 

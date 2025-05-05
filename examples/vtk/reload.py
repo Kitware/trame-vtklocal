@@ -50,7 +50,7 @@ def create_cone_pipeline():
     renderer.SetBackground(0.4, 0.2, 0.1)
     renderer.ResetCamera()
 
-    return renderWindow, cone
+    return renderWindow, cone, actor
 
 
 def create_sphere_pipeline():
@@ -91,7 +91,7 @@ class DemoApp(TrameApp):
     def __init__(self, server=None):
         super().__init__(server)
         self.spheres_rw = create_sphere_pipeline()
-        self.cone_rw, self.cone = create_cone_pipeline()
+        self.cone_rw, self.cone, self.cone_actor = create_cone_pipeline()
         self.build_ui()
         self.time = 0
 
@@ -104,6 +104,11 @@ class DemoApp(TrameApp):
     def reset_time(self, **_):
         self.time = time.time()
 
+    @change("opacity")
+    def on_opacity(self, opacity, **_):
+        self.cone_actor.property.opacity = float(opacity)
+        self.ctx.cone_view.update_throttle()
+
     def update_done(self):
         print(f"Update time {time.time() - self.time:0.2f}s")
 
@@ -115,7 +120,7 @@ class DemoApp(TrameApp):
             ):
                 vtklocal.LocalView(
                     self.spheres_rw,
-                    shared_handler=True,
+                    use_handler="big_scene",
                     throttle_rate=20,
                     key=("reset_count", 0),
                     updated=self.update_done,
@@ -126,7 +131,7 @@ class DemoApp(TrameApp):
             ):
                 vtklocal.LocalView(
                     self.cone_rw,
-                    shared_handler=True,
+                    # use_handler="big_scene",
                     throttle_rate=20,
                     ctx_name="cone_view",
                 )
@@ -136,15 +141,23 @@ class DemoApp(TrameApp):
                 click="reset_count++",
                 style="position: absolute; top: 1rem; left: 1rem; z-index: 10;",
             )
-
-            html.Input(
-                type="range",
-                v_model=("resolution", 6),
-                min=3,
-                max=60,
-                step=1,
-                style="position: absolute; top: 1rem; right: 1rem; z-index: 10;",
-            )
+            with html.Div(
+                style="position: absolute; right: 1rem; top: 1rem; z-index: 10;"
+            ):
+                html.Input(
+                    type="range",
+                    v_model=("resolution", 6),
+                    min=3,
+                    max=60,
+                    step=1,
+                )
+                html.Input(
+                    type="range",
+                    v_model=("opacity", 1),
+                    min=0.01,
+                    max=1,
+                    step=0.01,
+                )
 
 
 # -----------------------------------------------------------------------------

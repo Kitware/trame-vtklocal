@@ -91,9 +91,17 @@ export class VtkWASMHandler {
       await loadScriptAsModule(jsModuleURL);
 
       // Load WASM
-      const objectManager = await window.createVTKWasmSceneManager();
+      const objectManager = await window.createVTKWasmSceneManager({
+        // Pipes std::cout and std::cerr into debug and error in dev console.
+        // print: console.info,
+        // printErr: console.error,
+      });
       objectManager.initialize();
       this.sceneManager = objectManager;
+
+      // debug
+      // this.sceneManager.setObjectManagerLogVerbosity("INFO");
+      // this.sceneManager.setDeserializerLogVerbosity("INFO");
 
       // Capture objects
       this.loaded = true;

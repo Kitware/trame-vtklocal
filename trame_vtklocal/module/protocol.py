@@ -2,6 +2,7 @@
 from wslink import register as export_rpc
 from wslink.websocket import LinkProtocol
 
+# from vtkmodules.vtkCommonCore import vtkLogger
 from vtkmodules.vtkSerializationManager import vtkObjectManager
 
 
@@ -26,6 +27,14 @@ class ObjectManagerAPI(LinkProtocol):
         self._debug_state = False
         self._debug_state_counter = 1
 
+        # Debug - adjust verbosity
+        # self.vtk_object_manager.SetObjectManagerLogVerbosity(
+        #     vtkLogger.VERBOSITY_WARNING
+        # )
+        # self.vtk_object_manager.serializer.SetSerializerLogVerbosity(
+        #     vtkLogger.VERBOSITY_WARNING
+        # )
+
     def register_widget(self, root_obj, dep_obj):
         self.vtk_object_manager.RegisterObject(dep_obj)
         root_id = self.vtk_object_manager.GetId(root_obj)
@@ -34,7 +43,7 @@ class ObjectManagerAPI(LinkProtocol):
             self._widgets[root_id] = set()
 
         self._widgets[root_id].add(dep_id)
-        print(f"Register widget: {dep_obj.GetClassName()}={dep_id}")
+        # print(f"Register widget: {dep_obj.GetClassName()}={dep_id}")
 
     def unregister_widget(self, root_obj, dep_obj):
         self.vtk_object_manager.UnRegisterObject(dep_obj)
@@ -43,10 +52,12 @@ class ObjectManagerAPI(LinkProtocol):
         if root_id in self._widgets:
             self._widgets[root_id].discard(dep_id)
 
-    def update(self, push_camera=False, **_):
+    def update(self, push_camera=False, obj_to_update=None, **_):
         self._push_camera = push_camera
 
+        # FIXME (once C++ has api to add obj_to_update)
         self.vtk_object_manager.UpdateStatesFromObjects()
+
         if self._debug_state:
             self.vtk_object_manager.Export(f"snapshot-{self._debug_state_counter}")
             self._debug_state_counter += 1

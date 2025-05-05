@@ -2,7 +2,8 @@ import vtk
 
 from trame.app import get_server
 from trame.ui.html import DivLayout
-from trame.widgets import html, client, vtklocal
+from trame.widgets import html, client  # , vtklocal
+from trame_vtklocal.widgets import vtklocal  # just for -e compatibility
 from trame.decorators import TrameApp, change
 from trame.assets.remote import HttpFile
 

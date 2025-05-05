@@ -7,7 +7,8 @@ import warnings
 from pathlib import Path
 from trame_client.widgets.core import AbstractElement
 from trame_vtklocal import module
-from trame_vtklocal.utils.throttle import Throttle
+
+from trame_common.exec.throttle import Throttle
 
 try:
     import zlib  # noqa
@@ -60,6 +61,10 @@ class LocalView(HtmlElement):
         listeners (dict):
             Dynamic structure describing what to observe and how to map internal
             WASM state to trame state variable.
+        use_handler (string):
+            Name of a global instance of WASM handler to use. This is useful for
+            skipping WASM reinitialization when your vue component is going to be
+            mounted/unmounted often. (i.e. used inside VueRouter element)
         updated (event):
             Emitted after each completed client side update.
         memory_vtk (event):
@@ -100,7 +105,7 @@ class LocalView(HtmlElement):
         self._attributes["rw_id"] = f':render-window="{self._window_id}"'
         self._attributes["ref"] = f'ref="{self.__ref}"'
         self._attr_names += [
-            ("shared_handler", "useSharedHandler"),
+            ("use_handler", "useHandler"),
             ("cache_size", "cacheSize"),
             ("eager_sync", "eagerSync"),
             ("listeners", ":listeners"),
@@ -156,7 +161,10 @@ class LocalView(HtmlElement):
 
     def update(self, push_camera=False):
         """Sync view by pushing updates to client"""
-        self.api.update(push_camera=push_camera)
+        self.api.update(
+            push_camera=push_camera,
+            obj_to_update=[self._render_window, *self.__registered_obj],
+        )
         self.server.js_call(self.__ref, "update")
 
     def register_vtk_object(self, vtk_instance):

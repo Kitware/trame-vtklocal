@@ -7,6 +7,7 @@ authors = [
 ]
 dependencies = [
     "trame",
+    "trame-common",
 ]
 requires-python = ">=3.9"
 readme = "README.rst"

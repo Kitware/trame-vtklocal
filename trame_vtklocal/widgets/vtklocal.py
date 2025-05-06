@@ -150,6 +150,15 @@ class LocalView(HtmlElement):
         """
         self.server.js_call(self.__ref, "evalStateExtract", state_mapping)
 
+    def detach_handler(self):
+        """
+        When using `use_handler=` property, you may reach a point where you
+        want to free the global WASM handler on the client side.
+        This method will remove the global reference so an unmount would release it,
+        while a new mount will re-create a new handler.
+        """
+        self.server.js_call(self.__ref, "detachHandler")
+
     @property
     def update_throttle(self):
         """Throttled update method on which you can update its rate by doing

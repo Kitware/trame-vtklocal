@@ -340,6 +340,15 @@ export default {
       createExtractCallback(trame, wasmManager, definition)();
     }
 
+    /**
+     * Remove WASM handler from global map to free memory once component unmount.
+     */
+    function detachHandler() {
+      if (props.useHandler && WASM_HANDLERS[props.useHandler]) {
+        delete WASM_HANDLERS[props.useHandler];
+      }
+    }
+
     return {
       container,
       update,
@@ -347,6 +356,7 @@ export default {
       evalStateExtract,
       invoke,
       printSceneManagerInformation,
+      detachHandler,
     };
   },
   template: `<div ref="container" style="position: relative; width: 100%; height: 100%;"></div>`,

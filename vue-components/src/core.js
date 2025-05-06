@@ -61,7 +61,7 @@ export class VtkWASMHandler {
     this.cameraIds = new Set();
     this.stateCache = {};
     this.loadingPending = null;
-    // FIXME - to remove once API available on C++ side
+    // FIXME - remove when VTK>=9.5
     this.renderWindowIds = new Set();
     this.renderWindowIdToInteractorId = new Map();
     this.renderWindowSizes = {};
@@ -98,6 +98,14 @@ export class VtkWASMHandler {
       });
       objectManager.initialize();
       this.sceneManager = objectManager;
+
+      // Ignore state properties - only in 9.5
+      if (this.sceneManager.skipProperty) {
+        this.sceneManager.skipProperty(
+          "vtkWebAssemblyOpenGLRenderWindow",
+          "Size"
+        );
+      }
 
       // debug
       // this.sceneManager.setObjectManagerLogVerbosity("INFO");
@@ -182,29 +190,38 @@ export class VtkWASMHandler {
       const { Id, MTime } = stateObj;
       this.stateMTimes[Id] = MTime;
 
-      // RenderWindow - to remove once API available on C++ side
-      if (this.renderWindowIds.has(Id) && stateObj?.Interactor?.Id) {
-        this.renderWindowIdToInteractorId.set(stateObj.Interactor.Id, Id);
-        stateObj.CanvasSelector = this.getCanvasSelector(Id);
-        delete stateObj["Size"];
-        if (this.renderWindowSizes[Id]) {
-          stateObj.Size = this.renderWindowSizes[Id];
+      if (
+        !this.sceneManager.skipProperty ||
+        !this.sceneManager.bindRenderWindow
+      ) {
+        // Not needed in >=9.5
+        if (this.renderWindowIds.has(Id) && stateObj?.Interactor?.Id) {
+          this.renderWindowIdToInteractorId.set(stateObj.Interactor.Id, Id);
+
+          // Connect canvas selector
+          stateObj.CanvasSelector = this.getCanvasSelector(Id);
+
+          // Don't use server side size (ignore prop skip it)
+          delete stateObj["Size"];
+          if (this.renderWindowSizes[Id]) {
+            stateObj.Size = this.renderWindowSizes[Id];
+          }
+
+          // Need to patch classname to allow OSMesa server to work
+          stateObj.ClassName = "vtkCocoaRenderWindow";
+
+          return JSON.stringify(stateObj);
         }
 
-        // Need to patch classname to allow OSMesa server to work
-        stateObj.ClassName = "vtkCocoaRenderWindow";
-
-        return JSON.stringify(stateObj);
+        // Interactor - to remove once API available on C++ side
+        if (this.renderWindowIdToInteractorId.has(Id)) {
+          // Connect canvas selector
+          stateObj.CanvasSelector = this.getCanvasSelector(
+            this.renderWindowIdToInteractorId.get(Id)
+          );
+          return JSON.stringify(stateObj);
+        }
       }
-
-      // Interactor - to remove once API available on C++ side
-      if (this.renderWindowIdToInteractorId.has(Id)) {
-        stateObj.CanvasSelector = this.getCanvasSelector(
-          this.renderWindowIdToInteractorId.get(Id)
-        );
-        return JSON.stringify(stateObj);
-      }
-
       return state;
     }
   }
@@ -257,8 +274,8 @@ export class VtkWASMHandler {
    *
    * @param {int} vtkId
    */
-  async update(vtkId) {
-    // FIXME - to remove once API available on C++ side
+  async update(vtkId, bindCanvas = false) {
+    // Not needed once 9.5 is out...
     this.renderWindowIds.add(vtkId);
 
     this.updateInProgress++;
@@ -320,6 +337,15 @@ export class VtkWASMHandler {
         this.sceneManager.updateObjectsFromStates();
         const [w, h] = this.renderWindowSizes[vtkId] || [10, 10];
         this.sceneManager.setSize(vtkId, w, h);
+
+        // Prevent state patching with new API
+        if (bindCanvas && this.sceneManager.bindRenderWindow) {
+          this.sceneManager.bindRenderWindow(
+            vtkId,
+            this.getCanvasSelector(vtkId)
+          );
+        }
+
         this.sceneManager.render(vtkId);
         // TODO outside:
         // - freeMemory: to keep memory in check

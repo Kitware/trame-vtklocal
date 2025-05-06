@@ -167,12 +167,12 @@ export default {
 
     // Update -----------------------------------------------------------------
 
-    async function update() {
+    async function update(bindCanvas = false) {
       if (!wasmManager.loaded) {
         return;
       }
 
-      await wasmManager.update(props.renderWindow);
+      await wasmManager.update(props.renderWindow, bindCanvas);
       emit("updated");
       checkMemory();
     }
@@ -232,7 +232,7 @@ export default {
         resizeObserver.observe(unref(container));
       }
 
-      await update();
+      await update(true);
 
       // Camera listener
       wasmManager.cameraIds.forEach((cid) => {
@@ -303,7 +303,9 @@ export default {
         }
       });
 
-      wasmManager.sceneManager.startEventLoop(props.renderWindow);
+      if (!wasmManager.sceneManager.startEventLoop(props.renderWindow)) {
+        console.error("Could not startEventLoop for", props.renderWindow);
+      }
     });
 
     onBeforeUnmount(() => {

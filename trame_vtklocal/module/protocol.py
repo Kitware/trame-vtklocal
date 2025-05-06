@@ -4,6 +4,14 @@ from wslink.websocket import LinkProtocol
 
 # from vtkmodules.vtkCommonCore import vtkLogger
 from vtkmodules.vtkSerializationManager import vtkObjectManager
+from vtkmodules.vtkCommonCore import vtkVersion
+
+VTK_VERSION = vtkVersion()
+API_NO_IDS_UPDATE = (
+    VTK_VERSION.GetVTKMajorVersion() <= 9
+    and VTK_VERSION.GetVTKMinorVersion() <= 4
+    and VTK_VERSION.GetVTKBuildVersion() < 20250505
+)  # mr90034
 
 
 def map_id_mtime(object_manager, vtk_id):
@@ -55,8 +63,16 @@ class ObjectManagerAPI(LinkProtocol):
     def update(self, push_camera=False, obj_to_update=None, **_):
         self._push_camera = push_camera
 
-        # FIXME (once C++ has api to add obj_to_update)
-        self.vtk_object_manager.UpdateStatesFromObjects()
+        if API_NO_IDS_UPDATE:  # <= 9.4.2
+            self.vtk_object_manager.UpdateStatesFromObjects()
+        else:  # > 9.4.2
+            if obj_to_update is None:
+                self.vtk_object_manager.UpdateStatesFromObjects()
+            else:
+                ids = [
+                    self.vtk_object_manager.GetId(vtk_obj) for vtk_obj in obj_to_update
+                ]
+                self.vtk_object_manager.UpdateStatesFromObjects(ids)
 
         if self._debug_state:
             self.vtk_object_manager.Export(f"snapshot-{self._debug_state_counter}")

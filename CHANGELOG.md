@@ -1,6 +1,36 @@
 # CHANGELOG
 
 
+## v0.9.0 (2025-05-06)
+
+### Bug Fixes
+
+- Add method to free global handlers
+  ([`5b492e9`](https://github.com/Kitware/trame-vtklocal/commit/5b492e98afabf83b80ce2244570fa32fc7135f8c))
+
+- Allow vue component to share wasm runtime
+  ([`7e4ac06`](https://github.com/Kitware/trame-vtklocal/commit/7e4ac06f3570fc4dda76ea7a90db5f71fd05987a))
+
+- Remove state patching with new API
+  ([`86e2c08`](https://github.com/Kitware/trame-vtklocal/commit/86e2c08d38fc29d10a92737dd8e233ab82fe324d))
+
+### Documentation
+
+- **example**: Remove dead code
+  ([`abbcc1e`](https://github.com/Kitware/trame-vtklocal/commit/abbcc1e5a15fc59cff4c6eedc9eea98ba1afbf92))
+
+- **example**: Test opacity change on cone
+  ([`5aec836`](https://github.com/Kitware/trame-vtklocal/commit/5aec836d762e3fa98e0507050df227372dbf6dc5))
+
+### Features
+
+- **handler**: Allow shared handler
+  ([`e64f2e6`](https://github.com/Kitware/trame-vtklocal/commit/e64f2e6c09ff4431038fc32ef8351cf12c92c0fe))
+
+- **js-lib**: New version for state patching and concurrent loading
+  ([`2fb2b21`](https://github.com/Kitware/trame-vtklocal/commit/2fb2b2194c56fae0f70515fed8e7cf6b03f7c992))
+
+
 ## v0.8.0 (2025-04-04)
 
 ### Features

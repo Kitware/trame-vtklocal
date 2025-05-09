@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.10.0 (2025-05-09)
+
+### Features
+
+- Add save capability and fix verbosity
+  ([`b21ae94`](https://github.com/Kitware/trame-vtklocal/commit/b21ae94cd79ac51ccd3452164fd6cb688f36d0bb))
+
+
 ## v0.9.0 (2025-05-06)
 
 ### Bug Fixes

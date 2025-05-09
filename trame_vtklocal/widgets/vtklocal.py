@@ -108,6 +108,7 @@ class LocalView(HtmlElement):
             ("use_handler", "useHandler"),
             ("cache_size", "cacheSize"),
             ("eager_sync", "eagerSync"),
+            "verbosity",
             ("listeners", ":listeners"),
         ]
         self._event_names += [
@@ -245,6 +246,13 @@ class LocalView(HtmlElement):
                 )
 
             return zip_buffer.getvalue()
+
+    def save(self, file_name, wasm_ids=None):
+        """Save zip file capturing state and blob data for a given render window"""
+        if wasm_ids is None:
+            wasm_ids = self.api.get_all_ids(self._window_id)
+
+        self.api.dump_data(file_name, wasm_ids)
 
     def reset_camera(self, renderer_or_render_window=None, **kwargs):
         """Reset camera by making the call on the client side"""

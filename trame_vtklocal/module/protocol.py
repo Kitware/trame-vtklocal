@@ -1,4 +1,6 @@
-# import json
+import zipfile
+import json
+from pathlib import Path
 from wslink import register as export_rpc
 from wslink.websocket import LinkProtocol
 
@@ -6,11 +8,18 @@ from wslink.websocket import LinkProtocol
 from vtkmodules.vtkSerializationManager import vtkObjectManager
 from vtkmodules.vtkCommonCore import vtkVersion
 
+try:
+    import zlib  # noqa
+
+    ZIP_COMPRESSION = zipfile.ZIP_DEFLATED
+except ImportError:
+    ZIP_COMPRESSION = zipfile.ZIP_STORED
+
 VTK_VERSION = vtkVersion()
 API_NO_IDS_UPDATE = (
     VTK_VERSION.GetVTKMajorVersion() <= 9
     and VTK_VERSION.GetVTKMinorVersion() <= 4
-    and VTK_VERSION.GetVTKBuildVersion() < 20250505
+    and VTK_VERSION.GetVTKBuildVersion() < 20250509
 )  # mr90034
 
 
@@ -59,6 +68,11 @@ class ObjectManagerAPI(LinkProtocol):
         dep_id = self.vtk_object_manager.GetId(dep_obj)
         if root_id in self._widgets:
             self._widgets[root_id].discard(dep_id)
+
+    def get_all_ids(self, root_id):
+        if root_id in self._widgets:
+            return [root_id, *self._widgets[root_id]]
+        return [root_id]
 
     def update(self, push_camera=False, obj_to_update=None, **_):
         self._push_camera = push_camera
@@ -189,6 +203,48 @@ class ObjectManagerAPI(LinkProtocol):
             force_push=force_push,
             interactor=interactor,
         )
+
+    def dump_data(self, output_file, wasm_ids):
+        """
+        Create file (zip) with WASM data
+        """
+        output_file = Path(output_file)
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+
+        # Extract ids to save
+        all_ids = set()
+        for vtk_id in wasm_ids:
+            all_ids.update(self.vtk_object_manager.GetAllDependencies(vtk_id))
+
+        # Extract hash to save
+        hashes = self.vtk_object_manager.GetBlobHashes(list(all_ids))
+
+        with zipfile.ZipFile(output_file, "w", ZIP_COMPRESSION) as zipf:
+            # Write info
+            zipf.writestr(
+                "vtk-wasm.json",
+                json.dumps(
+                    {
+                        "vtk": VTK_VERSION.GetVTKVersion(),
+                        "ids": wasm_ids,
+                    }
+                ),
+            )
+            # Write states
+            zipf.mkdir("states")
+            for vtk_id in all_ids:
+                zipf.writestr(
+                    f"states/{vtk_id}",
+                    self.vtk_object_manager.GetState(vtk_id),
+                )
+
+            # Write blobs
+            zipf.mkdir("blobs")
+            for hash in hashes:
+                zipf.writestr(
+                    f"blobs/{hash}",
+                    memoryview(self.vtk_object_manager.GetBlob(hash)),
+                )
 
 
 class ObjectManagerHelper:

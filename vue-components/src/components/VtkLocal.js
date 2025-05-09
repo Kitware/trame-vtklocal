@@ -232,6 +232,41 @@ export default {
         resizeObserver.observe(unref(container));
       }
 
+      // Update loggers
+      watchEffect(() => {
+        const settings = props.verbosity;
+        if (
+          settings.objectManager &&
+          wasmManager.sceneManager.setObjectManagerLogVerbosity
+        ) {
+          wasmManager.sceneManager.setObjectManagerLogVerbosity(
+            settings.objectManager
+          );
+        }
+        if (
+          settings.invoker &&
+          wasmManager.sceneManager.setInvokerLogVerbosity
+        ) {
+          wasmManager.sceneManager.setInvokerLogVerbosity(settings.invoker);
+        }
+        if (
+          settings.deserializer &&
+          wasmManager.sceneManager.setDeserializerLogVerbosity
+        ) {
+          wasmManager.sceneManager.setDeserializerLogVerbosity(
+            settings.deserializer
+          );
+        }
+        if (
+          settings.serializer &&
+          wasmManager.sceneManager.setSerializerLogVerbosity
+        ) {
+          wasmManager.sceneManager.setSerializerLogVerbosity(
+            settings.serializer
+          );
+        }
+      });
+
       await update(true);
 
       // Camera listener
@@ -268,40 +303,6 @@ export default {
         }
       });
 
-      // Update loggers
-      watchEffect(() => {
-        const settings = props.verbosity;
-        if (
-          settings.objectManager &&
-          wasmManager.sceneManager.setObjectManagerLogVerbosity
-        ) {
-          wasmManager.sceneManager.setObjectManagerLogVerbosity(
-            settings.objectManager
-          );
-        }
-        if (
-          settings.invoker &&
-          wasmManager.sceneManager.setInvokerLogVerbosity
-        ) {
-          wasmManager.sceneManager.setInvokerLogVerbosity(settings.invoker);
-        }
-        if (
-          settings.deserializer &&
-          wasmManager.sceneManager.setDeserializerLogVerbosity
-        ) {
-          wasmManager.sceneManager.setDeserializerLogVerbosity(
-            settings.deserializer
-          );
-        }
-        if (
-          settings.serializer &&
-          wasmManager.sceneManager.setSerializerLogVerbosity
-        ) {
-          wasmManager.sceneManager.setSerializerLogVerbosity(
-            settings.serializer
-          );
-        }
-      });
 
       if (!wasmManager.sceneManager.startEventLoop(props.renderWindow)) {
         console.error("Could not startEventLoop for", props.renderWindow);

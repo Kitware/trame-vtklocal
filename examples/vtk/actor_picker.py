@@ -14,11 +14,11 @@
 #
 # ///
 
-from trame.app import get_server, asynchronous
+from trame.app import TrameApp, asynchronous
 from trame.ui.html import DivLayout
 from trame.widgets import html, client
 from trame_vtklocal.widgets import vtklocal
-from trame.decorators import TrameApp, change
+from trame.decorators import change
 
 import vtkmodules.vtkRenderingOpenGL2  # noqa: F401
 from vtkmodules.vtkCommonColor import vtkNamedColors
@@ -39,10 +39,9 @@ colors = vtkNamedColors()
 NUMBER_OF_SPHERES = 10
 
 
-@TrameApp()
-class ActorPicker:
+class ActorPicker(TrameApp):
     def __init__(self, server=None):
-        self.server = get_server(server, client_type="vue3")
+        super().__init__(server)
 
         # ---------------------------------------------------------------------
         # VTK setup
@@ -120,7 +119,7 @@ class ActorPicker:
         # ---------------------------------------------------------------------
         # Build UI
         # ---------------------------------------------------------------------
-        self.server.state.setdefault("clicked_pos", None)
+        self.state.setdefault("clicked_pos", None)
         with DivLayout(self.server) as self.ui:
             client.Style("body { margin: 0; }")
             with html.Div(
@@ -148,10 +147,6 @@ class ActorPicker:
                     )
                     # Add a picker on client side
                     view.register_vtk_object(self.picker)
-
-    @property
-    def ctx(self):
-        return self.server.context
 
     @change("clicked_pos")
     def on_actor_clicked(self, clicked_pos, **_):

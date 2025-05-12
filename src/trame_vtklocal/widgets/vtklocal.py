@@ -275,7 +275,9 @@ class LocalView(HtmlElement):
 
     def get_wasm_id(self, vtk_object):
         """Return vtkObject id used within WASM scene manager"""
-        return self.object_manager.GetId(vtk_object)
+        if hasattr(vtk_object, "IsA"):  # vtkObject
+            return self.object_manager.GetId(vtk_object)
+        return vtk_object
 
     def get_vtk_obj(self, wasm_id):
         """Return corresponding VTK object"""
@@ -289,9 +291,8 @@ class LocalView(HtmlElement):
         self.object_manager.UpdateObjectFromState(state_obj)
 
     async def invoke(self, vtk_obj, method, *args):
-        wasm_id = vtk_obj
-        if hasattr(vtk_obj, "IsA"):  # vtkObject
-            wasm_id = self.get_wasm_id(vtk_obj)
+        wasm_id = self.get_wasm_id(vtk_obj)
+        args = list(map(self.get_wasm_id, args))
 
         self._pending_invoke_result = asyncio.get_running_loop().create_future()
         self.server.js_call(self.__ref, "invoke", wasm_id, method, args)

@@ -303,7 +303,6 @@ export default {
         }
       });
 
-
       if (!wasmManager.sceneManager.startEventLoop(props.renderWindow)) {
         console.error("Could not startEventLoop for", props.renderWindow);
       }

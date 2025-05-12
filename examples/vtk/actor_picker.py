@@ -129,9 +129,8 @@ class ActorPicker:
                     throttle_rate=20,
                     ctx_name="wasm_view",
                 ) as view:
-                    pass
                     wasm_interactor_id = view.get_wasm_id(self.interactor)
-                    print(f"{wasm_interactor_id=}")
+                    # print(f"{wasm_interactor_id=}")
                     view.listeners = (
                         "wasm_listeners",
                         {
@@ -146,7 +145,7 @@ class ActorPicker:
                         },
                     )
                     # Add a picker on client side
-                    # view.register_vtk_object(self.picker) # FIXME not serializable yet
+                    view.register_vtk_object(self.picker)
 
     @property
     def ctx(self):
@@ -157,7 +156,6 @@ class ActorPicker:
         if clicked_pos is None:
             return
 
-        # Not working yet
         asynchronous.create_task(self._activate_actor(**clicked_pos))
 
     async def _activate_actor(self, x, y):

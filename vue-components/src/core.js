@@ -101,9 +101,16 @@ export class VtkWASMHandler {
 
       // Ignore state properties - only in 9.5
       if (this.sceneManager.skipProperty) {
-        this.sceneManager.skipProperty(
+        // Will be enough when wasm check for superclass
+        this.sceneManager.skipProperty("vtkRenderWindow", "Size");
+        // FIXME: but for now we need specific class (window/linux/mac/wasm)
+        [
           "vtkWebAssemblyOpenGLRenderWindow",
-          "Size"
+          "vtkXOpenGLRenderWindow",
+          "vtkWin32OpenGLRenderWindow",
+          "vtkCocoaRenderWindow",
+        ].forEach((className) =>
+          this.sceneManager.skipProperty(className, "Size")
         );
       }
 

@@ -37,18 +37,20 @@ dev = [
 ]
 
 [build-system]
-requires = ['setuptools', 'wheel']
-build-backend = 'setuptools.build_meta'
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.setuptools.packages.find]
-where = ["."]
+[tool.hatch.build]
+include = [
+  "/src/trame_vtklocal/**/*.py",
+  "/src/trame_vtklocal/module/serve/**",
+  "/src/trame/**/*.py",
+]
 
-[tool.setuptools.package-data]
-trame_vtklocal = [
-    "module/**/*.js",
-    "module/**/*.css",
-    "module/**/*.mjs",
-    "module/**/*.wasm",
+[tool.hatch.build.targets.wheel]
+packages = [
+    "src/trame_vtklocal",
+    "src/trame",
 ]
 
 [tool.semantic_release]

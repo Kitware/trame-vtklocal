@@ -15,7 +15,7 @@ export default {
         },
       },
     },
-    outDir: "../trame_vtklocal/module/serve/js",
+    outDir: "../src/trame_vtklocal/module/serve/js",
     assetsDir: ".",
   },
 };

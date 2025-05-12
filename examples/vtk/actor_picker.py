@@ -1,16 +1,18 @@
+#!/usr/bin/env -S uv run --script
 # /// script
+#
+# requires-python = ">=3.10"
+#
+# dependencies = [
+#   "trame>=3.9",
+#   "trame-vtklocal>=0.11",
+#   "vtk==9.4.20250510.dev0",
+# ]
+#
 # [[tool.uv.index]]
 # url = "https://wheels.vtk.org"
 #
-# dependencies = [
-#   "trame",
-#   "trame-vtklocal",
-#   "vtk==9.4.20250403.dev0",
-# ]
 # ///
-
-# $> uv run ./actor_picker.py
-
 
 from trame.app import get_server, asynchronous
 from trame.ui.html import DivLayout

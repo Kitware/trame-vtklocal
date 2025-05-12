@@ -1,6 +1,24 @@
 # CHANGELOG
 
 
+## v0.11.0 (2025-05-12)
+
+### Chores
+
+- Restructure code to use hatchling
+  ([`3017940`](https://github.com/Kitware/trame-vtklocal/commit/301794055b93a95a970b2178bc648389fd65f793))
+
+### Continuous Integration
+
+- Bump JS library version
+  ([`abd8aa0`](https://github.com/Kitware/trame-vtklocal/commit/abd8aa09749e0bfac4b40c2d557fb4bf485c49f8))
+
+### Features
+
+- **invoke**: Allow method call for picking
+  ([`0accb79`](https://github.com/Kitware/trame-vtklocal/commit/0accb790f493fa780adfe6c1627e52b230feb0e2))
+
+
 ## v0.10.0 (2025-05-09)
 
 ### Features

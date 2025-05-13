@@ -1,56 +1,25 @@
 import "./style.css";
 
-const LOADED_URLS = [];
-const PROMISES = {};
+import { VtkWASMLoader } from "./wasmLoader";
 
-function createFuture() {
-  let resolve, reject;
-  const promise = new Promise((res, rej) => {
-    resolve = res;
-    reject = rej;
-  });
-  return { promise, resolve, reject };
-}
+// url => loader instance
+const WASM_LOADERS = {};
 
 /**
- * Add script tag with provided URL with type="module"
+ * RemoteSession type definition
  *
- * @param {string} url
- * @return {Promise<void>} to know when the script is ready
- */
-function loadScriptAsModule(url) {
-  if (PROMISES[url]) {
-    return PROMISES[url];
-  }
-
-  PROMISES[url] = new Promise(function (resolve, reject) {
-    if (LOADED_URLS.indexOf(url) === -1) {
-      LOADED_URLS.push(url);
-      var newScriptTag = document.createElement("script");
-      newScriptTag.type = "module";
-      newScriptTag.src = url;
-      newScriptTag.onload = resolve;
-      newScriptTag.onerror = reject;
-      document.body.appendChild(newScriptTag);
-    } else {
-      resolve(false);
-    }
-  });
-
-  return PROMISES[url];
-}
-
-/**
- * VtkWASMHandler type definition
- *
- * @typedef {Object} VtkWASMHandler
+ * @typedef {Object} RemoteSession
  * @property {Boolean} loaded
  * @property {Set<int>} cameraIds
+ * @property {wasmSceneManager} sceneManager
  */
-export class VtkWASMHandler {
+export class RemoteSession {
   constructor() {
-    this.updateInProgress = 0;
+    console.log("Using RemoteSession");
+    this.sceneManager = null;
     this.loaded = false;
+    //
+    this.updateInProgress = 0;
     this.currentMTime = 1;
     this.stateMTimes = {};
     this.hashesMTime = {};
@@ -60,7 +29,6 @@ export class VtkWASMHandler {
     this.networkFetchStatus = null;
     this.cameraIds = new Set();
     this.stateCache = {};
-    this.loadingPending = null;
     // FIXME - remove when VTK>=9.5
     this.renderWindowIds = new Set();
     this.renderWindowIdToInteractorId = new Map();
@@ -78,51 +46,27 @@ export class VtkWASMHandler {
    * @param {str} wasmBaseURL
    */
   async load(wasmBaseURL) {
-    if (this.loaded) {
-      return;
+    if (!WASM_LOADERS[wasmBaseURL]) {
+      WASM_LOADERS[wasmBaseURL] = new VtkWASMLoader();
     }
 
-    if (!this.loadingPending) {
-      const { promise, resolve } = createFuture();
-      this.loadingPending = promise;
+    await WASM_LOADERS[wasmBaseURL].load(wasmBaseURL);
+    this.sceneManager = await WASM_LOADERS[wasmBaseURL].createRemoteSession();
+    this.loaded = true;
 
-      // Load JS
-      const jsModuleURL = `${wasmBaseURL}/vtkWasmSceneManager.mjs`;
-      await loadScriptAsModule(jsModuleURL);
-
-      // Load WASM
-      const objectManager = await window.createVTKWasmSceneManager({
-        // Pipes std::cout and std::cerr into debug and error in dev console.
-        // print: console.info,
-        // printErr: console.error,
-      });
-      objectManager.initialize();
-      this.sceneManager = objectManager;
-
-      // Ignore state properties - only in 9.5
-      if (this.sceneManager.skipProperty) {
-        // Will be enough when wasm check for superclass
-        this.sceneManager.skipProperty("vtkRenderWindow", "Size");
-        // FIXME: but for now we need specific class (window/linux/mac/wasm)
-        [
-          "vtkWebAssemblyOpenGLRenderWindow",
-          "vtkXOpenGLRenderWindow",
-          "vtkWin32OpenGLRenderWindow",
-          "vtkCocoaRenderWindow",
-        ].forEach((className) =>
-          this.sceneManager.skipProperty(className, "Size")
-        );
-      }
-
-      // debug
-      // this.sceneManager.setObjectManagerLogVerbosity("INFO");
-      // this.sceneManager.setDeserializerLogVerbosity("INFO");
-
-      // Capture objects
-      this.loaded = true;
-      resolve();
-    } else {
-      await this.loadingPending;
+    // Ignore state properties - only in 9.5
+    if (this.sceneManager.skipProperty) {
+      // Will be enough when wasm check for superclass
+      this.sceneManager.skipProperty("vtkRenderWindow", "Size");
+      // FIXME: but for now we need specific class (window/linux/mac/wasm)
+      [
+        "vtkWin32OpenGLRenderWindow",
+        "vtkXOpenGLRenderWindow",
+        "vtkCocoaRenderWindow",
+        "vtkWebAssemblyOpenGLRenderWindow",
+      ].forEach((className) =>
+        this.sceneManager.skipProperty(className, "Size")
+      );
     }
   }
 
@@ -484,3 +428,6 @@ export class VtkWASMHandler {
     }
   }
 }
+
+// For backward compatibility
+export const VtkWASMHandler = RemoteSession;

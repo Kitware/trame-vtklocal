@@ -7,7 +7,7 @@ import {
   toRef,
   watchEffect,
 } from "vue";
-import { VtkWASMHandler } from "../core";
+import { RemoteSession } from "../remote";
 
 const WASM_HANDLERS = {};
 
@@ -81,7 +81,7 @@ export default {
   setup(props, { emit }) {
     // Create global WASM handler if missing
     if (props.useHandler && !WASM_HANDLERS[props.useHandler]) {
-      WASM_HANDLERS[props.useHandler] = new VtkWASMHandler();
+      WASM_HANDLERS[props.useHandler] = new RemoteSession();
     }
 
     const trame = inject("trame");
@@ -93,7 +93,7 @@ export default {
     const listeners = toRef(props, "listeners");
     const wasmManager = props.useHandler
       ? WASM_HANDLERS[props.useHandler]
-      : new VtkWASMHandler();
+      : new RemoteSession();
     let subscription = null;
 
     // network connector ------------------------------------------------------

@@ -3,32 +3,27 @@
   "private": true,
   "version": "0.0.0",
   "main": "./dist/trame_vtklocal.umd.js",
-  "unpkg": "./dist/trame_vtklocal.umd.js",
-  "module": "./dist/trame_vtklocal.mjs",
-  "exports": {
-    ".": {
-      "import": "./dist/trame_vtklocal.mjs",
-      "require": "./dist/trame_vtklocal.umd.js"
-    }
-  },
   "scripts": {
     "dev": "vite",
     "build": "vite build --emptyOutDir",
-    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore --ignore-pattern public",
+    "lint": "eslint --fix src",
+    "format": "prettier .  --write",
     "semantic-release": "semantic-release"
   },
   "peerDependencies": {
     "vue": "^2.7.0 || >=3.0.0"
   },
   "devDependencies": {
-    "@rushstack/eslint-patch": "^1.1.4",
-    "@vue/eslint-config-prettier": "^7.0.0",
-    "eslint": "^8.33.0",
-    "eslint-plugin-vue": "^9.3.0",
-    "prettier": "^2.7.1",
-    "semantic-release": "^24.2.2",
-    "vite": "^4.1.0",
-    "vue": "^3.0.0"
+    "@eslint/js": "^9.22.0",
+    "@vitejs/plugin-vue": "^5.2.3",
+    "@vue/eslint-config-prettier": "^10.2.0",
+    "eslint": "^9.22.0",
+    "eslint-plugin-vue": "~10.0.0",
+    "globals": "^16.0.0",
+    "prettier": "3.5.3",
+    "vite": "^6.2.4",
+    "vite-plugin-vue-devtools": "^7.7.2",
+    "vue": "^3.5.13"
   },
   "files": [
     "dist/*",

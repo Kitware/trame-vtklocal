@@ -2,11 +2,13 @@ export default {
     base: "./",
     build: {
       lib: {
-        entry: "../vue-components/src/core.js",
-        name: "trame_vtklocal",
-        formats: ["es", "umd"],
-        fileName: "trame-vtklocal",
+        entry: {
+          "remote": "../vue-components/src/remote.js",
+          "vtk": "../vue-components/src/standalone.js",
+        },
+        formats: ["es"],
       },
       assetsDir: ".",
+      outDir: "./dist/esm",
     },
   };

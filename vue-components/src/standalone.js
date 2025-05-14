@@ -19,6 +19,25 @@ function isTypedArray(obj) {
   return !!TYPED_ARRAYS[obj.constructor.name];
 }
 
+function createPropGetter(wasm, wrapMethods, vtkId) {
+  const fullState = wasm.get(vtkId);
+  const getPropHandler = {};
+  Object.keys(fullState).forEach((propName) => {
+    // console.log("Prop key:", propName);
+    getPropHandler[propName] = () => wrapMethods.decorateResult(wasm.get(vtkId)[propName]);
+  });
+  return getPropHandler;
+}
+
+function createPropSetter(wasm, wrapMethods, vtkId) {
+  const fullState = wasm.get(vtkId);
+  const setPropHandler = {};
+  Object.keys(fullState).forEach((propName) => {
+    setPropHandler[propName] = (value) => wasm.set(vtkId, wrapMethods.decorateKwargs({[propName]: value}));
+  });
+  return setPropHandler;
+}
+
 function createVtkObjectProxy(
   wasm,
   vtkProxyCache,
@@ -28,7 +47,6 @@ function createVtkObjectProxy(
 ) {
   // Reuse vtkProxy if already available
   if (idToRef.has(vtkId) && idToRef.get(vtkId).deref()) {
-    console.log(" => reused", vtkId);
     return idToRef.get(vtkId).deref();
   }
 
@@ -54,6 +72,10 @@ function createVtkObjectProxy(
       unObserve(observerTags.pop());
     }
   }
+  const propGetters = createPropGetter(wasm, wrapMethods, vtkId);
+  const propSetters = createPropSetter(wasm, wrapMethods, vtkId);
+
+  // Extract properties and unCapitalize them & add setter
 
   // Create proxy for given vtk object
   const target = {
@@ -72,6 +94,9 @@ function createVtkObjectProxy(
       if (prop === "state") {
         return wasm.get(vtkId);
       }
+      if (propGetters[prop]) {
+        return propGetters[prop]();
+      }
       if (!target[prop]) {
         // console.log("register method", prop);
         target[prop] = async (...args) =>
@@ -80,6 +105,12 @@ function createVtkObjectProxy(
           );
       }
       return target[prop];
+    },
+    set(target, property, value) {
+      if (propSetters[property]) {
+        propSetters[property](value);
+      }
+      return value;
     },
   });
 
@@ -179,12 +210,19 @@ function createInstanciatorProxy(wasm, vtkProxyCache, idToRef) {
 }
 
 export async function createNamespace(url, config={}) {
-  const loader = new VtkWASMLoader();
-  await loader.load(url, config);
-
-  const wasm = loader.createStandaloneSession();
   const vtkProxyCache = new WeakMap();
   const idToRef = new Map();
+  let wasm = null;
+
+  if (window.createVTKWASM) {
+    // Use loaded VTK.wasm
+    wasm = await window.createVTKWASM(config);
+  } else {
+    // Load script for VTK.wasm
+    const loader = new VtkWASMLoader();
+    await loader.load(url, config);
+    wasm = loader.createStandaloneSession();
+  }
 
   return createInstanciatorProxy(wasm, vtkProxyCache, idToRef);
 }

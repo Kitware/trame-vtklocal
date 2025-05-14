@@ -7,7 +7,8 @@ from trame.decorators import change
 from trame.assets.remote import HttpFile
 from trame.assets.local import to_url
 
-vtk.vtkCellArray.SetDefaultStorageIs64Bit(False)
+if hasattr(vtk.vtkCellArray, "SetDefaultStorageIs64Bit"):
+    vtk.vtkCellArray.SetDefaultStorageIs64Bit(False)
 
 # -----------------------------------------------------------------------------
 # Fetch data / files

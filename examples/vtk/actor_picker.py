@@ -156,11 +156,17 @@ class ActorPicker(TrameApp):
         asynchronous.create_task(self._activate_actor(**clicked_pos))
 
     async def _activate_actor(self, x, y):
-        await self.ctx.wasm_view.invoke(self.picker, "Pick", x, y, 0, self.renderer)
-        actor_info = await self.ctx.wasm_view.invoke(self.picker, "GetActor")
-        actor = self.ctx.wasm_view.get_vtk_obj(actor_info.get("Id"))
+        picked_worked = await self.ctx.wasm_view.invoke(
+            self.picker, "Pick", (x, y, 0), self.renderer
+        )
+        if not picked_worked:
+            # prevent calling a method returning a null pointer
+            return
 
-        if actor:
+        actor_info = await self.ctx.wasm_view.invoke(self.picker, "GetActor")
+
+        if actor_info:
+            actor = self.ctx.wasm_view.get_vtk_obj(actor_info.get("Id"))
             actor_prop = actor.property
 
             # Restore previous state

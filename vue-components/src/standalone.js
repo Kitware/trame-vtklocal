@@ -1,24 +1,5 @@
 import { VtkWASMLoader, createFuture } from "./wasmLoader";
 
-const TYPED_ARRAYS = {
-  "Int8Array": 1,
-  "Uint8Array": 1,
-  "Uint8ClampedArray": 1,
-  "Int16Array": 1,
-  "Uint16Array": 1,
-  "Int32Array": 1,
-  "Uint32Array": 1,
-  "Float16Array": 1,
-  "Float32Array": 1,
-  "Float64Array": 1,
-  "BigInt64Array": 1,
-  "BigUint64Array": 1,
-}
-
-function isTypedArray(obj) {
-  return !!TYPED_ARRAYS[obj.constructor.name];
-}
-
 function createPropGetter(wasm, wrapMethods, vtkId) {
   const fullState = wasm.get(vtkId);
   const getPropHandler = {};
@@ -139,14 +120,7 @@ function createInstanciatorProxy(wasm, vtkProxyCache, idToRef) {
   }
 
   function decorateArgs(args) {
-    const newArgs = args.map((v) => (vtkProxyCache.has(v) ? v.obj : v));
-    // console.log("newArgs", newArgs);
-
-    // Handle typed array
-    if (newArgs.length === 1 && isTypedArray(newArgs[0])) {
-      return newArgs[0];
-    }
-    return newArgs;
+    return args.map((v) => (vtkProxyCache.has(v) ? v.obj : v));
   }
 
   const internalMethods = { isVtkObject, decorateKwargs, decorateArgs };
@@ -209,6 +183,16 @@ function createInstanciatorProxy(wasm, vtkProxyCache, idToRef) {
   );
 }
 
+/**
+ * Create a VTK namespace for handling vtk object creation.
+ *
+ * @param {String} url - Optional directory to where VTK.wasm is getting served from.
+ *                  If vtkWebAssemblyInterface.mjs is already loaded as a script,
+ *                  this will be ignored.
+ * @param {Object} config
+ *
+ * @returns the vtk namespace for creating VTK objects.
+ */
 export async function createNamespace(url, config={}) {
   const vtkProxyCache = new WeakMap();
   const idToRef = new Map();
@@ -227,7 +211,15 @@ export async function createNamespace(url, config={}) {
   return createInstanciatorProxy(wasm, vtkProxyCache, idToRef);
 }
 
-// Auto create namespace
+/**
+ * If the script is tagged with id="vtk-wasm", a global "vtk" namespace
+ * will be created automatically. Since the namespace creation is asynchronous,
+ * a global "vtkReady" promise will be provided to enable code synchronization.
+ *
+ * Possible data attributes:
+ *  - data-url="url to load VTK.wasm from" only needed if VTK.wasm is not already loaded.
+ *  - data-config="{}" json config for WASM module configuration.
+ */
 const { promise, resolve, reject } = createFuture();
 const script = document.querySelector("#vtk-wasm");
 if (script) {

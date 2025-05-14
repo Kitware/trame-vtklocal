@@ -270,37 +270,76 @@ export default {
       await update(true);
 
       // Camera listener
-      wasmManager.cameraIds.forEach((cid) => {
-        cameraTags.push([
-          cid,
-          wasmManager.sceneManager.addObserver(cid, "ModifiedEvent", () => {
-            emit("camera", wasmManager.getState(cid));
-          }),
-        ]);
-      });
+      if (wasmManager.sceneManager.addObserver) {
+        // Old API - before vtk 9.5
+        wasmManager.cameraIds.forEach((cid) => {
+          cameraTags.push([
+            cid,
+            wasmManager.sceneManager.addObserver(cid, "ModifiedEvent", () => {
+              emit("camera", wasmManager.getState(cid));
+            }),
+          ]);
+        });
+      } else {
+        // New API - starting with vtk 9.5
+        wasmManager.cameraIds.forEach((cid) => {
+          cameraTags.push([
+            cid,
+            wasmManager.sceneManager.observe(cid, "ModifiedEvent", () => {
+              emit("camera", wasmManager.getState(cid));
+            }),
+          ]);
+        });
+      }
+      
 
       // Attach listeners
       watchEffect(() => {
-        while (listenersTags.length) {
-          const [cid, tag] = listenersTags.pop();
-          wasmManager.sceneManager.removeObserver(cid, tag);
-        }
-
-        for (const [cid, eventMap] of Object.entries(listeners.value || {})) {
-          const wasmId = Number(cid);
-          for (const [eventName, extractInfo] of Object.entries(
-            eventMap || {}
-          )) {
-            const fn = createExtractCallback(trame, wasmManager, extractInfo);
-            listenersTags.push([
-              wasmId,
-              wasmManager.sceneManager.addObserver(wasmId, eventName, fn),
-            ]);
-
-            // Push update at registration
-            fn();
+        if (wasmManager.sceneManager.removeObserver) {
+          // Old API - before vtk 9.5
+          while (listenersTags.length) {
+            const [cid, tag] = listenersTags.pop();
+            wasmManager.sceneManager.removeObserver(cid, tag);
           }
-        }
+
+          for (const [cid, eventMap] of Object.entries(listeners.value || {})) {
+            const wasmId = Number(cid);
+            for (const [eventName, extractInfo] of Object.entries(
+              eventMap || {}
+            )) {
+              const fn = createExtractCallback(trame, wasmManager, extractInfo);
+              listenersTags.push([
+                wasmId,
+                wasmManager.sceneManager.addObserver(wasmId, eventName, fn),
+              ]);
+  
+              // Push update at registration
+              fn();
+            }
+          }
+        } else {
+          // New API - starting with vtk 9.5
+          while (listenersTags.length) {
+            const [cid, tag] = listenersTags.pop();
+            wasmManager.sceneManager.unObserve(cid, tag);
+          }
+
+          for (const [cid, eventMap] of Object.entries(listeners.value || {})) {
+            const wasmId = Number(cid);
+            for (const [eventName, extractInfo] of Object.entries(
+              eventMap || {}
+            )) {
+              const fn = createExtractCallback(trame, wasmManager, extractInfo);
+              listenersTags.push([
+                wasmId,
+                wasmManager.sceneManager.observe(wasmId, eventName, fn),
+              ]);
+  
+              // Push update at registration
+              fn();
+            }
+          }
+        }       
       });
 
       if (!wasmManager.sceneManager.startEventLoop(props.renderWindow)) {
@@ -313,14 +352,17 @@ export default {
         unsubscribe();
       }
 
+      // Old/New API - detection
+      const removeObserverMethodName = wasmManager.sceneManager.removeObserver ? "removeObserver" : "unObserve";
+
       // Camera listeners
       while (cameraTags.length) {
         const [cid, tag] = cameraTags.pop();
-        wasmManager.sceneManager.removeObserver(cid, tag);
+        wasmManager.sceneManager[removeObserverMethodName](cid, tag);
       }
       while (listenersTags.length) {
         const [cid, tag] = listenersTags.pop();
-        wasmManager.sceneManager.removeObserver(cid, tag);
+        wasmManager.sceneManager[removeObserverMethodName](cid, tag);
       }
 
       // console.log("vtkLocal::unmounted");

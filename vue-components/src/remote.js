@@ -15,7 +15,6 @@ const WASM_LOADERS = {};
  */
 export class RemoteSession {
   constructor() {
-    console.log("Using RemoteSession");
     this.sceneManager = null;
     this.loaded = false;
     //
@@ -52,6 +51,7 @@ export class RemoteSession {
 
     await WASM_LOADERS[wasmBaseURL].load(wasmBaseURL);
     this.sceneManager = await WASM_LOADERS[wasmBaseURL].createRemoteSession();
+    this.stateDecorator = WASM_LOADERS[wasmBaseURL].createStateDecorator();
     this.loaded = true;
 
     // Ignore state properties - only in 9.5
@@ -279,7 +279,7 @@ export class RemoteSession {
       while (statesToRegister.length) {
         const state = statesToRegister.pop();
         if (state) {
-          this.sceneManager.registerState(state);
+          this.sceneManager.registerState(this.stateDecorator(state));
         }
       }
 

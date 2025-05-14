@@ -14,6 +14,20 @@ export function createFuture() {
   return { promise, resolve, reject };
 }
 
+function convertToObj(state) {
+  if (state?.Id) {
+    return state;
+  }
+  return JSON.parse(state);
+}
+
+function convertToStr(state) {
+  if (state?.Id) {
+    return JSON.stringify(state);
+  }
+  return state;
+}
+
 /**
  * Add script tag with provided URL with type="module"
  *
@@ -146,5 +160,13 @@ export class VtkWASMLoader {
       throw new Error("Current WASM version does not support standalone mode");
     }
     return new this.wasm.vtkStandaloneSession();
+  }
+
+  /** Helper for handling API change */
+  createStateDecorator() {
+    if (this.wasm) {
+      return convertToObj;
+    }
+    return convertToStr;
   }
 }

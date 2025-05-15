@@ -1,6 +1,48 @@
 # CHANGELOG
 
 
+## v0.12.0 (2025-05-15)
+
+### Bug Fixes
+
+- **config**: Allow per widget config
+  ([`3fcfe5b`](https://github.com/Kitware/trame-vtklocal/commit/3fcfe5bbf06cb8a82e4cd542900e230ad93af06a))
+
+- **invoke**: Use obj decorator instead of id
+  ([`5a0f560`](https://github.com/Kitware/trame-vtklocal/commit/5a0f560612ca6157bfdf81002529ca90d01a405a))
+
+- **js**: Support legacy and new API
+  ([`1f28ed1`](https://github.com/Kitware/trame-vtklocal/commit/1f28ed197cc0af48ebd5a15864e70a0f4fa9c718))
+
+- **js-lib**: Publish new bundle
+  ([`40d1f8c`](https://github.com/Kitware/trame-vtklocal/commit/40d1f8c24f105c5056815a353abb0255a7698748))
+
+- **standalone**: Allow property handling
+  ([`d2dc1ec`](https://github.com/Kitware/trame-vtklocal/commit/d2dc1ec0529ad770364c54074c617a94cf6d5de4))
+
+- **standalone**: Remove custom typedArray handling
+  ([`a2bd56f`](https://github.com/Kitware/trame-vtklocal/commit/a2bd56fdc7c2d32f8cb6c9025ef22e2bc928b62e))
+
+### Documentation
+
+- Use trame 3.9 notation
+  ([`ae00d71`](https://github.com/Kitware/trame-vtklocal/commit/ae00d71313e57171c5490c0107a8759a0285d4bc))
+
+- **example**: Expand vuetify widget example
+  ([`ef5652b`](https://github.com/Kitware/trame-vtklocal/commit/ef5652bfd44dbe19f6224c69bd1a9ea84fe15954))
+
+- **example**: Use uv to allow standalone exec
+  ([`851574e`](https://github.com/Kitware/trame-vtklocal/commit/851574e22859c7ea9a7d83768b6cf11a73b6cf1c))
+
+- **standalone**: Add config options
+  ([`ab2bf09`](https://github.com/Kitware/trame-vtklocal/commit/ab2bf093b55af9fd73bdca25459a6c20c2175af3))
+
+### Features
+
+- **js**: Handle legacy and new wasm bundle
+  ([`d4e88fd`](https://github.com/Kitware/trame-vtklocal/commit/d4e88fddbe34a53fceb2f1c9c9a446328be3ee62))
+
+
 ## v0.11.0 (2025-05-12)
 
 ### Chores

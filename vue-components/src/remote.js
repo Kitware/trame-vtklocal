@@ -297,7 +297,7 @@ export class RemoteSession {
           );
         }
 
-        this.sceneManager.render(vtkId);
+        await this.sceneManager.render(vtkId);
         // TODO outside:
         // - freeMemory: to keep memory in check
       } catch (e) {
@@ -415,7 +415,7 @@ export class RemoteSession {
    * @param {int} width
    * @param {int} height
    */
-  setSize(renderWindowId, width, height) {
+  async setSize(renderWindowId, width, height) {
     this.renderWindowSizes[renderWindowId] = [width, height];
     const canvasSelector = this.getCanvasSelector(renderWindowId);
     const canvas = document.querySelector(canvasSelector);
@@ -424,7 +424,7 @@ export class RemoteSession {
       canvas.height = height;
 
       this.sceneManager.setSize(renderWindowId, width, height);
-      this.sceneManager.render(renderWindowId);
+      await this.sceneManager.render(renderWindowId);
     }
   }
 }

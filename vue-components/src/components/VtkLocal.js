@@ -153,11 +153,11 @@ export default {
 
     // Resize -----------------------------------------------------------------
 
-    function resize() {
+    async function resize() {
       const { width, height } = container.value.getBoundingClientRect();
       const w = Math.floor(width * window.devicePixelRatio + 0.5);
       const h = Math.floor(height * window.devicePixelRatio + 0.5);
-      wasmManager.setSize(props.renderWindow, w, h);
+      await wasmManager.setSize(props.renderWindow, w, h);
     }
     let resizeObserver = new ResizeObserver(resize);
 

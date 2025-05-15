@@ -1,6 +1,6 @@
 {
     "name": "@kitware/trame-vtklocal",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "license": "Apache-2.0",
     "repository": {
         "type": "git",
@@ -10,10 +10,14 @@
         "access": "public"
     },
     "scripts": {
-        "vtk": "vite build --emptyOutDir -c vite.config.standalone.js",
-        "esm": "vite build --emptyOutDir" ,
+        "vtk": "vite build -c vite.config.standalone.js",
+        "viewer": "vite build -c vite.config.viewer.js",
+        "esm": "vite build" ,
         "debug": "vite build --sourcemap -m dev",
-        "build": "npm run esm && npm run vtk"
+        "build": "npm run esm && npm run vtk && npm run viewer"
+    },
+    "dependencies": {
+        "jszip": "3.10.1"
     },
     "devDependencies": {
         "globals": "^16.0.0",

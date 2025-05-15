@@ -13,6 +13,9 @@
   "peerDependencies": {
     "vue": "^2.7.0 || >=3.0.0"
   },
+  "dependencies": {
+    "jszip": "3.10.1"
+  },
   "devDependencies": {
     "@eslint/js": "^9.22.0",
     "@vitejs/plugin-vue": "^5.2.3",

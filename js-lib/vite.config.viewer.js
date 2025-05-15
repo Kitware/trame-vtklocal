@@ -2,10 +2,10 @@ export default {
     base: "./",
     build: {
       lib: {
-        entry: "../vue-components/src/standalone.js",
+        entry: "../vue-components/src/viewer.js",
         formats: ["umd"],
-        name: "vtkWASM",
-        fileName: "vtk",
+        name: "vtkWASMViewer",
+        fileName: "viewer",
       },
       assetsDir: ".",
       outDir: "./dist/umd",

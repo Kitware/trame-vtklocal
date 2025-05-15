@@ -32,7 +32,7 @@ function isSameConfig(a, b) {
   return a.rendering === b.rendering && a.exec === b.exec;
 }
 
-function generateWasmConfig(config) {
+export function generateWasmConfig(config) {
   if (config?.rendering === "webgpu") {
     console.log("WASM use WebGPU");
     return {
@@ -117,34 +117,51 @@ export class VtkWASMLoader {
         this.config.exec = "async";
       }
 
-      // Check which wasm bundle we have
-      let url = null;
-      let jsModuleURL = null;
-
-      // Try newest version first
-      url = `${wasmBaseURL}/vtkWebAssemblyInterface${this.config?.exec === 'async' ? 'Async' : ''}.mjs`;
-      const newModuleResponse = await fetch(url);
-      if (newModuleResponse.ok) {
-        jsModuleURL = url;
-      }
-
-      // Try older version
-      if (!jsModuleURL) {
-        url = `${wasmBaseURL}/vtkWasmSceneManager.mjs`;
-        const oldModuleResponse = await fetch(url);
-        if (oldModuleResponse.ok) {
-          jsModuleURL = url;
+      // wait for wasm script to load if any
+      if (!window.createVTKWASM) {
+        let scriptLoaded = null;
+        document.querySelectorAll("script").forEach((script) => {
+          if (script.src.includes("vtkWebAssemblyInterface")) {
+            const { promise, resolve } = createFuture();
+            script.onload = resolve;
+            scriptLoaded = promise;
+          }
+        });
+        if (scriptLoaded) {
+          await scriptLoaded;
         }
       }
 
-      // Not sure what to do
-      if (!jsModuleURL) {
-        throw new Error(`Could not fetch wasm bundle from ${wasmBaseURL}`);
-      }
+      if (!window.createVTKWASM) {
+        // Check which wasm bundle we have
+        let url = null;
+        let jsModuleURL = null;
 
-      // Load JS
-      console.log("WASM use", jsModuleURL);
-      await loadScriptAsModule(jsModuleURL);
+        // Try newest version first
+        url = `${wasmBaseURL}/vtkWebAssemblyInterface${this.config?.exec === 'async' ? 'Async' : ''}.mjs`;
+        const newModuleResponse = await fetch(url);
+        if (newModuleResponse.ok) {
+          jsModuleURL = url;
+        }
+
+        // Try older version
+        if (!jsModuleURL) {
+          url = `${wasmBaseURL}/vtkWasmSceneManager.mjs`;
+          const oldModuleResponse = await fetch(url);
+          if (oldModuleResponse.ok) {
+            jsModuleURL = url;
+          }
+        }
+
+        // Not sure what to do
+        if (!jsModuleURL) {
+          throw new Error(`Could not fetch wasm bundle from ${wasmBaseURL}`);
+        }
+
+        // Load JS
+        console.log("WASM use", jsModuleURL);
+        await loadScriptAsModule(jsModuleURL);
+      }
 
       // Load WASM
       if (window.createVTKWASM) {

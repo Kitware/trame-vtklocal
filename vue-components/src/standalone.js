@@ -196,17 +196,10 @@ function createInstanciatorProxy(wasm, vtkProxyCache, idToRef) {
 export async function createNamespace(url, config={}) {
   const vtkProxyCache = new WeakMap();
   const idToRef = new Map();
-  let wasm = null;
 
-  if (window.createVTKWASM) {
-    // Use loaded VTK.wasm
-    wasm = await window.createVTKWASM(config);
-  } else {
-    // Load script for VTK.wasm
-    const loader = new VtkWASMLoader();
-    await loader.load(url, config);
-    wasm = loader.createStandaloneSession();
-  }
+  const loader = new VtkWASMLoader();
+  await loader.load(url || "loaded-module", config);
+  const wasm = loader.createStandaloneSession();
 
   return createInstanciatorProxy(wasm, vtkProxyCache, idToRef);
 }
@@ -229,7 +222,7 @@ if (script) {
   window.vtkReady = promise;
   createNamespace(url, config).then((vtk) => {
     window.vtk = vtk;
-    resolve();
+    resolve(vtk);
   });
 } else {
   reject('No script with id="vtk-wasm"');

@@ -1,6 +1,21 @@
 # CHANGELOG
 
 
+## v0.12.1 (2025-05-15)
+
+### Bug Fixes
+
+- **interaction**: Await on scene manager render
+  ([`b5ffc9e`](https://github.com/Kitware/trame-vtklocal/commit/b5ffc9e491161a5e6e68b761f89c63849efcf079))
+
+- when not awaited, the `startEventLoop` got called before the interactor->Enabled was set to true,
+  therefore `startEventLoop` became a no-op - also use await on methods which call
+  `vtkRemoteSession::Render` since that returns a promise too.
+
+- **viewer**: Add wasm export viewer
+  ([`f84a8a0`](https://github.com/Kitware/trame-vtklocal/commit/f84a8a0e3aec4b6818b355e0be329c102749aaf2))
+
+
 ## v0.12.0 (2025-05-15)
 
 ### Bug Fixes

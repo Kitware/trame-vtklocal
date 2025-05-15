@@ -116,7 +116,10 @@ def create_vtk_pipeline():
     stream_mapper = vtk.vtkPolyDataMapper()
     stream_actor = vtk.vtkActor()
     stream_mapper.SetInputConnection(tubeFilter.GetOutputPort())
+    # stream_mapper.SetInputConnection(streamTracer.GetOutputPort())
     stream_actor.SetMapper(stream_mapper)
+    # stream_actor.property.render_line_as_tubes = 1
+    # stream_actor.property.line_width = 10
     renderer.AddActor(stream_actor)
 
     lut = vtk.vtkLookupTable()
@@ -135,6 +138,11 @@ def create_vtk_pipeline():
     renderer.SetBackground(0.4, 0.4, 0.4)
 
     lineWidget.On()
+
+    renderer.active_camera.position = [0, -1, 0]
+    renderer.active_camera.focal_point = [0, 0, 0]
+    renderer.active_camera.view_up = [0, 0, 1]
+    renderer.ResetCamera()
 
     return renderWindow, lineSeed, lineWidget, bike_actor
 
@@ -224,7 +232,10 @@ class App(TrameApp):
             # Content
             with layout.content:
                 with vtklocal.LocalView(
-                    self.rw, throttle_rate=20, ctx_name="local_view"
+                    self.rw,
+                    throttle_rate=20,
+                    ctx_name="local_view",
+                    config="{ rendering: 'webgl' }",
                 ) as view:
                     self.ctrl.view_update = view.update_throttle
                     self.ctrl.view_reset_camera = view.reset_camera

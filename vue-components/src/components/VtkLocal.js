@@ -61,6 +61,13 @@ export default {
         serializer: null,
       }),
     },
+    config: {
+      type: Object,
+      default: () => ({
+        rendering: "webgl",
+        exec: "sync",
+      }),
+    },
     listeners: {
       type: Object,
       // {
@@ -211,7 +218,7 @@ export default {
       // console.log("vtkLocal::mounted");
       wasmManager.bindNetwork(netFetchState, netFetchBlob, netFetchStatus);
       if (!wasmManager.loaded) {
-        await wasmManager.load(wasmURL);
+        await wasmManager.load(wasmURL, props.config);
       }
       const selector = wasmManager.bindCanvasToDOM(
         props.renderWindow,

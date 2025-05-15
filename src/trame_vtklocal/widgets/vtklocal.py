@@ -65,6 +65,12 @@ class LocalView(HtmlElement):
             Name of a global instance of WASM handler to use. This is useful for
             skipping WASM reinitialization when your vue component is going to be
             mounted/unmounted often. (i.e. used inside VueRouter element)
+        config (dict):
+            Provide configuration for your wasm runtime.
+            {
+               rendering: 'webgpu' or 'webgl',
+               exec: 'sync' or 'async',
+            }
         updated (event):
             Emitted after each completed client side update.
         memory_vtk (event):
@@ -110,6 +116,7 @@ class LocalView(HtmlElement):
             ("eager_sync", "eagerSync"),
             "verbosity",
             ("listeners", ":listeners"),
+            ("config", ":config"),
         ]
         self._event_names += [
             "updated",

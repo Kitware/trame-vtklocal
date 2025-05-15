@@ -28,6 +28,23 @@ function convertToStr(state) {
   return state;
 }
 
+function isSameConfig(a, b) {
+  return a.rendering === b.rendering && a.exec === b.exec;
+}
+
+function generateWasmConfig(config) {
+  if (config?.rendering === "webgpu") {
+    console.log("WASM use WebGPU");
+    return {
+      preRun: [function (module) {
+          module.ENV.VTK_GRAPHICS_BACKEND = "WEBGPU";
+      }],
+    };
+  }
+  console.log("WASM use WebGL2");
+  return {};
+}
+
 /**
  * Add script tag with provided URL with type="module"
  *
@@ -67,6 +84,8 @@ export class VtkWASMLoader {
     this.loaded = false;
     this.loadingPending = null;
     this.wasm = null;
+    this.config = {};
+    this.runtimes = [];
   }
 
   /**
@@ -83,7 +102,8 @@ export class VtkWASMLoader {
    * @param {str} wasmBaseURL
    * @param {object} config - for WASM runtime creation.
    */
-  async load(wasmBaseURL, config = {}) {
+  async load(wasmBaseURL, config = { rendering: "webgl", exec: "sync" }) {
+    this.config = config;
     if (this.loaded) {
       return;
     }
@@ -92,12 +112,17 @@ export class VtkWASMLoader {
       const { promise, resolve } = createFuture();
       this.loadingPending = promise;
 
+      // WebGPU only works in async mode
+      if (this.config?.rendering === "webgpu") {
+        this.config.exec = "async";
+      }
+
       // Check which wasm bundle we have
       let url = null;
       let jsModuleURL = null;
 
       // Try newest version first
-      url = `${wasmBaseURL}/vtkWebAssemblyInterface.mjs`;
+      url = `${wasmBaseURL}/vtkWebAssemblyInterface${this.config?.exec === 'async' ? 'Async' : ''}.mjs`;
       const newModuleResponse = await fetch(url);
       if (newModuleResponse.ok) {
         jsModuleURL = url;
@@ -118,11 +143,12 @@ export class VtkWASMLoader {
       }
 
       // Load JS
+      console.log("WASM use", jsModuleURL);
       await loadScriptAsModule(jsModuleURL);
 
       // Load WASM
       if (window.createVTKWASM) {
-        this.wasm = await window.createVTKWASM(config);
+        this.wasm = await window.createVTKWASM(generateWasmConfig(this.config));
       }
 
       // Capture objects
@@ -138,10 +164,24 @@ export class VtkWASMLoader {
    *
    * @returns
    */
-  async createRemoteSession() {
+  async createRemoteSession(config) {
     if (this.wasm) {
       // New API
-      return new this.wasm.vtkRemoteSession();
+      if (this.wasm?.isAsync && this.wasm.isAsync()) {
+        if (!config || isSameConfig(this.config, config)) {
+          // Reuse the same runtime
+          console.log("(Main runtime in async)");
+          return new this.wasm.vtkRemoteSession();
+        } else {
+          console.log("(New in async)");
+          const newWASMRuntime = await window.createVTKWASM(generateWasmConfig(config || this.config));
+          return new newWASMRuntime.vtkRemoteSession();
+        }
+      } else {
+        console.log("(New in sync)");
+        const newWASMRuntime = await window.createVTKWASM(generateWasmConfig(config || this.config));
+        return new newWASMRuntime.vtkRemoteSession();
+      }
     }
 
     // Old API

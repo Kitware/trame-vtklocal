@@ -124,6 +124,7 @@ class DemoApp(TrameApp):
                     throttle_rate=20,
                     key=("reset_count", 0),
                     updated=self.update_done,
+                    config="{exec: 'async', rendering: 'webgl'}",
                 )
 
             with html.Div(
@@ -134,6 +135,7 @@ class DemoApp(TrameApp):
                     # use_handler="big_scene",
                     throttle_rate=20,
                     ctx_name="cone_view",
+                    config="{exec: 'async', rendering: 'abc'}",
                 )
 
             html.Button(

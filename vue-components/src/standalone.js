@@ -218,7 +218,8 @@ export async function createNamespace(url, config={}) {
  *
  * Possible data attributes:
  *  - data-url="url to load VTK.wasm from" only needed if VTK.wasm is not already loaded.
- *  - data-config="{}" json config for WASM module configuration.
+ *  - data-config="{ rendering: 'webgl|webgpu', exec: 'sync|async' }" json config for 
+ *    WASM module configuration.
  */
 const { promise, resolve, reject } = createFuture();
 const script = document.querySelector("#vtk-wasm");

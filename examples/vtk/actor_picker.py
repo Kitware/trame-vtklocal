@@ -5,7 +5,7 @@
 #
 # dependencies = [
 #   "trame>=3.9",
-#   "trame-vtklocal>=0.11",
+#   "trame-vtklocal<0.12",
 #   "vtk==9.4.20250510.dev0",
 # ]
 #
@@ -165,7 +165,7 @@ class ActorPicker(TrameApp):
 
         actor_info = await self.ctx.wasm_view.invoke(self.picker, "GetActor")
 
-        if actor_info:
+        if actor_info and actor_info.get("Id"):
             actor = self.ctx.wasm_view.get_vtk_obj(actor_info.get("Id"))
             actor_prop = actor.property
 

@@ -150,7 +150,7 @@ function createInstanciatorProxy(wasm, vtkProxyCache, idToRef) {
   }
   internalMethods.decorateResult = decorateResult;
 
-  function toObject(obj_or_id) {
+  function getVtkObject(obj_or_id) {
     return createVtkObjectProxy(
       wasm,
       vtkProxyCache,
@@ -175,7 +175,7 @@ function createInstanciatorProxy(wasm, vtkProxyCache, idToRef) {
   }
 
   return new Proxy(
-    { toObject },
+    { getVtkObject },
     {
       get(target, prop, resolver) {
         if (prop === "then") {

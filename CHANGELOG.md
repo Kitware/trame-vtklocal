@@ -1,6 +1,33 @@
 # CHANGELOG
 
 
+## v0.12.2 (2025-05-19)
+
+### Bug Fixes
+
+- **viewer**: Createviewer return viewer
+  ([`127df0b`](https://github.com/Kitware/trame-vtklocal/commit/127df0bdf2303b775f8b67e1311b61fddd52f68d))
+
+- **vtklocal**: Expose getVtkObject from vue component
+  ([`e17c1a1`](https://github.com/Kitware/trame-vtklocal/commit/e17c1a19dceef261d4ed673b472a14303a88f4a7))
+
+### Chores
+
+- **js**: Add getVtkObject(id) on vtk namespace
+  ([`86a4209`](https://github.com/Kitware/trame-vtklocal/commit/86a420973287989dca3464a45ff3e8d721270698))
+
+- **js**: Add missing delete() method on vtk proxy
+  ([`1ce77cd`](https://github.com/Kitware/trame-vtklocal/commit/1ce77cdd120a2851ca70311f055fcfefc6884273))
+
+- **js**: Bump version of the js-lib
+  ([`fc7cc47`](https://github.com/Kitware/trame-vtklocal/commit/fc7cc47e5f95337901578443ae98c9cbe0764f91))
+
+### Continuous Integration
+
+- Fix js-lib build
+  ([`9d098c8`](https://github.com/Kitware/trame-vtklocal/commit/9d098c847e539e1625db6f14b3dbdb961860f8a6))
+
+
 ## v0.12.1 (2025-05-15)
 
 ### Bug Fixes

@@ -3,7 +3,7 @@ import { RemoteSession } from "./remote";
 import { createFuture } from "./wasmLoader";
 
 export class ExportViewer {
-  constructor(containerSelector, remoting) {   
+  constructor(containerSelector, remoting) {
     this.remoting = remoting;
     this.rootContainer = document.querySelector(containerSelector);
     this.rootContainer.innerHTML = '<div class="wasm-viewer" />';
@@ -24,7 +24,7 @@ export class ExportViewer {
     const zipFile = new JSZip();
     const zipContent = await zipFile.loadAsync(fileContent);
     const config = JSON.parse(
-      await zipContent.file("vtk-wasm.json").async("string")
+      await zipContent.file("vtk-wasm.json").async("string"),
     );
     const rwId = config.ids[0];
     progress++;
@@ -57,7 +57,7 @@ export class ExportViewer {
       .querySelector(selector)
       .setAttribute(
         "style",
-        "position: absolute; left: 0; top: 0; width: 100%; height: 100%;"
+        "position: absolute; left: 0; top: 0; width: 100%; height: 100%;",
       );
 
     this.remoting.sceneManager.bindRenderWindow(rwId, selector);
@@ -65,12 +65,14 @@ export class ExportViewer {
   }
 }
 
-export async function createViewer(containerSelector, dataURL, wasmURL, wasmConfig) {
+export async function createViewer(
+  containerSelector,
+  dataURL,
+  wasmURL,
+  wasmConfig,
+) {
   const remoting = new RemoteSession();
   await remoting.load(wasmURL || "loaded-module", wasmConfig);
   const viewer = new ExportViewer(containerSelector, remoting);
   await viewer.load(dataURL);
 }
-
-
-    

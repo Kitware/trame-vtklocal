@@ -1,30 +1,39 @@
 import { VtkWASMLoader, createFuture } from "./wasmLoader";
 
 function createPropGetter(wasm, wrapMethods, vtkId) {
+  if (!wasm.get) {
+    return {};
+  }
+
   const fullState = wasm.get(vtkId);
   const getPropHandler = {};
   Object.keys(fullState).forEach((propName) => {
     // console.log("Prop key:", propName);
-    getPropHandler[propName] = () => wrapMethods.decorateResult(wasm.get(vtkId)[propName]);
+    getPropHandler[propName] = () =>
+      wrapMethods.decorateResult(wasm.get(vtkId)[propName]);
   });
   return getPropHandler;
 }
 
 function createPropSetter(wasm, wrapMethods, vtkId) {
+  if (!wasm.get) {
+    return {};
+  }
   const fullState = wasm.get(vtkId);
   const setPropHandler = {};
   Object.keys(fullState).forEach((propName) => {
-    setPropHandler[propName] = (value) => wasm.set(vtkId, wrapMethods.decorateKwargs({[propName]: value}));
+    setPropHandler[propName] = (value) =>
+      wasm.set(vtkId, wrapMethods.decorateKwargs({ [propName]: value }));
   });
   return setPropHandler;
 }
 
-function createVtkObjectProxy(
+export function createVtkObjectProxy(
   wasm,
   vtkProxyCache,
   idToRef,
   wrapMethods,
-  vtkId
+  vtkId,
 ) {
   // Reuse vtkProxy if already available
   if (idToRef.has(vtkId) && idToRef.get(vtkId).deref()) {
@@ -73,6 +82,11 @@ function createVtkObjectProxy(
         return resolver;
       }
       if (prop === "state") {
+        if (!wasm.get) {
+          // To support old remote API
+          wasm.updateStateFromObject(vtkId);
+          return wasm.getState(vtkId);
+        }
         return wasm.get(vtkId);
       }
       if (prop === "delete") {
@@ -90,7 +104,7 @@ function createVtkObjectProxy(
         // console.log("register method", prop);
         target[prop] = async (...args) =>
           wrapMethods.decorateResult(
-            await wasm.invoke(vtkId, prop, wrapMethods.decorateArgs(args))
+            await wasm.invoke(vtkId, prop, wrapMethods.decorateArgs(args)),
           );
       }
       return target[prop];
@@ -143,7 +157,7 @@ function createInstanciatorProxy(wasm, vtkProxyCache, idToRef) {
         vtkProxyCache,
         idToRef,
         internalMethods,
-        result.Id
+        result.Id,
       );
     }
     return result;
@@ -156,7 +170,7 @@ function createInstanciatorProxy(wasm, vtkProxyCache, idToRef) {
       vtkProxyCache,
       idToRef,
       internalMethods,
-      obj_or_id.Id || obj_or_id
+      obj_or_id.Id || obj_or_id,
     );
   }
 
@@ -170,7 +184,7 @@ function createInstanciatorProxy(wasm, vtkProxyCache, idToRef) {
       vtkProxyCache,
       idToRef,
       internalMethods,
-      vtkId
+      vtkId,
     );
   }
 
@@ -187,7 +201,7 @@ function createInstanciatorProxy(wasm, vtkProxyCache, idToRef) {
         }
         return target[prop];
       },
-    }
+    },
   );
 }
 
@@ -201,7 +215,7 @@ function createInstanciatorProxy(wasm, vtkProxyCache, idToRef) {
  *
  * @returns the vtk namespace for creating VTK objects.
  */
-export async function createNamespace(url, config={}) {
+export async function createNamespace(url, config = {}) {
   const vtkProxyCache = new WeakMap();
   const idToRef = new Map();
 
@@ -219,7 +233,7 @@ export async function createNamespace(url, config={}) {
  *
  * Possible data attributes:
  *  - data-url="url to load VTK.wasm from" only needed if VTK.wasm is not already loaded.
- *  - data-config="{ rendering: 'webgl|webgpu', exec: 'sync|async' }" json config for 
+ *  - data-config="{ rendering: 'webgl|webgpu', exec: 'sync|async' }" json config for
  *    WASM module configuration.
  */
 const { promise, resolve, reject } = createFuture();

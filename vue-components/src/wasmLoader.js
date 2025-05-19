@@ -36,9 +36,11 @@ export function generateWasmConfig(config) {
   if (config?.rendering === "webgpu") {
     console.log("WASM use WebGPU");
     return {
-      preRun: [function (module) {
+      preRun: [
+        function (module) {
           module.ENV.VTK_GRAPHICS_BACKEND = "WEBGPU";
-      }],
+        },
+      ],
     };
   }
   console.log("WASM use WebGL2");
@@ -138,7 +140,7 @@ export class VtkWASMLoader {
         let jsModuleURL = null;
 
         // Try newest version first
-        url = `${wasmBaseURL}/vtkWebAssemblyInterface${this.config?.exec === 'async' ? 'Async' : ''}.mjs`;
+        url = `${wasmBaseURL}/vtkWebAssemblyInterface${this.config?.exec === "async" ? "Async" : ""}.mjs`;
         const newModuleResponse = await fetch(url);
         if (newModuleResponse.ok) {
           jsModuleURL = url;
@@ -191,12 +193,16 @@ export class VtkWASMLoader {
           return new this.wasm.vtkRemoteSession();
         } else {
           console.log("(New in async)");
-          const newWASMRuntime = await window.createVTKWASM(generateWasmConfig(config || this.config));
+          const newWASMRuntime = await window.createVTKWASM(
+            generateWasmConfig(config || this.config),
+          );
           return new newWASMRuntime.vtkRemoteSession();
         }
       } else {
         console.log("(New in sync)");
-        const newWASMRuntime = await window.createVTKWASM(generateWasmConfig(config || this.config));
+        const newWASMRuntime = await window.createVTKWASM(
+          generateWasmConfig(config || this.config),
+        );
         return new newWASMRuntime.vtkRemoteSession();
       }
     }

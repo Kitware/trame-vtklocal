@@ -1,7 +1,7 @@
 .unused-canvas {
-    display: none;
-    position: absolute;
+  display: none;
+  position: absolute;
 }
 .unused-canvas * {
-    display: none;
+  display: none;
 }

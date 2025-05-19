@@ -1,6 +1,7 @@
 import "./style.css";
 
 import { VtkWASMLoader } from "./wasmLoader";
+import { createVtkObjectProxy } from "./standalone";
 
 // url => loader instance
 const WASM_LOADERS = {};
@@ -33,6 +34,41 @@ export class RemoteSession {
     this.renderWindowIdToInteractorId = new Map();
     this.renderWindowSizes = {};
 
+    // vtkObject Proxy handling
+    this.vtkProxyCache = new WeakMap();
+    this.idToRef = new Map();
+    this.internalWrapMethods = {};
+    this.internalWrapMethods.isVtkObject = (obj) => this.vtkProxyCache.has(obj);
+    this.internalWrapMethods.decorateKwargs = (kwargs) => {
+      const wrapped = {};
+      Object.entries(kwargs).forEach(([k, v]) => {
+        if (this.vtkProxyCache.has(v)) {
+          wrapped[k] = v.obj;
+        } else {
+          wrapped[k] = v;
+        }
+      });
+      return wrapped;
+    };
+    this.internalWrapMethods.decorateArgs = (args) => {
+      return args.map((v) => (this.vtkProxyCache.has(v) ? v.obj : v));
+    };
+    this.internalWrapMethods.decorateResult = (result) => {
+      if (result == null) {
+        return result;
+      }
+      if (result?.Id) {
+        return createVtkObjectProxy(
+          this.sceneManager,
+          this.vtkProxyCache,
+          this.idToRef,
+          this.internalWrapMethods,
+          result.Id,
+        );
+      }
+      return result;
+    };
+
     // Canvas management
     this.offlineCanvasContainer = document.createElement("div");
     this.offlineCanvasContainer.setAttribute("class", "unused-canvas");
@@ -50,7 +86,8 @@ export class RemoteSession {
     }
 
     await WASM_LOADERS[wasmBaseURL].load(wasmBaseURL, config);
-    this.sceneManager = await WASM_LOADERS[wasmBaseURL].createRemoteSession(config);
+    this.sceneManager =
+      await WASM_LOADERS[wasmBaseURL].createRemoteSession(config);
     this.stateDecorator = WASM_LOADERS[wasmBaseURL].createStateDecorator();
     this.loaded = true;
 
@@ -65,7 +102,7 @@ export class RemoteSession {
         "vtkCocoaRenderWindow",
         "vtkWebAssemblyOpenGLRenderWindow",
       ].forEach((className) =>
-        this.sceneManager.skipProperty(className, "Size")
+        this.sceneManager.skipProperty(className, "Size"),
       );
     }
   }
@@ -168,7 +205,7 @@ export class RemoteSession {
         if (this.renderWindowIdToInteractorId.has(Id)) {
           // Connect canvas selector
           stateObj.CanvasSelector = this.getCanvasSelector(
-            this.renderWindowIdToInteractorId.get(Id)
+            this.renderWindowIdToInteractorId.get(Id),
           );
           return JSON.stringify(stateObj);
         }
@@ -266,7 +303,7 @@ export class RemoteSession {
 
       // Remove state that should be ignored
       serverStatus.ignore_ids.forEach((vtkId) =>
-        this.sceneManager.unRegisterState(vtkId)
+        this.sceneManager.unRegisterState(vtkId),
       );
 
       // Ensure completion of all network calls
@@ -293,7 +330,7 @@ export class RemoteSession {
         if (bindCanvas && this.sceneManager.bindRenderWindow) {
           this.sceneManager.bindRenderWindow(
             vtkId,
-            this.getCanvasSelector(vtkId)
+            this.getCanvasSelector(vtkId),
           );
         }
 
@@ -326,6 +363,11 @@ export class RemoteSession {
     if (useCache && this.stateCache[wasmId]) {
       return this.stateCache[wasmId];
     }
+    // New API
+    if (this.sceneManager.get) {
+      return this.sceneManager.get(wasmId);
+    }
+    // Old API
     this.sceneManager.updateStateFromObject(wasmId);
     return this.sceneManager.getState(wasmId);
   }
@@ -426,6 +468,34 @@ export class RemoteSession {
       this.sceneManager.setSize(renderWindowId, width, height);
       await this.sceneManager.render(renderWindowId);
     }
+  }
+  /**
+   * @typedef {object} vtkObject
+   * @property {number} id - WASM id
+   * @property {object} obj - Return id wrapped as an object {Id: wasmId}.
+   * @property {object} state - Return full object state
+   * @method delete - Remove object from WASM stack
+   * @method set - Update a batch of properties at once using keyword arguments
+   * @method observe(eventName, fn) -> tag - Attach listener on a specific event
+   * @method unObserve(tag) - Detach listener
+   * @method unObserveAll() - Detach all listeners
+   * @property VTK Property Name - Read VTK property from its state
+   * @property VTK Property Name as Setter - Set VTK property
+   * @method VTK Method Name - Async call to vtk internal
+   */
+  /**
+   * Get a helper proxy for controlling the vtkObject available on the WASM side.
+   * @param {number} vtkId - wasm id for given vtkObject
+   * @returns {vtkObject}
+   */
+  getVtkObject(vtkId) {
+    return createVtkObjectProxy(
+      this.sceneManager,
+      this.vtkProxyCache,
+      this.idToRef,
+      this.internalWrapMethods,
+      vtkId,
+    );
   }
 }
 

@@ -167,7 +167,7 @@ export default {
       wasmManager.freeMemory(props.cacheSize);
       emit(
         "memory-vtk",
-        wasmManager.sceneManager.getTotalVTKDataObjectMemoryUsage()
+        wasmManager.sceneManager.getTotalVTKDataObjectMemoryUsage(),
       );
       emit("memory-arrays", wasmManager.sceneManager.getTotalBlobMemoryUsage());
     }
@@ -222,13 +222,13 @@ export default {
       }
       const selector = wasmManager.bindCanvasToDOM(
         props.renderWindow,
-        unref(container)
+        unref(container),
       );
       unref(container)
         .querySelector(selector)
         .setAttribute(
           "style",
-          "position: absolute; left: 0; top: 0; width: 100%; height: 100%;"
+          "position: absolute; left: 0; top: 0; width: 100%; height: 100%;",
         );
       if (props.eagerSync) {
         subscribe();
@@ -247,7 +247,7 @@ export default {
           wasmManager.sceneManager.setObjectManagerLogVerbosity
         ) {
           wasmManager.sceneManager.setObjectManagerLogVerbosity(
-            settings.objectManager
+            settings.objectManager,
           );
         }
         if (
@@ -261,7 +261,7 @@ export default {
           wasmManager.sceneManager.setDeserializerLogVerbosity
         ) {
           wasmManager.sceneManager.setDeserializerLogVerbosity(
-            settings.deserializer
+            settings.deserializer,
           );
         }
         if (
@@ -269,7 +269,7 @@ export default {
           wasmManager.sceneManager.setSerializerLogVerbosity
         ) {
           wasmManager.sceneManager.setSerializerLogVerbosity(
-            settings.serializer
+            settings.serializer,
           );
         }
       });
@@ -298,7 +298,6 @@ export default {
           ]);
         });
       }
-      
 
       // Attach listeners
       watchEffect(() => {
@@ -312,14 +311,14 @@ export default {
           for (const [cid, eventMap] of Object.entries(listeners.value || {})) {
             const wasmId = Number(cid);
             for (const [eventName, extractInfo] of Object.entries(
-              eventMap || {}
+              eventMap || {},
             )) {
               const fn = createExtractCallback(trame, wasmManager, extractInfo);
               listenersTags.push([
                 wasmId,
                 wasmManager.sceneManager.addObserver(wasmId, eventName, fn),
               ]);
-  
+
               // Push update at registration
               fn();
             }
@@ -334,19 +333,19 @@ export default {
           for (const [cid, eventMap] of Object.entries(listeners.value || {})) {
             const wasmId = Number(cid);
             for (const [eventName, extractInfo] of Object.entries(
-              eventMap || {}
+              eventMap || {},
             )) {
               const fn = createExtractCallback(trame, wasmManager, extractInfo);
               listenersTags.push([
                 wasmId,
                 wasmManager.sceneManager.observe(wasmId, eventName, fn),
               ]);
-  
+
               // Push update at registration
               fn();
             }
           }
-        }       
+        }
       });
 
       if (!wasmManager.sceneManager.startEventLoop(props.renderWindow)) {
@@ -360,7 +359,9 @@ export default {
       }
 
       // Old/New API - detection
-      const removeObserverMethodName = wasmManager.sceneManager.removeObserver ? "removeObserver" : "unObserve";
+      const removeObserverMethodName = wasmManager.sceneManager.removeObserver
+        ? "removeObserver"
+        : "unObserve";
 
       // Camera listeners
       while (cameraTags.length) {
@@ -389,6 +390,10 @@ export default {
       createExtractCallback(trame, wasmManager, definition)();
     }
 
+    function getVtkObject(vtkId) {
+      return wasmManager.getVtkObject(vtkId);
+    }
+
     /**
      * Remove WASM handler from global map to free memory once component unmount.
      */
@@ -406,6 +411,7 @@ export default {
       invoke,
       printSceneManagerInformation,
       detachHandler,
+      getVtkObject,
     };
   },
   template: `<div ref="container" style="position: relative; width: 100%; height: 100%;"></div>`,

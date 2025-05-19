@@ -75,4 +75,5 @@ export async function createViewer(
   await remoting.load(wasmURL || "loaded-module", wasmConfig);
   const viewer = new ExportViewer(containerSelector, remoting);
   await viewer.load(dataURL);
+  return viewer;
 }

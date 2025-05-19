@@ -75,6 +75,14 @@ function createVtkObjectProxy(
       if (prop === "state") {
         return wasm.get(vtkId);
       }
+      if (prop === "delete") {
+        const result = wasm.destroy(vtkId);
+        if (result) {
+          const removedProxy = idToRef.delete(vtkId);
+          vtkProxyCache.delete(removedProxy);
+        }
+        return result;
+      }
       if (propGetters[prop]) {
         return propGetters[prop]();
       }

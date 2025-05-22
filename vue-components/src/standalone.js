@@ -1,5 +1,33 @@
 import { VtkWASMLoader, createFuture } from "./wasmLoader";
 
+function toJsName(cxxName) {
+  const jsName = `${cxxName.charAt(0).toLowerCase()}${cxxName.slice(1)}`;
+  // console.log("c2j", cxxName, "=>", jsName);
+  return jsName;
+}
+
+function toCxxName(jsName) {
+  const cxxName = `${jsName.charAt(0).toUpperCase()}${jsName.slice(1)}`;
+  // console.log("j2c", jsName, "=>", cxxName);
+  return cxxName;
+}
+
+function toCxxKeys(kwArgs) {
+  const wrapped = {};
+  Object.entries(kwArgs).forEach(([k, v]) => {
+    wrapped[toCxxName(k)] = v;
+  });
+  return wrapped;
+}
+
+function toJsKeys(kwArgs) {
+  const wrapped = {};
+  Object.entries(kwArgs).forEach(([k, v]) => {
+    wrapped[toJsName(k)] = v;
+  });
+  return wrapped;
+}
+
 function createPropGetter(wasm, wrapMethods, vtkId) {
   if (!wasm.get) {
     return {};
@@ -9,7 +37,7 @@ function createPropGetter(wasm, wrapMethods, vtkId) {
   const getPropHandler = {};
   Object.keys(fullState).forEach((propName) => {
     // console.log("Prop key:", propName);
-    getPropHandler[propName] = () =>
+    getPropHandler[toJsName(propName)] = () =>
       wrapMethods.decorateResult(wasm.get(vtkId)[propName]);
   });
   return getPropHandler;
@@ -22,7 +50,7 @@ function createPropSetter(wasm, wrapMethods, vtkId) {
   const fullState = wasm.get(vtkId);
   const setPropHandler = {};
   Object.keys(fullState).forEach((propName) => {
-    setPropHandler[propName] = (value) =>
+    setPropHandler[toJsName(propName)] = (value) =>
       wasm.set(vtkId, wrapMethods.decorateKwargs({ [propName]: value }));
   });
   return setPropHandler;
@@ -43,7 +71,7 @@ export function createVtkObjectProxy(
   // Create methods
   const observerTags = [];
   function set(props) {
-    return wasm.set(vtkId, wrapMethods.decorateKwargs(props));
+    return wasm.set(vtkId, wrapMethods.decorateKwargs(toCxxKeys(props)));
   }
   function observe(event, callback) {
     const tag = wasm.observe(vtkId, event, callback);
@@ -85,9 +113,9 @@ export function createVtkObjectProxy(
         if (!wasm.get) {
           // To support old remote API
           wasm.updateStateFromObject(vtkId);
-          return wasm.getState(vtkId);
+          return toJsKeys(wasm.getState(vtkId));
         }
-        return wasm.get(vtkId);
+        return toJsKeys(wasm.get(vtkId));
       }
       if (prop === "delete") {
         const result = wasm.destroy(vtkId);
@@ -101,10 +129,10 @@ export function createVtkObjectProxy(
         return propGetters[prop]();
       }
       if (!target[prop]) {
-        // console.log("register method", prop);
+        // console.log("register method", prop, toCxxName(prop));
         target[prop] = async (...args) =>
           wrapMethods.decorateResult(
-            await wasm.invoke(vtkId, prop, wrapMethods.decorateArgs(args)),
+            await wasm.invoke(vtkId, toCxxName(prop), wrapMethods.decorateArgs(args)),
           );
       }
       return target[prop];
@@ -177,7 +205,7 @@ function createInstanciatorProxy(wasm, vtkProxyCache, idToRef) {
   function create(name, args) {
     const vtkId = wasm.create(name);
     if (args) {
-      wasm.set(vtkId, decorateKwargs(args));
+      wasm.set(vtkId, decorateKwargs(toCxxKeys(args)));
     }
     return createVtkObjectProxy(
       wasm,

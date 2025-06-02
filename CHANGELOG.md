@@ -1,6 +1,41 @@
 # CHANGELOG
 
 
+## v0.12.3 (2025-06-02)
+
+### Bug Fixes
+
+- **wasm**: Use new library name
+  ([`c7820d0`](https://github.com/Kitware/trame-vtklocal/commit/c7820d0e1d1c13db35d52e665044be1b72181178))
+
+### Chores
+
+- Wasm JS API follow JS convention
+  ([`c58b3d8`](https://github.com/Kitware/trame-vtklocal/commit/c58b3d881f47965b614ea59660495edc403b493b))
+
+### Continuous Integration
+
+- Bump js version
+  ([`5697bcd`](https://github.com/Kitware/trame-vtklocal/commit/5697bcd52d191ed46b413ef31f84dd87ed06ab10))
+
+### Documentation
+
+- **example**: Fix linting issue in example
+  ([`77c56fe`](https://github.com/Kitware/trame-vtklocal/commit/77c56fe92b0c559262ad0b268acf01a481a9a44a))
+
+- **example**: Fix picking dependencies
+  ([`0309838`](https://github.com/Kitware/trame-vtklocal/commit/0309838dc1ad695d583b02ba706721ca8fd02720))
+
+- **example**: Make example self executable
+  ([`0dffc7a`](https://github.com/Kitware/trame-vtklocal/commit/0dffc7a2775e344a5996a0f4ed2ad5beff3c9391))
+
+- **js**: Update pure js example
+  ([`7d8ee4e`](https://github.com/Kitware/trame-vtklocal/commit/7d8ee4ef6587ccb5f6ca15f1b23a819e7696cac8))
+
+- **lut**: Add lut example
+  ([`761375a`](https://github.com/Kitware/trame-vtklocal/commit/761375afac76149f808f4b86bda32998606168fb))
+
+
 ## v0.12.2 (2025-05-19)
 
 ### Bug Fixes

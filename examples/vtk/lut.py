@@ -56,7 +56,7 @@ class App(TrameApp):
                     fluid=True,
                     classes="pa-0 fill-height",
                 ):
-                    view = vtklocal.LocalView(renderWindow)
+                    vtklocal.LocalView(renderWindow)
 
 
 def main():

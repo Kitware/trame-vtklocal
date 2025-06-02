@@ -123,7 +123,7 @@ export class VtkWASMLoader {
       if (!window.createVTKWASM) {
         let scriptLoaded = null;
         document.querySelectorAll("script").forEach((script) => {
-          if (script.src.includes("vtkWebAssemblyInterface")) {
+          if (script.src.includes("vtkWebAssembly")) {
             const { promise, resolve } = createFuture();
             script.onload = resolve;
             scriptLoaded = promise;
@@ -140,7 +140,7 @@ export class VtkWASMLoader {
         let jsModuleURL = null;
 
         // Try newest version first
-        url = `${wasmBaseURL}/vtkWebAssemblyInterface${this.config?.exec === "async" ? "Async" : ""}.mjs`;
+        url = `${wasmBaseURL}/vtkWebAssembly${this.config?.exec === "async" ? "Async" : ""}.mjs`;
         const newModuleResponse = await fetch(url);
         if (newModuleResponse.ok) {
           jsModuleURL = url;

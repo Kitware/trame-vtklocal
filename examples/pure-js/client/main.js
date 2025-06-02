@@ -1,6 +1,6 @@
 import "./style.css";
 import Trame from "@kitware/trame";
-import { VtkWASMHandler } from "@kitware/trame-vtklocal";
+import { VtkWASMHandler } from "@kitware/trame-vtklocal/dist/esm/remote.mjs";
 
 // ============================================================================
 // Helper method/class for wasm view handling
@@ -48,11 +48,11 @@ class WasmView {
     createExtractCallback(this.trame, this.wasm, definition)();
   }
 
-  async update() {
+  async update(bindCanvas = false) {
     if (!this.wasm.loaded) {
       return;
     }
-    await this.wasm.update(this.rwId);
+    await this.wasm.update(this.rwId, bindCanvas);
     this.checkMemory();
   }
 
@@ -127,7 +127,7 @@ async function connect() {
     viewContainer,
   );
   trame.refs[renderWindowWasmRef] = view; // Allow server to call method on us (update, resetCamera, evalStateExtract)
-  await view.update();
+  await view.update(true); // only bind on first update
 
   const resizeObserver = new ResizeObserver(() => view.resize());
   resizeObserver.observe(viewContainer);

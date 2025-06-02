@@ -19,7 +19,7 @@
     "vite-plugin-eslint": "^1.8.1"
   },
   "dependencies": {
-    "@kitware/trame": "^0.0.5",
-    "@kitware/trame-vtklocal": "0.6.3"
+    "@kitware/trame": "^0.0.7",
+    "@kitware/trame-vtklocal": "1.1.1"
   }
 }

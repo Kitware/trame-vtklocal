@@ -151,19 +151,19 @@ async function pick(xyz, picker, renderwindow, renderer, prop) {
     }
     try {
         pickPending = true;
-        const found = await picker.Pick(xyz, renderer);
+        const found = await picker.pick(xyz, renderer);
         if (found) {
             if (lastActor) {
-              (await lastActor.GetProperty()).DeepCopy(prop);
+              (await lastActor.getProperty()).deepCopy(prop);
               lastActor = null;
             }
-            lastActor = await picker.GetActor();
-            const actorProp = await lastActor.GetProperty();
-            await prop.DeepCopy(actorProp);
-            await actorProp.SetColor(1, 0, 1);
-            await actorProp.EdgeVisibilityOn();
+            lastActor = await picker.getActor();
+            const actorProp = await lastActor.getProperty();
+            await prop.deepCopy(actorProp);
+            await actorProp.setColor(1, 0, 1);
+            await actorProp.edgeVisibilityOn();
         }
-        await renderwindow.Render();
+        await renderwindow.render();
     } finally {
         pickPending = false;
     }
@@ -182,7 +182,7 @@ function setupJSPicking(refName, interactorId, pickerId, renderWindowId, rendere
     const prop = getVtkObject(propId);
 
     interactor.observe("MouseMoveEvent", async () => {
-          const pos = interactor.state.EventPosition;
+          const pos = interactor.eventPosition;
           await pick([pos[0], pos[1], 0], picker, renderWindow, renderer, prop);
     });
 }""")

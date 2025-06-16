@@ -1,6 +1,22 @@
 # CHANGELOG
 
 
+## v0.13.0 (2025-06-16)
+
+### Documentation
+
+- Fix pure-js example
+  ([`fb3d2c1`](https://github.com/Kitware/trame-vtklocal/commit/fb3d2c1ccf0ee3737f81d36f63f7adfe8abb02f3))
+
+- Update picking with standalone api
+  ([`da29bcd`](https://github.com/Kitware/trame-vtklocal/commit/da29bcd8ee70f0089b79eb19ef2056b298696105))
+
+### Features
+
+- **invoke**: Enable vtk object unwrap
+  ([`27460d3`](https://github.com/Kitware/trame-vtklocal/commit/27460d30717cf73a8397b33cc98559624f46e4e8))
+
+
 ## v0.12.3 (2025-06-02)
 
 ### Bug Fixes

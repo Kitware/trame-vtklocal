@@ -80,7 +80,9 @@ class DemoApp:
         self.html_view.print_scene_manager_information()
 
     async def _get_client_camera(self):
-        active_camera = await self.html_view.invoke(self.renderer, "GetActiveCamera")
+        active_camera = await self.html_view.invoke(
+            self.renderer, "GetActiveCamera", unwrap_vtk_object=False
+        )
         print(f"\n{active_camera=}")
 
         cam_pos = await self.html_view.invoke(

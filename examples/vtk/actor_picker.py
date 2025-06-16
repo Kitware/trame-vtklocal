@@ -163,10 +163,8 @@ class ActorPicker(TrameApp):
             # prevent calling a method returning a null pointer
             return
 
-        actor_info = await self.ctx.wasm_view.invoke(self.picker, "GetActor")
-
-        if actor_info and actor_info.get("Id"):
-            actor = self.ctx.wasm_view.get_vtk_obj(actor_info.get("Id"))
+        actor = await self.ctx.wasm_view.invoke(self.picker, "GetActor")
+        if actor:
             actor_prop = actor.property
 
             # Restore previous state

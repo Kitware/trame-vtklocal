@@ -42,6 +42,21 @@ def get_version():
     return vtk_version.GetVTKVersion()
 
 
+def is_vtk_version_newer(major, min, patch):
+    from vtkmodules.vtkCommonCore import vtkVersion
+
+    vtk_version = vtkVersion()
+    if vtk_version.GetVTKMajorVersion() > major:
+        return True
+    elif vtk_version.GetVTKMajorVersion() == major:
+        if vtk_version.GetVTKMinorVersion() > min:
+            return True
+        elif vtk_version.GetVTKMinorVersion() == min:
+            if vtk_version.GetVTKBuildVersion() > patch:
+                return True
+    return False
+
+
 class LocalView(HtmlElement):
     """
     LocalView allow to mirror a server side vtkRenderWindow
@@ -303,14 +318,28 @@ class LocalView(HtmlElement):
 
         self.object_manager.UpdateObjectFromState(state_obj)
 
-    async def invoke(self, vtk_obj, method, *args):
+    async def invoke(self, vtk_obj, method, *args, unwrap_vtk_object=True):
         wasm_id = self.get_wasm_id(vtk_obj)
-        args = list(map(self.get_wasm_obj_id, args))
+
+        if is_vtk_version_newer(9, 5, 100):
+            args = list(map(self.get_wasm_obj_id, args))
+        else:
+            args = list(map(self.get_wasm_id, args))
 
         self._pending_invoke_result = asyncio.get_running_loop().create_future()
         self.server.js_call(self.__ref, "invoke", wasm_id, method, args)
         await self._pending_invoke_result
-        return self._pending_invoke_result.result()
+        result_from_client = self._pending_invoke_result.result()
+
+        # auto unwrap vtk objects
+        if (
+            unwrap_vtk_object
+            and isinstance(result_from_client, dict)
+            and "Id" in result_from_client
+        ):
+            return self.get_vtk_obj(result_from_client.get("Id"))
+
+        return result_from_client
 
     def print_scene_manager_information(self):
         self.server.js_call(self.__ref, "printSceneManagerInformation")

@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.13.1 (2025-06-19)
+
+### Bug Fixes
+
+- **js**: Proper docker mjs file detection
+  ([`8ca375c`](https://github.com/Kitware/trame-vtklocal/commit/8ca375c17634b50d6939ed5109cb78f977aaecf0))
+
+
 ## v0.13.0 (2025-06-16)
 
 ### Documentation

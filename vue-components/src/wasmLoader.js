@@ -143,7 +143,12 @@ export class VtkWASMLoader {
         url = `${wasmBaseURL}/vtkWebAssembly${this.config?.exec === "async" ? "Async" : ""}.mjs`;
         const newModuleResponse = await fetch(url);
         if (newModuleResponse.ok) {
-          jsModuleURL = url;
+          // In docker we serve the index.html when file don't exist
+          const content = await newModuleResponse.text();
+          if (content[0] !== "<") {
+            // Not html content
+            jsModuleURL = url;
+          }
         }
 
         // Try older version
@@ -151,7 +156,12 @@ export class VtkWASMLoader {
           url = `${wasmBaseURL}/vtkWasmSceneManager.mjs`;
           const oldModuleResponse = await fetch(url);
           if (oldModuleResponse.ok) {
-            jsModuleURL = url;
+            // In docker we serve the index.html when file don't exist
+            const content = await oldModuleResponse.text();
+            if (content[0] !== "<") {
+              // Not html content
+              jsModuleURL = url;
+            }
           }
         }
 

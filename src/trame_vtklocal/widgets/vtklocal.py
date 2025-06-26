@@ -86,6 +86,9 @@ class LocalView(HtmlElement):
                rendering: 'webgpu' or 'webgl',
                exec: 'sync' or 'async',
             }
+        auto_resize (bool):
+            Enabled by default. If disabled, the render window will not
+            automatically resize when the canvas is resized.
         updated (event):
             Emitted after each completed client side update.
         memory_vtk (event):
@@ -132,6 +135,7 @@ class LocalView(HtmlElement):
             "verbosity",
             ("listeners", ":listeners"),
             ("config", ":config"),
+            ("auto_resize", "autoResize"),
         ]
         self._event_names += [
             "updated",
@@ -289,6 +293,19 @@ class LocalView(HtmlElement):
         if renderer_or_render_window.IsA("vtkRenderer"):
             id_to_reset_camera = self.get_wasm_id(renderer_or_render_window)
             self.server.js_call(self.__ref, "resetCamera", id_to_reset_camera)
+
+    def startXR(self, mode=1, required_features=1, optional_features=2):
+        """Start WebXR session
+
+        :param mode: 0 (inline), 1 (VR) or 2 (AR)
+        """
+        self.server.js_call(
+            self.__ref, "startXR", mode, required_features, optional_features
+        )
+
+    def stopXR(self):
+        """Stop WebXR session"""
+        self.server.js_call(self.__ref, "stopXR")
 
     @property
     def ref_name(self):

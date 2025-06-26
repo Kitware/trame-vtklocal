@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.13.2 (2025-06-26)
+
+### Bug Fixes
+
+- **vtk**: Update vtk version constrain to be 9.4+
+  ([`3f95d62`](https://github.com/Kitware/trame-vtklocal/commit/3f95d6216d52a59f781e1420123ea3de005741c4))
+
+
 ## v0.13.1 (2025-06-19)
 
 ### Bug Fixes

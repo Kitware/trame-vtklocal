@@ -72,6 +72,12 @@ def main():
         required=True,
         help="CMake build configuration",
     )
+    parser.add_argument(
+        "-j",
+        "--parallel",
+        default="",
+        help="Number of parallel jobs for building (default: all available cores)",
+    )
 
     args = parser.parse_args()
 
@@ -79,6 +85,7 @@ def main():
     branch = args.branch
     target = args.target
     cmake_config = args.cmake_config
+    num_jobs = args.parallel
 
     # Clone inside ../dev/vtk-{branch}
     git_clone_dir = os.path.join(os.getcwd(), f"dev/vtk-{branch}")
@@ -132,25 +139,15 @@ def main():
                 "-DCMAKE_BUILD_TYPE:STRING=" + cmake_config,
                 "-DBUILD_SHARED_LIBS=OFF",
                 "-DVTK_WRAP_SERIALIZATION=ON",
-                "-DVTK_ENABLE_LOGGING=ON",
                 "-DVTK_BUILD_EXAMPLES=OFF",
-                "-DVTK_MODULE_ENABLE_VTK_RenderingLICOpenGL2=NO",
+                "-DVTK_ENABLE_WEBGPU=ON",
                 # "-DVTK_BUILD_TESTING=ON",
             ],
             check=True,
             shell=use_shell_for_emscripten_tools,
         )
 
-        subprocess.run(
-            [
-                "cmake",
-                "--build",
-                build_dir,
-                "--target",
-                "WasmSceneManager",
-            ],
-            check=True,
-        )
+        subprocess.run(["cmake", "--build", build_dir, "-j", num_jobs], check=True)
 
     elif target == "py":
         # Build vtk python binaries
@@ -171,7 +168,7 @@ def main():
             check=True,
         )
 
-        subprocess.run(["cmake", "--build", build_dir], check=True)
+        subprocess.run(["cmake", "--build", build_dir, "-j", num_jobs], check=True)
 
     else:
         print(

@@ -63,8 +63,8 @@ Optionally, you can develop with bleeding edge VTK by following these steps. Mak
 2. CMake
 3. Ninja
 4. Python
-5. NodeJS >= 22.0.0: https://nodejs.org/en/download/package-manager
-6. Emscripten SDK: See https://emscripten.org/docs/getting_started/downloads.html#download-and-install
+5. NodeJS >= 24.0.1: https://nodejs.org/en/download/package-manager
+6. Emscripten SDK version 4.0.10: See https://emscripten.org/docs/getting_started/downloads.html#download-and-install
 
 .. code-block:: console
 

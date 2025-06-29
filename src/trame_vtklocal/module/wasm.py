@@ -38,14 +38,20 @@ async def setup_wasm_directory(target_directory, wasm_url):
 
     if VTK_WASM_DIR:
         src_folder = Path(VTK_WASM_DIR)
-        shutil.copyfile(
-            src_folder.joinpath("vtkWasmSceneManager.mjs"),
-            target_directory.joinpath("vtkWasmSceneManager.mjs"),
-        )
-        shutil.copyfile(
-            src_folder.joinpath("vtkWasmSceneManager.wasm"),
-            target_directory.joinpath("vtkWasmSceneManager.wasm"),
-        )
+        for filename in [
+            "vtkWebAssembly.mjs",
+            "vtkWebAssembly.wasm",
+            "vtkWebAssemblyAsync.mjs",
+            "vtkWebAssemblyAsync.wasm",
+        ]:
+            if not src_folder.joinpath(filename).exists():
+                raise FileNotFoundError(
+                    f"File {filename} not found in VTK_WASM_DIR: {VTK_WASM_DIR}"
+                )
+            shutil.copyfile(
+                src_folder.joinpath(filename),
+                target_directory.joinpath(filename),
+            )
         return
 
     await download_file(wasm_url, dest_file)
@@ -77,8 +83,13 @@ def register_wasm(serve_path):
     if VTK_WASM_DIR:
         # remove existing wasm folder so that the latest wasm binary is copied.
         if dest_directory.exists():
-            dest_directory.joinpath("vtkWasmSceneManager.mjs").unlink(missing_ok=True)
-            dest_directory.joinpath("vtkWasmSceneManager.wasm").unlink(missing_ok=True)
+            for filename in [
+                "vtkWebAssembly.mjs",
+                "vtkWebAssembly.wasm",
+                "vtkWebAssemblyAsync.mjs",
+                "vtkWebAssemblyAsync.wasm",
+            ]:
+                dest_directory.joinpath(filename).unlink(missing_ok=True)
             dest_directory.rmdir()
 
     if not dest_directory.exists():

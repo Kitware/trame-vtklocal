@@ -99,12 +99,16 @@ export class VtkWASMLoader {
    *   config = {
    *     print: console.info,
    *     printErr: console.error,
+   *     rendering: "webgl", // or "webgpu"
+   *     exec: "sync", // or "async"
    *   }
    *
    * @param {str} wasmBaseURL
    * @param {object} config - for WASM runtime creation.
+   * @param {str} wasmBaseName - (default is "vtk") base name of the wasm bundle to load. e.g., "vtk" or "addon" will
+   *                             look for vtkWebAssembly.mjs or addonWebAssembly.mjs in the wasmBaseURL.
    */
-  async load(wasmBaseURL, config = { rendering: "webgl", exec: "sync" }) {
+  async load(wasmBaseURL, config = { rendering: "webgl", exec: "sync" }, wasmBaseName = "vtk") {
     this.config = config;
     if (this.loaded) {
       return;
@@ -123,7 +127,7 @@ export class VtkWASMLoader {
       if (!window.createVTKWASM) {
         let scriptLoaded = null;
         document.querySelectorAll("script").forEach((script) => {
-          if (script.src.includes("vtkWebAssembly")) {
+          if (script.src.includes(`${wasmBaseName}WebAssembly`)) {
             const { promise, resolve } = createFuture();
             script.onload = resolve;
             scriptLoaded = promise;
@@ -140,7 +144,7 @@ export class VtkWASMLoader {
         let jsModuleURL = null;
 
         // Try newest version first
-        url = `${wasmBaseURL}/vtkWebAssembly${this.config?.exec === "async" ? "Async" : ""}.mjs`;
+        url = `${wasmBaseURL}/${wasmBaseName}WebAssembly${this.config?.exec === "async" ? "Async" : ""}.mjs`;
         const newModuleResponse = await fetch(url);
         if (newModuleResponse.ok) {
           // In docker we serve the index.html when file don't exist

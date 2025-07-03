@@ -80,12 +80,12 @@ export class RemoteSession {
    *
    * @param {str} wasmBaseURL
    */
-  async load(wasmBaseURL, config) {
+  async load(wasmBaseURL, config, wasmBaseName) {
     if (!WASM_LOADERS[wasmBaseURL]) {
       WASM_LOADERS[wasmBaseURL] = new VtkWASMLoader();
     }
 
-    await WASM_LOADERS[wasmBaseURL].load(wasmBaseURL, config);
+    await WASM_LOADERS[wasmBaseURL].load(wasmBaseURL, config, wasmBaseName);
     this.sceneManager =
       await WASM_LOADERS[wasmBaseURL].createRemoteSession(config);
     this.stateDecorator = WASM_LOADERS[wasmBaseURL].createStateDecorator();

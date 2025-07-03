@@ -30,5 +30,7 @@ def get_helper(server):
 
 def setup(trame_server, **kwargs):
     global HELPERS_PER_SERVER
-    HELPERS_PER_SERVER[trame_server.name] = ObjectManagerHelper(trame_server)
-    trame_server.enable_module(register_wasm(serve_path))
+    HELPERS_PER_SERVER[trame_server.name] = ObjectManagerHelper(
+        trame_server, addon_serdes_registrars=kwargs.pop("addon_serdes_registrars", [])
+    )
+    trame_server.enable_module(register_wasm(serve_path, **kwargs))

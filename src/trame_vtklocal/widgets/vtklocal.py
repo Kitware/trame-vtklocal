@@ -22,7 +22,7 @@ class HtmlElement(AbstractElement):
     def __init__(self, _elem_name, children=None, **kwargs):
         super().__init__(_elem_name, children, **kwargs)
         if self.server:
-            self.server.enable_module(module)
+            self.server.enable_module(module, **kwargs)
 
 
 def encode_blobs(blob_map):
@@ -85,6 +85,7 @@ class LocalView(HtmlElement):
             {
                rendering: 'webgpu' or 'webgl',
                exec: 'sync' or 'async',
+               wasmBaseName: 'vtk',  # base name of the wasm file, will look for `${wasmBaseName}WebAssembly.mjs`
             }
         updated (event):
             Emitted after each completed client side update.

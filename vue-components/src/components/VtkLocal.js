@@ -93,6 +93,7 @@ export default {
 
     const trame = inject("trame");
     const wasmURL = trame.state.get("__trame_vtklocal_wasm_url");
+    const wasmBaseName = trame.state.get("__trame_vtklocal_wasm_base_name");
     const cameraTags = [];
     const listenersTags = [];
     const container = ref(null);
@@ -218,7 +219,7 @@ export default {
       // console.log("vtkLocal::mounted");
       wasmManager.bindNetwork(netFetchState, netFetchBlob, netFetchStatus);
       if (!wasmManager.loaded) {
-        await wasmManager.load(wasmURL, props.config);
+        await wasmManager.load(wasmURL, props.config, wasmBaseName);
       }
       const selector = wasmManager.bindCanvasToDOM(
         props.renderWindow,

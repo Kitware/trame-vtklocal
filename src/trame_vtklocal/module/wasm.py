@@ -19,14 +19,15 @@ def run_async(coroutine):
 
 
 async def download_file(url, filename):
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
-            data = await response.read()
-            with open(filename, "wb") as f:
-                f.write(data)
-
-
-VTK_WASM_DIR = os.environ.get("VTK_WASM_DIR")
+    if isinstance(url, Path) or Path(url).exists():
+        # just copy the file if it is a local file
+        shutil.copyfile(url, filename)
+    elif url.startswith("http://") or url.startswith("https://"):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                data = await response.read()
+                with open(filename, "wb") as f:
+                    f.write(data)
 
 
 async def setup_wasm_directory(target_directory, wasm_url):
@@ -35,24 +36,6 @@ async def setup_wasm_directory(target_directory, wasm_url):
 
     dest_file = str((target_directory / "vtk-wasm.tgz").resolve())
     dest_folder = str(target_directory.resolve())
-
-    if VTK_WASM_DIR:
-        src_folder = Path(VTK_WASM_DIR)
-        for filename in [
-            "vtkWebAssembly.mjs",
-            "vtkWebAssembly.wasm",
-            "vtkWebAssemblyAsync.mjs",
-            "vtkWebAssemblyAsync.wasm",
-        ]:
-            if not src_folder.joinpath(filename).exists():
-                raise FileNotFoundError(
-                    f"File {filename} not found in VTK_WASM_DIR: {VTK_WASM_DIR}"
-                )
-            shutil.copyfile(
-                src_folder.joinpath(filename),
-                target_directory.joinpath(filename),
-            )
-        return
 
     await download_file(wasm_url, dest_file)
 
@@ -75,27 +58,49 @@ def get_wasm_info():
     return version, url
 
 
-def register_wasm(serve_path):
+def register_wasm(serve_path, **kwargs):
+    """Register the VTK WebAssembly files in the given serve path.
+    Keywords:
+        wasm_url: The URL to the VTK WebAssembly files. It is used if wasm_dir is not provided and VTK_WASM_DIR_OVERRIDE
+                  is not set. (default: get_wasm_info()[1])
+        wasm_base_name: The base name of the VTK WebAssembly files. (default: "vtk")
+        wasm_dir: The directory containing the VTK WebAssembly files.
+    """
     version, wasm_url = get_wasm_info()
+    wasm_base_name = kwargs.get("wasm_base_name", "vtk")
     BASE_URL = f"__trame_vtklocal/wasm/{version}"
     dest_directory = Path(serve_path) / "wasm" / version
 
-    if VTK_WASM_DIR:
-        # remove existing wasm folder so that the latest wasm binary is copied.
-        if dest_directory.exists():
-            for filename in [
-                "vtkWebAssembly.mjs",
-                "vtkWebAssembly.wasm",
-                "vtkWebAssemblyAsync.mjs",
-                "vtkWebAssemblyAsync.wasm",
-            ]:
-                dest_directory.joinpath(filename).unlink(missing_ok=True)
-            dest_directory.rmdir()
+    # get wasm directory from kwargs or environment variable
+    wasm_dir = kwargs.get("wasm_dir", os.environ.get("VTK_WASM_DIR_OVERRIDE"))
+    # if the wasm directory is provided, we copy the files from there
+    if wasm_dir and Path(wasm_dir).exists() and Path(wasm_dir).is_dir():
+        print(f"Using wasm_dir: {wasm_dir}")
+        dest_directory.mkdir(parents=True, exist_ok=True)
+        for src_file in Path(wasm_dir).rglob(f"{wasm_base_name}WebAssembly*"):
+            shutil.copyfile(
+                src_file,
+                dest_directory.joinpath(src_file.name),
+            )
+    else:
+        # get wasm version and url
+        wasm_url = kwargs.get("wasm_url", wasm_url)
 
-    if not dest_directory.exists():
-        run_async(setup_wasm_directory(dest_directory, wasm_url))
-
+        if (
+            not dest_directory.joinpath(f"{wasm_base_name}WebAssembly.mjs").exists()
+            or not dest_directory.joinpath(f"{wasm_base_name}WebAssembly.wasm").exists()
+            or not dest_directory.joinpath(
+                f"{wasm_base_name}WebAssemblyAsync.mjs"
+            ).exists()
+            or not dest_directory.joinpath(
+                f"{wasm_base_name}WebAssemblyAsync.wasm"
+            ).exists()
+        ):
+            # if the wasm directory does not exist, we need to download it
+            run_async(setup_wasm_directory(dest_directory, wasm_url))
     return dict(
-        # module_scripts=[f"{BASE_URL}/vtkWasmSceneManager.mjs"],
-        state={"__trame_vtklocal_wasm_url": BASE_URL},
+        state={
+            "__trame_vtklocal_wasm_url": BASE_URL,
+            "__trame_vtklocal_wasm_base_name": wasm_base_name,
+        },
     )

@@ -113,6 +113,11 @@ async function connect() {
   const wasmURL = "./wasm";
   const wasmManager = new VtkWASMHandler();
   wasmManager.bindNetwork(netFetchState, netFetchBlob, netFetchStatus);
+  // for addon wasm named "myAddonWebAssembly.{mjs, wasm}"
+  // await wasmManager.load(wasmURL, { rendering: "webgl", exec: "sync" }, "myAddon");
+  // for addon wasm named "myAddonWebAssemblyAsync.{mjs, wasm}"
+  // await wasmManager.load(wasmURL, { rendering: "webgpu", exec: "async" }, "myAddon");
+  // Load default wasm i.e, vtkWebAssembly.{mjs, wasm}
   await wasmManager.load(wasmURL);
 
   // View specific

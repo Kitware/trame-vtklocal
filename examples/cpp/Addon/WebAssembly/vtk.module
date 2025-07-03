@@ -1,0 +1,18 @@
+NAME
+  Addon::WebAssembly
+LIBRARY_NAME
+  addonWebAssembly
+SPDX_LICENSE_IDENTIFIER
+  BSD-3-Clause
+SPDX_COPYRIGHT_TEXT
+  Copyright (c) Ken Martin, Will Schroeder, Bill Lorensen
+DEPENDS
+  Addon::Style
+PRIVATE_DEPENDS
+  VTK::SerializationManager
+  VTK::WebAssemblySession
+OPTIONAL_DEPENDS
+  VTK::RenderingContextOpenGL2
+  VTK::RenderingOpenGL2
+  VTK::RenderingUI
+  VTK::RenderingVolumeOpenGL2

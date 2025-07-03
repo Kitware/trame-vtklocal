@@ -27,4 +27,4 @@ $py_version = & {
 
 # Set environment variables
 $env:PYTHONPATH = "$git_clone_dir\$build_dir\py\lib\site-packages"
-$env:VTK_WASM_DIR = "$git_clone_dir\$build_dir\wasm32\bin"
+$env:VTK_WASM_DIR_OVERRIDE = "$git_clone_dir\$build_dir\wasm32\bin"

@@ -20,4 +20,4 @@ readonly build_dir="build/$cmake_config"
 
 readonly py_version=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
 export PYTHONPATH="$git_clone_dir/$build_dir/py/lib/python$py_version/site-packages"
-export VTK_WASM_DIR="$git_clone_dir/$build_dir/wasm32/bin"
+export VTK_WASM_DIR_OVERRIDE="$git_clone_dir/$build_dir/wasm32/bin"

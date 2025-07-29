@@ -16,7 +16,7 @@
 #       python ./utils/build_vtk.py -u https://gitlab.kitware.com/vtk/vtk.git -b master -t py -c RelWithDebInfo
 #
 # After this script is completed,
-#   set VTK_WASM_DIR=dev/vtk_${branch}/build/${build_type}/wasm/bin
+#   set VTK_WASM_DIR_OVERRIDE=dev/vtk_${branch}/build/${build_type}/wasm/bin
 #   set PYTHONPATH=dev/vtk_${branch}/build/${build_type}/py/lib/pythonx.y/site-packages
 
 import argparse

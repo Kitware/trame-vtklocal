@@ -32,9 +32,12 @@ def map_id_mtime(object_manager, vtk_id):
 
 class ObjectManagerAPI(LinkProtocol):
     def __init__(self, *args, **kwargs):
+        addon_serdes_registrars = kwargs.pop("addon_serdes_registrars", [])
         super().__init__(*args, **kwargs)
         self.vtk_object_manager = vtkObjectManager()
         self.vtk_object_manager.Initialize()
+        for registrar in addon_serdes_registrars:
+            self.vtk_object_manager.InitializeExtensionModuleHandler(registrar)
         self._subscriptions = {}
         self._widgets = {}
         self._last_publish_states = {}
@@ -248,10 +251,10 @@ class ObjectManagerAPI(LinkProtocol):
 
 
 class ObjectManagerHelper:
-    def __init__(self, trame_server):
+    def __init__(self, trame_server, addon_serdes_registrars=None):
         self.trame_server = trame_server
         self.root_protocol = None
-        self.api = ObjectManagerAPI()
+        self.api = ObjectManagerAPI(addon_serdes_registrars=addon_serdes_registrars)
         self.trame_server.add_protocol_to_configure(self.configure_protocol)
 
     def configure_protocol(self, protocol):

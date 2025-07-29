@@ -243,12 +243,12 @@ function createInstanciatorProxy(wasm, vtkProxyCache, idToRef) {
  *
  * @returns the vtk namespace for creating VTK objects.
  */
-export async function createNamespace(url, config = {}) {
+export async function createNamespace(url, config = {}, wasmBaseName = "vtk") {
   const vtkProxyCache = new WeakMap();
   const idToRef = new Map();
 
   const loader = new VtkWASMLoader();
-  await loader.load(url || "loaded-module", config);
+  await loader.load(url || "loaded-module", config, wasmBaseName);
   const wasm = loader.createStandaloneSession();
 
   return createInstanciatorProxy(wasm, vtkProxyCache, idToRef);

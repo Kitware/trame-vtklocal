@@ -1,6 +1,36 @@
 # CHANGELOG
 
 
+## v0.14.0 (2025-07-29)
+
+### Chores
+
+- Update build_vtk.py build command
+  ([`6ffd92a`](https://github.com/Kitware/trame-vtklocal/commit/6ffd92aa349511c6c23b826b84d99a18880e0675))
+
+- build all wasm targets - added a -j/--parallel option to specify number of build jobs. this
+  argument is forwarded to cmake --build
+
+- Update wasm file names to copy when VTK_WASM_DIR is set
+  ([`29a26ea`](https://github.com/Kitware/trame-vtklocal/commit/29a26ea734cbc0727d46715cd12eb6f179175ed8))
+
+### Documentation
+
+- **dev**: Update node and emsdk versions
+  ([`3ce2dd9`](https://github.com/Kitware/trame-vtklocal/commit/3ce2dd9031e016bb9d95399070dae4a73e6078e4))
+
+- **example**: Add serialization clipping issue
+  ([`89c51f0`](https://github.com/Kitware/trame-vtklocal/commit/89c51f0731048f7b20c20a3a798a6994496491d8))
+
+- **examples**: Add snapshot viewer for loading exported states
+  ([`363ca9f`](https://github.com/Kitware/trame-vtklocal/commit/363ca9f408cb86e137a368b3ffc95402c22d9284))
+
+### Features
+
+- **addon**: Support serialization of addon VTK modules
+  ([`de5c018`](https://github.com/Kitware/trame-vtklocal/commit/de5c018b591a053035b81732368265fcfd932e5e))
+
+
 ## v0.13.2 (2025-06-26)
 
 ### Bug Fixes

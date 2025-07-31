@@ -4,4 +4,4 @@ trame-vuetify
 trame-vtk
 trame-server>=3.1
 
-vtk==9.4.20250403.dev0 # for method call
+vtk==9.5.20250726.dev0 # for method call

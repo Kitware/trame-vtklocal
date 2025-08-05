@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v0.14.1 (2025-08-05)
+
+### Bug Fixes
+
+- Remove trame_server from kwargs as it is already passed as a positional argument
+  ([`802cee7`](https://github.com/Kitware/trame-vtklocal/commit/802cee759da7f4e4a849ad4bdd5fcf0777035af1))
+
+### Documentation
+
+- Add pyvista example with mapper input issue
+  ([`3384bb7`](https://github.com/Kitware/trame-vtklocal/commit/3384bb798460a289a630f8c25fcde3a213bafb4c))
+
+
 ## v0.14.0 (2025-07-29)
 
 ### Chores

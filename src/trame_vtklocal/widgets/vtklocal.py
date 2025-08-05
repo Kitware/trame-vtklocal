@@ -22,6 +22,8 @@ class HtmlElement(AbstractElement):
     def __init__(self, _elem_name, children=None, **kwargs):
         super().__init__(_elem_name, children, **kwargs)
         if self.server:
+            # Remove the server reference from kwargs to avoid multuple args with same name.
+            kwargs.pop("trame_server", None)
             self.server.enable_module(module, **kwargs)
 
 

@@ -84,6 +84,10 @@ export default {
       //    }
       // }
     },
+    autoResize: {
+      type: Boolean,
+      default: true,
+    }
   },
   setup(props, { emit }) {
     // Create global WASM handler if missing
@@ -130,7 +134,7 @@ export default {
 
     function handleMessage([event]) {
       if (event.type === "state") {
-        wasmManager.pushState(event.content);
+        wasmManager.patchState(event.content);
       }
       if (event.type === "blob") {
         wasmManager.pushHash(event.hash, event.content);
@@ -160,7 +164,7 @@ export default {
       const h = Math.floor(height * window.devicePixelRatio + 0.5);
       await wasmManager.setSize(props.renderWindow, w, h);
     }
-    let resizeObserver = new ResizeObserver(resize);
+    let resizeObserver = props.autoResize && new ResizeObserver(resize);
 
     // Memory -----------------------------------------------------------------
 
@@ -211,6 +215,18 @@ export default {
 
     function printSceneManagerInformation() {
       wasmManager.sceneManager.printSceneManagerInformation();
+    }
+
+    // startXR ----------------------------------------------------------------
+
+    function startXR(mode, requiredFeatures, optionalFeatures) {
+      wasmManager.sceneManager.startXR(mode, requiredFeatures, optionalFeatures);
+    }
+
+    // stopXR ----------------------------------------------------------------
+
+    function stopXR() {
+      wasmManager.sceneManager.stopXR();
     }
 
     // Life Cycles ------------------------------------------------------------
@@ -413,6 +429,8 @@ export default {
       printSceneManagerInformation,
       detachHandler,
       getVtkObject,
+      startXR,
+      stopXR,
     };
   },
   template: `<div ref="container" style="position: relative; width: 100%; height: 100%;"></div>`,

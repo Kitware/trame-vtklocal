@@ -196,7 +196,9 @@ export class RemoteSession {
           }
 
           // Need to patch classname to allow OSMesa server to work
-          stateObj.ClassName = "vtkCocoaRenderWindow";
+          if (stateObj.ClassName !== "vtkWebXRRenderWindow") {
+            stateObj.ClassName = "vtkCocoaRenderWindow";
+          }
 
           return JSON.stringify(stateObj);
         }
@@ -323,8 +325,10 @@ export class RemoteSession {
       // Bump local mtime and process states to reflect server state
       try {
         this.sceneManager.updateObjectsFromStates();
-        const [w, h] = this.renderWindowSizes[vtkId] || [10, 10];
-        this.sceneManager.setSize(vtkId, w, h);
+        if (this.renderWindowSizes[vtkId]) {
+          const [w, h] = this.renderWindowSizes[vtkId];
+          this.sceneManager.setSize(vtkId, w, h);
+        }
 
         // Prevent state patching with new API
         if (bindCanvas && this.sceneManager.bindRenderWindow) {

@@ -1,6 +1,30 @@
 # CHANGELOG
 
 
+## v0.15.0 (2025-08-13)
+
+### Chores
+
+- Remove GitHub workflow for publishing @kitware/trame-vtklocal to npm
+  ([`e866983`](https://github.com/Kitware/trame-vtklocal/commit/e8669833bf2880d6577b88c3025743a59105fe3c))
+
+### Continuous Integration
+
+- Update apt cache before installing osmesa
+  ([`0545876`](https://github.com/Kitware/trame-vtklocal/commit/054587696082865bf577cf3ae1cb0e2978740335))
+
+### Features
+
+- Remove js-lib and refactor vue-components to use @kitware/vtk-wasm
+  ([`06240a7`](https://github.com/Kitware/trame-vtklocal/commit/06240a716919e724e81c3cd3a0a4f4252a13bcdd))
+
+- Deleted js-lib directory including package.json, vite configuration files, and related build
+  scripts. - Updated vue-components package.json to include @kitware/vtk-wasm as a dependency. -
+  Refactored VtkLocal component to import RemoteSession from @kitware/vtk-wasm. - Removed remote.js,
+  standalone.js, viewer.js, wasmLoader.js, style.css from vue-components. - Updated viewer.js to
+  remove ExportViewer class and related functionality.
+
+
 ## v0.14.1 (2025-08-05)
 
 ### Bug Fixes

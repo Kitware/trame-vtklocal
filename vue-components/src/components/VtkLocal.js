@@ -7,7 +7,7 @@ import {
   toRef,
   watchEffect,
 } from "vue";
-import { RemoteSession } from "../remote";
+import { RemoteSession } from "@kitware/vtk-wasm/remote";
 
 const WASM_HANDLERS = {};
 

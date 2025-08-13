@@ -20,6 +20,6 @@
   },
   "dependencies": {
     "@kitware/trame": "^0.0.7",
-    "@kitware/trame-vtklocal": "1.1.1"
+    "@kitware/vtk-wasm": "^1.0.3"
   }
 }

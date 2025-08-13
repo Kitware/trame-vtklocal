@@ -1,6 +1,6 @@
 import "./style.css";
 import Trame from "@kitware/trame";
-import { VtkWASMHandler } from "@kitware/trame-vtklocal/dist/esm/remote.mjs";
+import { VtkWASMHandler } from "@kitware/vtk-wasm/remote";
 
 // ============================================================================
 // Helper method/class for wasm view handling

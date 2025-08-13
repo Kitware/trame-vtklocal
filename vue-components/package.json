@@ -14,7 +14,8 @@
     "vue": "^2.7.0 || >=3.0.0"
   },
   "dependencies": {
-    "jszip": "3.10.1"
+    "jszip": "3.10.1",
+    "@kitware/vtk-wasm": "^1.0.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.22.0",

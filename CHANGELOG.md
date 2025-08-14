@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.15.1 (2025-08-14)
+
+### Bug Fixes
+
+- **css**: Import css from vtk-wasm
+  ([`df8a55f`](https://github.com/Kitware/trame-vtklocal/commit/df8a55fba710cfd6749ca66dd551fa2b0a14a08f))
+
+
 ## v0.15.0 (2025-08-13)
 
 ### Chores

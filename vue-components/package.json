@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "jszip": "3.10.1",
-    "@kitware/vtk-wasm": "^1.0.3"
+    "@kitware/vtk-wasm": "^1.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.22.0",

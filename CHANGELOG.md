@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v0.15.2 (2025-08-25)
+
+### Bug Fixes
+
+- **wasm**: Handle different WASM file naming for older versions
+  ([`f6f8c93`](https://github.com/Kitware/trame-vtklocal/commit/f6f8c935eeed985c9f74ca516084611de72186dc))
+
+### Documentation
+
+- **BorderWidget**: Try vtkBorderWidget
+  ([`3cf5a41`](https://github.com/Kitware/trame-vtklocal/commit/3cf5a41eba4e393357ed2ce79e9f819b8728bfe0))
+
+
 ## v0.15.1 (2025-08-14)
 
 ### Bug Fixes

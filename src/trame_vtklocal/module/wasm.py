@@ -4,6 +4,7 @@ from pathlib import Path
 import os
 import shutil
 import tarfile
+from packaging.version import parse
 
 
 def run_async(coroutine):
@@ -86,18 +87,31 @@ def register_wasm(serve_path, **kwargs):
         # get wasm version and url
         wasm_url = kwargs.get("wasm_url", wasm_url)
 
-        if (
-            not dest_directory.joinpath(f"{wasm_base_name}WebAssembly.mjs").exists()
-            or not dest_directory.joinpath(f"{wasm_base_name}WebAssembly.wasm").exists()
-            or not dest_directory.joinpath(
-                f"{wasm_base_name}WebAssemblyAsync.mjs"
-            ).exists()
-            or not dest_directory.joinpath(
-                f"{wasm_base_name}WebAssemblyAsync.wasm"
-            ).exists()
-        ):
-            # if the wasm directory does not exist, we need to download it
-            run_async(setup_wasm_directory(dest_directory, wasm_url))
+        # if the required wasm files do not exist, we need to download them
+        # Versions before 9.5.20250531 use different WASM file naming conventions.
+        # this cutoff distinguishes between old and new formats.
+        if parse(version) < parse("9.5.20250531"):
+            # For older versions, the wasm files are named differently.
+            if (
+                not dest_directory.joinpath("vtkWasmSceneManager.mjs").exists()
+                or not dest_directory.joinpath("vtkWasmSceneManager.wasm").exists()
+            ):
+                run_async(setup_wasm_directory(dest_directory, wasm_url))
+        else:
+            if (
+                not dest_directory.joinpath(f"{wasm_base_name}WebAssembly.mjs").exists()
+                or not dest_directory.joinpath(
+                    f"{wasm_base_name}WebAssembly.wasm"
+                ).exists()
+                or not dest_directory.joinpath(
+                    f"{wasm_base_name}WebAssemblyAsync.mjs"
+                ).exists()
+                or not dest_directory.joinpath(
+                    f"{wasm_base_name}WebAssemblyAsync.wasm"
+                ).exists()
+            ):
+                run_async(setup_wasm_directory(dest_directory, wasm_url))
+
     return dict(
         state={
             "__trame_vtklocal_wasm_url": BASE_URL,

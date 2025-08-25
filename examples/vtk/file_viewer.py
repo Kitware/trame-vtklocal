@@ -4,7 +4,7 @@ from trame.widgets import html, client
 from trame_vtklocal.widgets import vtklocal
 from trame.decorators import TrameApp, trigger
 
-from vtkmodules.vtkIOXML import vtkXMLPolyDataReader
+from vtkmodules.vtkIOXML import vtkXMLPolyDataReader, vtkXMLMultiBlockDataReader
 from vtkmodules.vtkRenderingCore import (
     vtkActor,
     vtkPolyDataMapper,
@@ -33,15 +33,25 @@ def create_vtk_pipeline(file_name):
     renderWindowInteractor.SetRenderWindow(renderWindow)
     renderWindowInteractor.GetInteractorStyle().SetCurrentStyleToTrackballCamera()
 
-    reader = vtkXMLPolyDataReader(file_name=file_name)
+    if file_name.endswith(".vtm"):
+        reader = vtkXMLMultiBlockDataReader(file_name=file_name)
+        reader.Update()
+        mbdset = reader.GetOutput()
+        for i in range(mbdset.GetNumberOfBlocks()):
+            block = mbdset.GetBlock(i)
+            mapper = vtkPolyDataMapper(scalar_visibility=False)
+            mapper.SetInputDataObject(0, block)
+            actor = vtkActor()
+            actor.SetMapper(mapper)
+            renderer.AddActor(actor)
+    else:
+        reader = vtkXMLPolyDataReader(file_name=file_name)
+        mapper = vtkPolyDataMapper(scalar_visibility=False)
+        mapper.SetInputConnection(reader.GetOutputPort())
+        actor = vtkActor()
+        actor.SetMapper(mapper)
 
-    mapper = vtkPolyDataMapper(scalar_visibility=False)
-    mapper.SetInputConnection(reader.GetOutputPort())
-
-    actor = vtkActor()
-    actor.SetMapper(mapper)
-
-    renderer.AddActor(actor)
+        renderer.AddActor(actor)
     renderer.SetBackground(0.1, 0.2, 0.4)
     renderer.ResetCamera()
 

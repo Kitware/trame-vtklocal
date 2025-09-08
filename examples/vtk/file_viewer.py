@@ -1,8 +1,8 @@
-from trame.app import get_server
+from trame.app import TrameApp
 from trame.ui.html import DivLayout
 from trame.widgets import html, client
 from trame_vtklocal.widgets import vtklocal
-from trame.decorators import TrameApp, trigger
+from trame.decorators import trigger
 
 from vtkmodules.vtkIOXML import vtkXMLPolyDataReader, vtkXMLMultiBlockDataReader
 from vtkmodules.vtkRenderingCore import (
@@ -63,35 +63,33 @@ def create_vtk_pipeline(file_name):
 # -----------------------------------------------------------------------------
 
 
-@TrameApp()
-class DemoApp:
+class DemoApp(TrameApp):
     def __init__(self, server=None):
-        self.server = get_server(server, client_type=CLIENT_TYPE)
+        super().__init__(server, client_type=CLIENT_TYPE)
         self.server.cli.add_argument("-f", "--filename", required=True)
         args, _ = self.server.cli.parse_known_args()
         file_name = args.filename
 
         self.render_window = create_vtk_pipeline(file_name)
-        self.server.state.update(dict(mem_blob=0, mem_vtk=0))
-        self.html_view = None
-        self.ui = self._ui()
-        # print(self.ui)
+        self.state.update(dict(mem_blob=0, mem_vtk=0))
+        self._build_ui()
 
     @trigger("export")
     def export(self, format):
-        return self.html_view.export(format)
+        return self.ctx.view.export(format)
 
     def reset_camera(self):
-        self.html_view.reset_camera()
+        self.ctx.view.reset_camera()
 
-    def _ui(self):
-        with DivLayout(self.server) as layout:
+    def _build_ui(self):
+        with DivLayout(self.server) as self.ui:
             client.Style("body { margin: 0; }")
             with html.Div(
                 style="position: absolute; left: 0; top: 0; width: 100vw; height: 100vh;"
             ):
                 self.html_view = vtklocal.LocalView(
                     self.render_window,
+                    ctx_name="view",
                     throttle_rate=20,
                     cache_size=("cache", 0),
                     memory_vtk="mem_vtk = $event",
@@ -122,9 +120,6 @@ class DemoApp:
                 click=self.reset_camera,
                 style="position: absolute; top: 3rem; right: 14rem; z-index: 10;",
             )
-
-        return layout
-
 
 # -----------------------------------------------------------------------------
 # Main

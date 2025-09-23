@@ -1,3 +1,4 @@
 pytest
 pytest-asyncio
+pytest-playwright
 trame-client[test]

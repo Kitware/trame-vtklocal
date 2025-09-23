@@ -55,7 +55,7 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
-    
+
     - name: Install OSMesa for Linux
       if: matrix.config.os == 'ubuntu-latest'
       run: |
@@ -67,28 +67,29 @@ jobs:
         pip install .[vtk]
         pip install -r tests/requirements.txt
         pip install coverage
-    
+        playwright install
+
     - name: Run Tests
       run: |
           # Run the tests with coverage so we get a coverage report too
-          coverage run --source . -m pytest ./tests --firefox --headless --html=report-${{ matrix.config.name }}-${{ matrix.python-version }}.html
+          coverage run --source . -m pytest ./tests
           # Print the coverage report
           coverage report -m
 
     - name: Upload Coverage to Codecov
       uses: codecov/codecov-action@v3
-    
+
     - name: Upload pytest test results
       uses: actions/upload-artifact@v4
       if: always()
       with:
         name: pytest-results-${{  matrix.config.name }}
         path: |
-          visual_baseline/**/*.png
+          tests/refs/*.yml
+          tests/refs/**/*.png
           assets/**
-          report-*.html
         retention-days: 1
-        
+
   test-npm-build:
     runs-on: ubuntu-latest
 

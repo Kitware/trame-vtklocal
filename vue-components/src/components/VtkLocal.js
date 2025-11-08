@@ -194,13 +194,19 @@ export default {
       wasmManager.sceneManager.render(props.renderWindow);
     }
 
+    // render ------------------------------------------------------------
+
+    function render() {
+      wasmManager.sceneManager.render(props.renderWindow);
+    }
+
     // invoke ------------------------------------------------------------
 
     async function invoke(objId, method, args) {
       const result = await wasmManager.sceneManager.invoke(objId, method, args);
 
       // Extract object state if object is returned
-      if (result.Id && result.Success) {
+      if (result?.Id && result?.Success) {
         result.Value = wasmManager.getState(result.Id);
       }
 
@@ -354,6 +360,11 @@ export default {
       if (!wasmManager.sceneManager.startEventLoop(props.renderWindow)) {
         console.error("Could not startEventLoop for", props.renderWindow);
       }
+
+      // trigger an emit right away
+      wasmManager.cameraIds.forEach((cid) => {
+        emit("camera", wasmManager.getState(cid));
+      });
     });
 
     onBeforeUnmount(() => {
@@ -410,6 +421,7 @@ export default {
       container,
       update,
       resetCamera,
+      render,
       evalStateExtract,
       invoke,
       printSceneManagerInformation,

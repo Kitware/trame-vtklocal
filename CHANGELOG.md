@@ -1,6 +1,26 @@
 # CHANGELOG
 
 
+## v0.15.3 (2025-11-08)
+
+### Bug Fixes
+
+- **camera**: Trigger camera event at startup and add render() method
+  ([`0dee6eb`](https://github.com/Kitware/trame-vtklocal/commit/0dee6ebfdd64e251e8ef430b8f0279b1d90c6b3a))
+
+### Continuous Integration
+
+- Use playwright in tests
+  ([`c61c1eb`](https://github.com/Kitware/trame-vtklocal/commit/c61c1eb80b7a98d846d4f12cf69dd342bcb440d0))
+
+Signed-off-by: Patrick Avery <patrick.avery@kitware.com>
+
+### Documentation
+
+- Use TrameApp class in file_viewer.py
+  ([`f77ba50`](https://github.com/Kitware/trame-vtklocal/commit/f77ba50a54beead370ea5ad8cc3d4e6c5e431b26))
+
+
 ## v0.15.2 (2025-08-25)
 
 ### Bug Fixes

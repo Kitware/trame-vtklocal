@@ -424,6 +424,8 @@ export default {
       render,
       evalStateExtract,
       invoke,
+      resize,
+      wasmManager,
       printSceneManagerInformation,
       detachHandler,
       getVtkObject,

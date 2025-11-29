@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.15.4 (2025-11-29)
+
+### Bug Fixes
+
+- **api**: Expose resize & wasmManager
+  ([`2cc72d6`](https://github.com/Kitware/trame-vtklocal/commit/2cc72d6f351e64dec51332befaafe14ab39e7667))
+
+
 ## v0.15.3 (2025-11-08)
 
 ### Bug Fixes

@@ -95,6 +95,34 @@ Running examples
 Some example are meant to test and validate WASM rendering.
 Some will default for remote rendering but if you want to force them to use WASM just run `export USE_WASM=1` before executing them.
 
+Progress events
+----------------------------------------
+
+The client-side VtkLocal component emits a `progress` event while wasm sync is happening.
+This can be used to keep a global loader visible until the first sync completes.
+
+.. code-block:: python
+
+    from trame.widgets import vtklocal, vuetify
+
+    state.app_loading = True
+    state._vtklocal_seen_active = False
+
+    def on_vtklocal_progress(event):
+        if event.get("active"):
+            state._vtklocal_seen_active = True
+            state.app_loading = True
+        elif state._vtklocal_seen_active:
+            state.app_loading = False
+
+    with vuetify.VOverlay(v_model=("app_loading",), absolute=True):
+        vuetify.VProgressCircular(indeterminate=True, size=64)
+
+    view = vtklocal.LocalView(
+        render_window,
+        progress=(on_vtklocal_progress, "[$event]"),
+    )
+
 SharedArrayBuffer
 ----------------------------------------
 

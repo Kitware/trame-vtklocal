@@ -98,6 +98,9 @@ class LocalView(HtmlElement):
         camera (event):
             Event emitted when any camera is changed. The actual state of
             the camera is passed as arg.
+        progress (event):
+            Event emitted during wasm sync. Payload includes active flag and
+            current/total counts for states and blobs.
 
     """
 
@@ -142,6 +145,7 @@ class LocalView(HtmlElement):
             ("memory_vtk", "memory-vtk"),
             ("memory_arrays", "memory-arrays"),
             ("invoke_response", "invoke-response"),
+            "progress",
         ]
 
         # Generate throttle update function

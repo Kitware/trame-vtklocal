@@ -131,6 +131,7 @@ def main():
             [
                 "emcmake",
                 "cmake",
+                #"--fresh",
                 "-S",
                 ".",
                 "-B",
@@ -141,6 +142,19 @@ def main():
                 "-DVTK_WRAP_SERIALIZATION=ON",
                 "-DVTK_BUILD_EXAMPLES=OFF",
                 "-DVTK_ENABLE_WEBGPU=ON",
+                # "-DVTK_BUILD_TESTING=ON",
+                "-DVTK_WEBASSEMBLY_THREADS=OFF",
+                "-DCMAKE_C_FLAGS=-pthread",
+                "-DCMAKE_CXX_FLAGS=-pthread",
+                "-DCMAKE_EXE_LINKER_FLAGS=-pthread",
+                #,-sPROXY_TO_PTHREAD=1, sOFFSCREENCANVAS_SUPPORT=1",
+                # "-DVTK_SMP_IMPLEMENTATION=Sequential",
+                # "-DVTK_SMP_ENABLE_STDThread=OFF",
+                # "-DVTK_SMP_ENABLE_TBB=OFF",
+                # "-DVTK_SMP_ENABLE_OPENMP=OFF",
+                #"-DVTK_ENABLE_LOGGING=OFF",
+                "-DVTK_MODULE_ENABLE_VTK_loguru=NO"
+                #"-VTK_REQUIRE_LARGE_FILE_SUPPORT=NO"
                 # "-DVTK_BUILD_TESTING=ON",
             ],
             check=True,

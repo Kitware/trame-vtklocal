@@ -141,6 +141,7 @@ def main():
                 "-DVTK_WRAP_SERIALIZATION=ON",
                 "-DVTK_BUILD_EXAMPLES=OFF",
                 "-DVTK_ENABLE_WEBGPU=ON",
+                # "-DVTK_BUILD_TESTING=ON",
             ],
             check=True,
             shell=use_shell_for_emscripten_tools,

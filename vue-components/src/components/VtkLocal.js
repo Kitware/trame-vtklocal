@@ -505,35 +505,45 @@ export default {
     };
   },
   template: `<div ref="container" style="position: relative; width: 100%; height: 100%;">
-    <div v-if="showLoading" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(10, 10, 10, 0.45); z-index: 2;">
-      <div style="min-width: 220px; max-width: 320px; padding: 12px 14px; border-radius: 8px; background: rgba(20, 20, 20, 0.9); color: #f5f5f5;">
-        <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">
-          {{ wasmLoading ? "Loading VTK WASM" : "Syncing VTK Data" }}
-        </div>
-        <div v-if="wasmLoading" style="font-size: 12px; opacity: 0.85;">
-          Fetching WebAssembly bundle...
-        </div>
-        <div v-else>
-          <div style="margin-bottom: 10px;">
-            <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; opacity: 0.8;">
-              <span>States</span>
-              <span>{{ progress.state.current }}/{{ progress.state.total }}</span>
-            </div>
-            <div style="height: 6px; background: rgba(255, 255, 255, 0.15); border-radius: 4px; overflow: hidden;">
-              <div :style="{ width: statePercent + '%', height: '100%', background: '#4aa3ff' }"></div>
-            </div>
+    <slot
+      v-if="showLoading"
+      name="loader"
+      :progress="progress"
+      :wasm-loading="wasmLoading"
+      :state-percent="statePercent"
+      :hash-percent="hashPercent"
+      :show-loading="showLoading"
+    >
+      <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(10, 10, 10, 0.45); z-index: 2;">
+        <div style="min-width: 220px; max-width: 320px; padding: 12px 14px; border-radius: 8px; background: rgba(20, 20, 20, 0.9); color: #f5f5f5;">
+          <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">
+            {{ wasmLoading ? "Loading VTK WASM" : "Syncing VTK Data" }}
           </div>
-          <div>
-            <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; opacity: 0.8;">
-              <span>Blobs</span>
-              <span>{{ progress.hash.current }}/{{ progress.hash.total }}</span>
+          <div v-if="wasmLoading" style="font-size: 12px; opacity: 0.85;">
+            Fetching WebAssembly bundle...
+          </div>
+          <div v-else>
+            <div style="margin-bottom: 10px;">
+              <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; opacity: 0.8;">
+                <span>States</span>
+                <span>{{ progress.state.current }}/{{ progress.state.total }}</span>
+              </div>
+              <div style="height: 6px; background: rgba(255, 255, 255, 0.15); border-radius: 4px; overflow: hidden;">
+                <div :style="{ width: statePercent + '%', height: '100%', background: '#4aa3ff' }"></div>
+              </div>
             </div>
-            <div style="height: 6px; background: rgba(255, 255, 255, 0.15); border-radius: 4px; overflow: hidden;">
-              <div :style="{ width: hashPercent + '%', height: '100%', background: '#f5c542' }"></div>
+            <div>
+              <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; opacity: 0.8;">
+                <span>Blobs</span>
+                <span>{{ progress.hash.current }}/{{ progress.hash.total }}</span>
+              </div>
+              <div style="height: 6px; background: rgba(255, 255, 255, 0.15); border-radius: 4px; overflow: hidden;">
+                <div :style="{ width: hashPercent + '%', height: '100%', background: '#f5c542' }"></div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </slot>
   </div>`,
 };

@@ -123,6 +123,21 @@ This can be used to keep a global loader visible until the first sync completes.
         progress=(on_vtklocal_progress, "[$event]"),
     )
 
+If you are using the Vue component directly, you can override the built-in loader
+with the `loader` slot.
+
+.. code-block:: html
+
+    <vtk-local>
+      <template #loader="{ progress, wasmLoading, statePercent, hashPercent }">
+        <div v-if="wasmLoading">Loading wasm...</div>
+        <div v-else>
+          States: {{ progress.state.current }}/{{ progress.state.total }}
+          Blobs: {{ progress.hash.current }}/{{ progress.hash.total }}
+        </div>
+      </template>
+    </vtk-local>
+
 SharedArrayBuffer
 ----------------------------------------
 

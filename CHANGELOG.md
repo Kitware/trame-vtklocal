@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.16.0 (2026-01-02)
+
+### Features
+
+- **vtklocal**: Add progress event handling during WASM sync
+  ([`5546dc6`](https://github.com/Kitware/trame-vtklocal/commit/5546dc6e4246c54d5e117404303ed8137a6d1568))
+
+
 ## v0.15.4 (2025-11-29)
 
 ### Bug Fixes

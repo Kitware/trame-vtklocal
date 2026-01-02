@@ -1,6 +1,8 @@
 import {
+  computed,
   inject,
   ref,
+  reactive,
   unref,
   onMounted,
   onBeforeUnmount,
@@ -34,6 +36,7 @@ export default {
     "memory-arrays",
     "camera",
     "invoke-response",
+    "progress",
   ],
   props: {
     useHandler: {
@@ -105,6 +108,62 @@ export default {
       ? WASM_HANDLERS[props.useHandler]
       : new RemoteSession();
     let subscription = null;
+    const progress = reactive({
+      active: false,
+      state: {
+        current: 0,
+        total: 0,
+      },
+      hash: {
+        current: 0,
+        total: 0,
+      },
+    });
+    const wasmLoading = ref(!wasmManager.loaded);
+    const showLoading = computed(() => wasmLoading.value || progress.active);
+    const statePercent = computed(() => {
+      if (!progress.state.total) {
+        return 0;
+      }
+      return Math.min(
+        100,
+        Math.floor((progress.state.current / progress.state.total) * 100),
+      );
+    });
+    const hashPercent = computed(() => {
+      if (!progress.hash.total) {
+        return 0;
+      }
+      return Math.min(
+        100,
+        Math.floor((progress.hash.current / progress.hash.total) * 100),
+      );
+    });
+    function updateProgress(payload) {
+      if (!payload) {
+        return;
+      }
+      progress.active = !!payload.active;
+      progress.state.current = payload.state?.current || 0;
+      progress.state.total = payload.state?.total || 0;
+      progress.hash.current = payload.hash?.current || 0;
+      progress.hash.total = payload.hash?.total || 0;
+      emit("progress", {
+        active: progress.active,
+        state: {
+          current: progress.state.current,
+          total: progress.state.total,
+        },
+        hash: {
+          current: progress.hash.current,
+          total: progress.hash.total,
+        },
+      });
+    }
+    let removeProgressCallback = null;
+    if (wasmManager.addProgressCallback) {
+      removeProgressCallback = wasmManager.addProgressCallback(updateProgress);
+    }
 
     // network connector ------------------------------------------------------
 
@@ -227,7 +286,12 @@ export default {
       // console.log("vtkLocal::mounted");
       wasmManager.bindNetwork(netFetchState, netFetchBlob, netFetchStatus);
       if (!wasmManager.loaded) {
-        await wasmManager.load(wasmURL, props.config, wasmBaseName);
+        wasmLoading.value = true;
+        try {
+          await wasmManager.load(wasmURL, props.config, wasmBaseName);
+        } finally {
+          wasmLoading.value = false;
+        }
       }
       const selector = wasmManager.bindCanvasToDOM(
         props.renderWindow,
@@ -371,6 +435,10 @@ export default {
       if (subscription) {
         unsubscribe();
       }
+      if (removeProgressCallback) {
+        removeProgressCallback();
+        removeProgressCallback = null;
+      }
 
       // Old/New API - detection
       const removeObserverMethodName = wasmManager.sceneManager.removeObserver
@@ -429,7 +497,53 @@ export default {
       printSceneManagerInformation,
       detachHandler,
       getVtkObject,
+      progress,
+      showLoading,
+      statePercent,
+      hashPercent,
+      wasmLoading,
     };
   },
-  template: `<div ref="container" style="position: relative; width: 100%; height: 100%;"></div>`,
+  template: `<div ref="container" style="position: relative; width: 100%; height: 100%;">
+    <slot
+      v-if="showLoading"
+      name="loader"
+      :progress="progress"
+      :wasm-loading="wasmLoading"
+      :state-percent="statePercent"
+      :hash-percent="hashPercent"
+      :show-loading="showLoading"
+    >
+      <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(10, 10, 10, 0.45); z-index: 2;">
+        <div style="min-width: 220px; max-width: 320px; padding: 12px 14px; border-radius: 8px; background: rgba(20, 20, 20, 0.9); color: #f5f5f5;">
+          <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">
+            {{ wasmLoading ? "Loading VTK WASM" : "Syncing VTK Data" }}
+          </div>
+          <div v-if="wasmLoading" style="font-size: 12px; opacity: 0.85;">
+            Fetching WebAssembly bundle...
+          </div>
+          <div v-else>
+            <div style="margin-bottom: 10px;">
+              <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; opacity: 0.8;">
+                <span>States</span>
+                <span>{{ progress.state.current }}/{{ progress.state.total }}</span>
+              </div>
+              <div style="height: 6px; background: rgba(255, 255, 255, 0.15); border-radius: 4px; overflow: hidden;">
+                <div :style="{ width: statePercent + '%', height: '100%', background: '#4aa3ff' }"></div>
+              </div>
+            </div>
+            <div>
+              <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; opacity: 0.8;">
+                <span>Blobs</span>
+                <span>{{ progress.hash.current }}/{{ progress.hash.total }}</span>
+              </div>
+              <div style="height: 6px; background: rgba(255, 255, 255, 0.15); border-radius: 4px; overflow: hidden;">
+                <div :style="{ width: hashPercent + '%', height: '100%', background: '#f5c542' }"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </slot>
+  </div>`,
 };

@@ -8,6 +8,7 @@ authors = [
 dependencies = [
     "trame",
     "trame-common",
+    "packaging",
 ]
 requires-python = ">=3.9"
 readme = "README.rst"

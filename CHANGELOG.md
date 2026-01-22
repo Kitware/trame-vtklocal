@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.16.1 (2026-01-22)
+
+### Bug Fixes
+
+- **packaging**: Add missing packaging dependency
+  ([`d1c9951`](https://github.com/Kitware/trame-vtklocal/commit/d1c995183c41990d21efed5adbcddfeffd537c14))
+
+
 ## v0.16.0 (2026-01-02)
 
 ### Features

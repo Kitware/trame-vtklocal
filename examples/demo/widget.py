@@ -1,14 +1,34 @@
-# pip install trame trame-vtklocal trame-vuetify trame-components
+#!/usr/bin/env -S uv run --script
+#
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#     "trame>=3.12",
+#     "trame-components>=2.5",
+#     "trame-vtklocal",
+#     "trame-vuetify",
+#     "vtk>=9.6",
+# ]
+#
+# [tool.uv]
+# prerelease = "allow"
+#
+# [[tool.uv.index]]
+# url = "https://wheels.vtk.org"
+# ///
+
 import vtk
 
-from trame.app import get_server
+from trame.app import TrameApp
 from trame.ui.html import DivLayout
 from trame.widgets import html, client, vtklocal, trame as tw, vuetify3 as v3
-from trame.decorators import TrameApp, change
+from trame.decorators import change
 from trame.assets.remote import HttpFile
 from trame.assets.local import to_url
 
 FULL_SCREEN = "position:absolute; left:0; top:0; width:100vw; height:100vh;"
+TOP_LEFT_OVERLAY = "position: absolute; top: 1rem; left: 1rem; width: 20vw; height: calc(20vw + 4rem); z-index: 1;"
+
 K_RANGE = [0.0, 15.6]
 P1 = [-0.4, 0, 0.05]
 P2 = [-0.4, 0, 1.5]
@@ -33,108 +53,100 @@ if not IMAGE.local:
     IMAGE.fetch()
 
 
-def create_vtk_pipeline():
-    resolution = 50
-
-    renderer = vtk.vtkRenderer()
-    renderWindow = vtk.vtkRenderWindow()
-    renderWindow.AddRenderer(renderer)
-    renderWindow.OffScreenRenderingOn()
-
-    renderWindowInteractor = vtk.vtkRenderWindowInteractor()
-    renderWindowInteractor.SetRenderWindow(renderWindow)
-    renderWindowInteractor.GetInteractorStyle().SetCurrentStyleToTrackballCamera()
-
-    bikeReader = vtk.vtkXMLPolyDataReader()
-    bikeReader.SetFileName(BIKE.path)
-
-    tunnelReader = vtk.vtkXMLUnstructuredGridReader()
-    tunnelReader.SetFileName(TUNNEL.path)
-    tunnelReader.Update()
-
-    lineSeed = vtk.vtkLineSource()
-    lineSeed.SetPoint1(*P1)
-    lineSeed.SetPoint2(*P2)
-    lineSeed.SetResolution(resolution)
-    lineSeed.Update()
-
-    lineWidget = vtk.vtkLineWidget2()
-    lineWidgetRep = lineWidget.GetRepresentation()
-    lineWidgetRep.SetPoint1WorldPosition(P1)
-    lineWidgetRep.SetPoint2WorldPosition(P2)
-    lineWidget.SetInteractor(renderWindowInteractor)
-
-    streamTracer = vtk.vtkStreamTracer()
-    streamTracer.SetInputConnection(tunnelReader.GetOutputPort())
-    streamTracer.SetSourceConnection(lineSeed.GetOutputPort())
-    streamTracer.SetIntegrationDirectionToForward()
-    streamTracer.SetIntegratorTypeToRungeKutta45()
-    streamTracer.SetMaximumPropagation(3)
-    streamTracer.SetIntegrationStepUnit(2)
-    streamTracer.SetInitialIntegrationStep(0.2)
-    streamTracer.SetMinimumIntegrationStep(0.01)
-    streamTracer.SetMaximumIntegrationStep(0.5)
-    streamTracer.SetMaximumError(0.000001)
-    streamTracer.SetMaximumNumberOfSteps(2000)
-    streamTracer.SetTerminalSpeed(0.00000000001)
-
-    tubeFilter = vtk.vtkTubeFilter()
-    tubeFilter.SetInputConnection(streamTracer.GetOutputPort())
-    tubeFilter.SetRadius(0.01)
-    tubeFilter.SetNumberOfSides(6)
-    tubeFilter.CappingOn()
-    tubeFilter.Update()
-
-    bike_mapper = vtk.vtkPolyDataMapper()
-    bike_actor = vtk.vtkActor()
-    bike_mapper.SetInputConnection(bikeReader.GetOutputPort())
-    bike_actor.SetMapper(bike_mapper)
-    renderer.AddActor(bike_actor)
-
-    stream_mapper = vtk.vtkPolyDataMapper()
-    stream_actor = vtk.vtkActor()
-    stream_mapper.SetInputConnection(tubeFilter.GetOutputPort())
-    stream_actor.SetMapper(stream_mapper)
-    renderer.AddActor(stream_actor)
-
-    lut = vtk.vtkLookupTable()
-    lut.SetHueRange(0.7, 0)
-    lut.SetSaturationRange(1.0, 0)
-    lut.SetValueRange(0.5, 1.0)
-
-    stream_mapper.SetLookupTable(lut)
-    stream_mapper.SetColorModeToMapScalars()
-    stream_mapper.SetScalarModeToUsePointData()
-    stream_mapper.SetArrayName("k")
-    stream_mapper.SetScalarRange(K_RANGE)
-
-    renderWindow.Render()
-    renderer.ResetCamera()
-    renderer.SetBackground(0.4, 0.4, 0.4)
-
-    lineWidget.On()
-
-    return renderWindow, lineSeed, lineWidget
-
-
-@TrameApp()
-class App:
+class App(TrameApp):
     def __init__(self, server=None):
-        self.server = get_server(server)
-        self.rw, self.seed, self.widget = create_vtk_pipeline()
+        super().__init__(server)
+        self._setup_vtk()
         self._build_ui()
 
         # reserve state variable for widget update
         self.state.line_widget = {"p1": P1, "p2": P2}
         self.state.trame__title = "trame + VTK.wasm"
 
-    @property
-    def state(self):
-        return self.server.state
+    def _setup_vtk(self):
+        resolution = 50
 
-    @property
-    def ctrl(self):
-        return self.server.controller
+        renderer = vtk.vtkRenderer()
+        renderWindow = vtk.vtkRenderWindow()
+        renderWindow.AddRenderer(renderer)
+        renderWindow.OffScreenRenderingOn()
+
+        renderWindowInteractor = vtk.vtkRenderWindowInteractor()
+        renderWindowInteractor.SetRenderWindow(renderWindow)
+        renderWindowInteractor.GetInteractorStyle().SetCurrentStyleToTrackballCamera()
+
+        bikeReader = vtk.vtkXMLPolyDataReader()
+        bikeReader.SetFileName(BIKE.path)
+
+        tunnelReader = vtk.vtkXMLUnstructuredGridReader()
+        tunnelReader.SetFileName(TUNNEL.path)
+        tunnelReader.Update()
+
+        lineSeed = vtk.vtkLineSource()
+        lineSeed.SetPoint1(*P1)
+        lineSeed.SetPoint2(*P2)
+        lineSeed.SetResolution(resolution)
+        lineSeed.Update()
+
+        lineWidget = vtk.vtkLineWidget2()
+        lineWidgetRep = lineWidget.GetRepresentation()
+        lineWidgetRep.SetPoint1WorldPosition(P1)
+        lineWidgetRep.SetPoint2WorldPosition(P2)
+        lineWidget.SetInteractor(renderWindowInteractor)
+
+        streamTracer = vtk.vtkStreamTracer()
+        streamTracer.SetInputConnection(tunnelReader.GetOutputPort())
+        streamTracer.SetSourceConnection(lineSeed.GetOutputPort())
+        streamTracer.SetIntegrationDirectionToForward()
+        streamTracer.SetIntegratorTypeToRungeKutta45()
+        streamTracer.SetMaximumPropagation(3)
+        streamTracer.SetIntegrationStepUnit(2)
+        streamTracer.SetInitialIntegrationStep(0.2)
+        streamTracer.SetMinimumIntegrationStep(0.01)
+        streamTracer.SetMaximumIntegrationStep(0.5)
+        streamTracer.SetMaximumError(0.000001)
+        streamTracer.SetMaximumNumberOfSteps(2000)
+        streamTracer.SetTerminalSpeed(0.00000000001)
+
+        tubeFilter = vtk.vtkTubeFilter()
+        tubeFilter.SetInputConnection(streamTracer.GetOutputPort())
+        tubeFilter.SetRadius(0.01)
+        tubeFilter.SetNumberOfSides(6)
+        tubeFilter.CappingOn()
+        tubeFilter.Update()
+
+        bike_mapper = vtk.vtkPolyDataMapper()
+        bike_actor = vtk.vtkActor()
+        bike_mapper.SetInputConnection(bikeReader.GetOutputPort())
+        bike_actor.SetMapper(bike_mapper)
+        renderer.AddActor(bike_actor)
+
+        stream_mapper = vtk.vtkPolyDataMapper()
+        stream_actor = vtk.vtkActor()
+        stream_mapper.SetInputConnection(tubeFilter.GetOutputPort())
+        stream_actor.SetMapper(stream_mapper)
+        renderer.AddActor(stream_actor)
+
+        lut = vtk.vtkLookupTable()
+        lut.SetHueRange(0.7, 0)
+        lut.SetSaturationRange(1.0, 0)
+        lut.SetValueRange(0.5, 1.0)
+
+        stream_mapper.SetLookupTable(lut)
+        stream_mapper.SetColorModeToMapScalars()
+        stream_mapper.SetScalarModeToUsePointData()
+        stream_mapper.SetArrayName("k")
+        stream_mapper.SetScalarRange(K_RANGE)
+
+        renderWindow.Render()
+        renderer.ResetCamera()
+        renderer.SetBackground(0.4, 0.4, 0.4)
+
+        lineWidget.On()
+
+        self.rw = renderWindow
+        self.seed = lineSeed
+        self.widget = lineWidget
 
     @change("line_widget")
     def _on_widget_update(self, line_widget, **_):
@@ -157,9 +169,7 @@ class App:
     def _build_ui(self):
         with DivLayout(self.server):
             client.Style("body { margin: 0; }")
-            with v3.VCard(
-                style="position: absolute; top: 1rem; left: 1rem; width: 20vw; height: calc(20vw + 4rem); z-index: 1;"
-            ):
+            with v3.VCard(style=TOP_LEFT_OVERLAY):
                 tw.LineSeed(
                     image=to_url(IMAGE.path),
                     point_1=("line_widget.p1",),
@@ -169,8 +179,9 @@ class App:
                     n_sliders=2,
                 )
             with html.Div(style=FULL_SCREEN):
-                with vtklocal.LocalView(self.rw) as view:
-                    view.update_throttle.rate = 20
+                with vtklocal.LocalView(
+                    self.rw, throttle_rate=20, progress_delay=500, progress_enabled=True
+                ) as view:
                     self.ctrl.view_update = view.update_throttle
                     self.widget_id = view.register_widget(self.widget)
                     view.listeners = (

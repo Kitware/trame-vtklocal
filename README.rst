@@ -14,6 +14,21 @@ VTK `9.4`, `9.5` and `9.6` are compatible with `trame-vtklocal>=0.16,<1` while `
 What we envision with VTK 10 is the completion of the main work with WASM and WebGPU. We will take that opportunity to cleanup
 the code in trame-vtklocal by removing legacy setup that were needed for VTK 9.4 and 9.5.
 
+A simple demo can be executed like so
+
+.. code-block:: console
+
+    # Using the local repository file
+    uv run ./examples/demo/widget.py
+
+    # Or from the url
+    uv run https://raw.githubusercontent.com/Kitware/trame-vtklocal/refs/heads/master/examples/demo/widget.py
+
+To get the following
+
+.. image:: https://raw.githubusercontent.com/Kitware/trame-vtklocal/refs/heads/master/trame-vtklocal.png
+  :alt: Usage example of trame-vtklocal
+
 License
 ----------------------------------------
 

@@ -6,10 +6,12 @@ trame-vtklocal  |pypi_download|
 
 Local Rendering using VTK.wasm to match server side rendering pipeline on the client side.
 The current code base is still at its infancy but we aim to make it the default implementation for local rendering using VTK/ParaView with trame.
-This WASM capability is starting to be available with VTK 9.4. 
+This WASM capability is starting to be available with VTK 9.4 but major improvement are happening in VTK 9.6.
+
+
 
 .. In term of version compatibility between VTK and trame-vtklocal we aim to follow this pattern.
-.. 
+..
 .. .. list-table:: Version compatibility
 ..    :widths: 50 50
 ..    :header-rows: 1
@@ -31,12 +33,9 @@ Installation
 
 .. code-block:: console
 
-    # to install a compatible version of VTK
-    pip install "trame-vtklocal[vtk]"
-
     # to install VTK yourself
     pip install trame-vtklocal
-    pip install "vtk>=9.4,<9.5"
+    pip install "vtk>=9.6" --pre --index-url https://wheels.vtk.org
 
 
 Development
@@ -76,7 +75,7 @@ Optionally, you can develop with bleeding edge VTK by following these steps. Mak
 
     # Windows: Set environment variables
     ./utils/dev_environment.ps1 -b master -c RelWithDebInfo
-    
+
     # Unix: Set environemt variables
     source ./utils/dev_environment.sh -b master -c RelWithDebInfo
 
@@ -89,7 +88,7 @@ Running examples
     pip install trame "trame-vtklocal[vtk]" trame-vuetify trame-vtk
 
     # regular trame app
-    python ./examples/vtk/cone.py 
+    python ./examples/vtk/cone.py
 
 
 Some example are meant to test and validate WASM rendering.
@@ -141,7 +140,7 @@ with the `loader` slot.
 SharedArrayBuffer
 ----------------------------------------
 
-To enable SharedArrayBuffer within trame you can just set the following on the server. 
+To enable SharedArrayBuffer within trame you can just set the following on the server.
 This option is not required anymore but still available if needed.
 
 .. code-block:: console
@@ -156,7 +155,7 @@ VTK.wasm vs trame-vtklocal
 ----------------------------------------
 
 This repository `trame-vtklocal` focus on providing a web component that is capable of mirroring a `vtkRenderWindow` defined on the server side.
-This include a JavaScript section for the browser and a Python section for the server. 
+This include a JavaScript section for the browser and a Python section for the server.
 
 The server include a definition of a custom network protocol over our WebSocket (wslink/trame) and some helper class to ease the vtkRenderWindow binding with a web component in the browser.
 While the Python package include a Vue.js component for a seamless integration with trame, we also publish a `npm package <https://www.npmjs.com/package/@kitware/trame-vtklocal>`_.
@@ -164,11 +163,11 @@ That pure JavaScript library let you still use the trame infrastructure on the s
 
 For the pure Python trame usage, you can find the `documented API <https://trame.readthedocs.io/en/latest/trame.widgets.vtklocal.html>`_.
 
-By design there is a nice separation between VTK.wasm and trame-vtklocal which should make trame-vtklocal fairly independent of VTK.wasm version. 
-But since we are still building capabilities, when the C++ API expend, we will also expand the Python/JavaScript component properties/methods. 
+By design there is a nice separation between VTK.wasm and trame-vtklocal which should make trame-vtklocal fairly independent of VTK.wasm version.
+But since we are still building capabilities, when the C++ API expend, we will also expand the Python/JavaScript component properties/methods.
 Hopefully we should be able to evolve trame-vtklocal with some reasonable fallback when the version of VTK is not in par with what is exposed in trame-vtklocal.
 
-Also most the testing of VTK.wasm is in VTK repository as many validation can be done in pure C++ or `Python <https://gitlab.kitware.com/vtk/vtk/-/tree/master/Serialization/Manager/Testing/Python>`_. 
+Also most the testing of VTK.wasm is in VTK repository as many validation can be done in pure C++ or `Python <https://gitlab.kitware.com/vtk/vtk/-/tree/master/Serialization/Manager/Testing/Python>`_.
 Then we have `the WASM module API <https://gitlab.kitware.com/vtk/vtk/-/blob/master/Web/WebAssembly/vtkWasmSceneManagerEmBinding.cxx>`_  with its `node/chrome testing <https://gitlab.kitware.com/vtk/vtk/-/tree/master/Web/WebAssembly/Testing/JavaScript>`_.
 
 The documented API of `vtkWasmSceneManager <https://vtk.org/doc/nightly/html/classvtkWasmSceneManager.html>`_ and `vtkObjectManager parent of vtkWasmSceneManager <https://vtk.org/doc/nightly/html/classvtkObjectManager.html>`_

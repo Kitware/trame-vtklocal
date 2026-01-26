@@ -39,6 +39,13 @@ export default {
     "progress",
   ],
   props: {
+    progressEnabled: {
+      type: Boolean,
+    },
+    progressDelay: {
+      type: Number,
+      default: 500,
+    },
     useHandler: {
       type: String,
     },
@@ -110,6 +117,8 @@ export default {
     let subscription = null;
     const progress = reactive({
       active: false,
+      tsStart: 0,
+      tsNow: 0,
       state: {
         current: 0,
         total: 0,
@@ -120,7 +129,12 @@ export default {
       },
     });
     const wasmLoading = ref(!wasmManager.loaded);
-    const showLoading = computed(() => wasmLoading.value || progress.active);
+    const showLoading = computed(
+      () =>
+        props.progressEnabled &&
+        progress.tsNow - progress.tsStart > props.progressDelay &&
+        (wasmLoading.value || progress.active),
+    );
     const statePercent = computed(() => {
       if (!progress.state.total) {
         return 0;
@@ -143,6 +157,10 @@ export default {
       if (!payload) {
         return;
       }
+      progress.tsNow = Date.now();
+      if (!progress.active && payload.active) {
+        progress.tsStart = progress.tsNow;
+      }
       progress.active = !!payload.active;
       progress.state.current = payload.state?.current || 0;
       progress.state.total = payload.state?.total || 0;
@@ -150,6 +168,7 @@ export default {
       progress.hash.total = payload.hash?.total || 0;
       emit("progress", {
         active: progress.active,
+        elapsed: progress.tsNow - progress.tsStart,
         state: {
           current: progress.state.current,
           total: progress.state.total,

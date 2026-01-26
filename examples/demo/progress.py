@@ -18,27 +18,28 @@ def create_vtk_pipeline():
     rwi = vtk.vtkRenderWindowInteractor(render_window=rw)
     rwi.interactor_style.SetCurrentStyleToTrackballCamera()
 
-    cone = vtk.vtkConeSource()
+    sphere = vtk.vtkSphereSource()
 
-    mapper = vtk.vtkPolyDataMapper(input_connection=cone.output_port)
+    mapper = vtk.vtkPolyDataMapper(input_connection=sphere.output_port)
     actor = vtk.vtkActor(mapper=mapper)
 
     renderer.AddActor(actor)
     renderer.background = (0.1, 0.2, 0.4)
     renderer.ResetCamera()
 
-    return rw, cone
+    return rw, sphere
 
 
 class WasmApp(TrameApp):
     def __init__(self, server=None):
         super().__init__(server)
-        self.render_window, self.cone = create_vtk_pipeline()
+        self.render_window, self.sphere = create_vtk_pipeline()
         self._build_ui()
 
     @change("resolution")
     def on_resolution_change(self, resolution, **_):
-        self.cone.SetResolution(int(resolution))
+        self.sphere.SetPhiResolution(int(resolution))
+        self.sphere.SetThetaResolution(int(resolution))
         self.ctrl.view_update()
 
     def _build_ui(self):
@@ -57,18 +58,19 @@ class WasmApp(TrameApp):
             )
             html.Input(
                 type="range",
-                v_model=("resolution", 6),
-                min=3,
-                max=60,
-                step=1,
+                v_model=("resolution", 30),
+                min=30,
+                max=260,
+                step=10,
                 style=TOP_LEFT,
             )
 
             with html.Div(style=FULL_SCREEN):
                 with vtklocal.LocalView(
                     self.render_window,
-                    progress_delay=500,
+                    progress_delay=100,  # Try to set it to 0 and 500
                     progress_enabled=True,
+                    cache_size=0,
                     v_if=("enable_view", True),
                 ) as view:
                     view.update_throttle.rate = 20  # max update rate

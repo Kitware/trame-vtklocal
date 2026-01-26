@@ -82,6 +82,11 @@ class LocalView(HtmlElement):
             Name of a global instance of WASM handler to use. This is useful for
             skipping WASM reinitialization when your vue component is going to be
             mounted/unmounted often. (i.e. used inside VueRouter element)
+        progress_enabled (bool):
+            Allow the progress synchronization to show (or not).
+        progress_delay (int):
+            Number of ms to wait before showing the progress. This allow to disable
+            progress dialog to show for short synchronization time.
         config (dict):
             Provide configuration for your wasm runtime.
             {
@@ -138,6 +143,8 @@ class LocalView(HtmlElement):
             "verbosity",
             ("listeners", ":listeners"),
             ("config", ":config"),
+            ("progress_enabled", "progressEnabled"),
+            ("progress_delay", "progressDelay"),
         ]
         self._event_names += [
             "updated",

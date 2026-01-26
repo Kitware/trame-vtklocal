@@ -8,20 +8,11 @@ Local Rendering using VTK.wasm to match server side rendering pipeline on the cl
 The current code base is still at its infancy but we aim to make it the default implementation for local rendering using VTK/ParaView with trame.
 This WASM capability is starting to be available with VTK 9.4 but major improvement are happening in VTK 9.6.
 
+Additional documentation can be found on [vtk-wasm documentation](https://kitware.github.io/vtk-wasm/).
 
-
-.. In term of version compatibility between VTK and trame-vtklocal we aim to follow this pattern.
-..
-.. .. list-table:: Version compatibility
-..    :widths: 50 50
-..    :header-rows: 1
-
-..    * - VTK
-..      - trame-vtklocal
-..    * - v9.4
-..      - v0
-..    * - v9.5
-..      - v1
+VTK `9.4`, `9.5` and `9.6` are compatible with `trame-vtklocal>=0.16,<1` while `trame-vtklocal>=1` will only be compatible with `VTK 10`.
+What we envision with VTK 10 is the completion of the main work with WASM and WebGPU. We will take that opportunity to cleanup
+the code in trame-vtklocal by removing legacy setup that were needed for VTK 9.4 and 9.5.
 
 License
 ----------------------------------------
@@ -35,6 +26,8 @@ Installation
 
     # to install VTK yourself
     pip install trame-vtklocal
+
+    # for the latest VTK capabilities
     pip install "vtk>=9.6" --pre --index-url https://wheels.vtk.org
 
 
@@ -54,7 +47,18 @@ Install the library
 
 .. code-block:: console
 
-    pip install -e .
+    # Create venv and install all dependencies
+    uv sync --all-extras --dev
+
+    # Activate environment
+    source .venv/bin/activate
+
+    # Install commit analysis
+    pre-commit install
+    pre-commit install --hook-type commit-msg
+
+    # Allow live code edit
+    uv pip install -e .
 
 Optionally, you can develop with bleeding edge VTK by following these steps. Make sure you've these tools
 
@@ -76,7 +80,7 @@ Optionally, you can develop with bleeding edge VTK by following these steps. Mak
     # Windows: Set environment variables
     ./utils/dev_environment.ps1 -b master -c RelWithDebInfo
 
-    # Unix: Set environemt variables
+    # Unix: Set environment variables
     source ./utils/dev_environment.sh -b master -c RelWithDebInfo
 
 
@@ -158,7 +162,7 @@ This repository `trame-vtklocal` focus on providing a web component that is capa
 This include a JavaScript section for the browser and a Python section for the server.
 
 The server include a definition of a custom network protocol over our WebSocket (wslink/trame) and some helper class to ease the vtkRenderWindow binding with a web component in the browser.
-While the Python package include a Vue.js component for a seamless integration with trame, we also publish a `npm package <https://www.npmjs.com/package/@kitware/trame-vtklocal>`_.
+While the Python package include a Vue.js component for a seamless integration with trame, we also publish a `npm package <https://www.npmjs.com/package/@kitware/vtk-wasm>`_.
 That pure JavaScript library let you still use the trame infrastructure on the server side but with your own stack on the client side. A usage example of that pure JavaScript option is covered `in that directory <https://github.com/Kitware/trame-vtklocal/tree/master/examples/pure-js>`_.
 
 For the pure Python trame usage, you can find the `documented API <https://trame.readthedocs.io/en/latest/trame.widgets.vtklocal.html>`_.

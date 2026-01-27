@@ -1,6 +1,27 @@
 # CHANGELOG
 
 
+## v0.16.2 (2026-01-27)
+
+### Bug Fixes
+
+- **vtk**: Update vtk-wasm to support 9.4 to 9.6
+  ([`4f428f7`](https://github.com/Kitware/trame-vtklocal/commit/4f428f7f3658f0b1a1f5a5b4a9ff31c7d6b80eb1))
+
+### Continuous Integration
+
+- Pre-commit
+  ([`6525261`](https://github.com/Kitware/trame-vtklocal/commit/65252612b7d0959a70ea48d10d7c096a372a4ea4))
+
+- Update pre-commit hooks
+  ([`c25bcbf`](https://github.com/Kitware/trame-vtklocal/commit/c25bcbf1b9a8465eaac200618c6d9eb0175dc40c))
+
+### Documentation
+
+- **demo**: Add picture
+  ([`22d13cf`](https://github.com/Kitware/trame-vtklocal/commit/22d13cfb8ee520fb09ef6fc68eb5e76d711c842e))
+
+
 ## v0.16.1 (2026-01-22)
 
 ### Bug Fixes

@@ -1,6 +1,24 @@
 # CHANGELOG
 
 
+## v0.16.3 (2026-01-28)
+
+### Bug Fixes
+
+- **emit_memory**: Add property to optionally report memory consumption
+  ([`01bd843`](https://github.com/Kitware/trame-vtklocal/commit/01bd8436ad5fc0525c7d1a0ac2e6339c5913289a))
+
+### Documentation
+
+- **example**: Add emit_memory=True prop
+  ([`7a85d2f`](https://github.com/Kitware/trame-vtklocal/commit/7a85d2f09824ae0bd63a554d28788b9c5de1cfa6))
+
+### Testing
+
+- Add helper methods to test perf
+  ([`6bb7cfc`](https://github.com/Kitware/trame-vtklocal/commit/6bb7cfcbd388d750a3019ab43c3ca49fa1af3236))
+
+
 ## v0.16.2 (2026-01-27)
 
 ### Bug Fixes

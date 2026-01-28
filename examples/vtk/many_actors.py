@@ -1,10 +1,12 @@
-from trame.app import get_server, asynchronous
+import random
+
+from trame.app import get_server
 from trame.ui.html import DivLayout
 from trame.widgets import html, client
 from trame_vtklocal.widgets import vtklocal
-from trame.decorators import TrameApp, change
+from trame.decorators import TrameApp, change, trigger
 
-from vtkmodules.vtkFiltersSources import vtkConeSource
+from vtkmodules.vtkFiltersSources import vtkSphereSource
 from vtkmodules.vtkRenderingCore import (
     vtkActor,
     vtkPolyDataMapper,
@@ -32,20 +34,26 @@ def create_vtk_pipeline():
     renderWindowInteractor = vtkRenderWindowInteractor()
     renderWindowInteractor.SetRenderWindow(renderWindow)
     renderWindowInteractor.GetInteractorStyle().SetCurrentStyleToTrackballCamera()
+    actors = []
 
-    cone = vtkConeSource()
+    for i in range(1000):
+        color = (random.random(), random.random(), random.random())
+        center = (random.random() * 100, random.random() * 100, random.random() * 100)
+        radius = random.random() + 0.5
+        sphere = vtkSphereSource(
+            center=center, radius=radius, phi_resolution=20, theta_resolution=20
+        )
 
-    mapper = vtkPolyDataMapper()
-    mapper.SetInputConnection(cone.GetOutputPort())
+        mapper = vtkPolyDataMapper(input_connection=sphere.output_port)
+        actor = vtkActor(mapper=mapper)
+        renderer.AddActor(actor)
+        actor.property.color = color
+        actors.append(actor)
 
-    actor = vtkActor()
-    actor.SetMapper(mapper)
-
-    renderer.AddActor(actor)
     renderer.SetBackground(0.1, 0.2, 0.4)
     renderer.ResetCamera()
 
-    return renderWindow, renderer, cone
+    return renderWindow, actors
 
 
 # -----------------------------------------------------------------------------
@@ -58,43 +66,24 @@ class DemoApp:
     def __init__(self, server=None):
         self.server = get_server(server, client_type=CLIENT_TYPE)
 
-        self.render_window, self.renderer, self.cone = create_vtk_pipeline()
+        self.render_window, self.actors = create_vtk_pipeline()
         self.server.state.update(dict(mem_blob=0, mem_vtk=0))
         self.html_view = None
         self.ui = self._ui()
         # print(self.ui)
 
+    @trigger("export")
+    def export(self, format):
+        return self.html_view.export(format)
+
     def reset_camera(self):
         self.html_view.reset_camera()
 
-    @change("resolution")
-    def on_resolution_change(self, resolution, **kwargs):
-        self.cone.SetResolution(int(resolution))
-        self.html_view.update_throttle()
-
-    def get_camera(self):
-        print("call get_camera")
-        asynchronous.create_task(self._get_client_camera())
-
-    def debug(self):
-        self.html_view.print_scene_manager_information()
-
-    async def _get_client_camera(self):
-        active_camera = await self.html_view.invoke(
-            self.renderer, "GetActiveCamera", unwrap_vtk_object=False
-        )
-        print(f"\n{active_camera=}")
-
-        cam_pos = await self.html_view.invoke(
-            self.renderer.GetActiveCamera(), "GetPosition"
-        )
-        print(f"\n{cam_pos=}")
-
-        # Making sure we got the same camera object on the server
-        assert (
-            self.html_view.get_vtk_obj(active_camera.get("Id"))
-            == self.renderer.active_camera
-        )
+    @change("opacity")
+    def on_opacity_change(self, opacity, **kwargs):
+        for actor in self.actors:
+            actor.property.opacity = float(opacity)
+            self.html_view.update_throttle()
 
     def _ui(self):
         with DivLayout(self.server) as layout:
@@ -122,27 +111,35 @@ class DemoApp:
             )
             html.Input(
                 type="range",
-                v_model=("resolution", 6),
-                min=3,
-                max=60,
-                step=1,
+                v_model=("opacity", 1),
+                min=0.01,
+                max=1,
+                step=0.01,
                 style="position: absolute; top: 1rem; right: 1rem; z-index: 10;",
             )
-            with html.Div(
-                style="position: absolute; top: 3rem; right: 1rem; z-index: 10;"
-            ):
-                html.Button(
-                    "Reset Camera",
-                    click=self.reset_camera,
-                )
-                html.Button(
-                    "Get Client Camera",
-                    click=self.get_camera,
-                )
-                html.Button(
-                    "Debug",
-                    click=self.debug,
-                )
+            html.Input(
+                type="range",
+                v_model=("cache", 0),
+                min=0,
+                max=100000,
+                step=1000,
+                style="position: absolute; top: 1rem; right: 10rem; z-index: 10;",
+            )
+            html.Button(
+                "Export json",
+                click="utils.download('scene-wasm.json', trigger('export', ['json']), 'application/octet-stream')",
+                style="position: absolute; top: 3rem; right: 1rem; z-index: 10;",
+            )
+            html.Button(
+                "Export zip",
+                click="utils.download('scene-wasm.zip', trigger('export', ['zip']), 'application/octet-stream')",
+                style="position: absolute; top: 3rem; right: 7rem; z-index: 10;",
+            )
+            html.Button(
+                "Reset Camera",
+                click=self.reset_camera,
+                style="position: absolute; top: 3rem; right: 14rem; z-index: 10;",
+            )
 
         return layout
 

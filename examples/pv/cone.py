@@ -42,6 +42,7 @@ class DemoApp:
                 self.html_view = vtklocal.LocalView(
                     self.render_window,
                     cache_size=("cache", 0),
+                    emit_memory=True,
                     memory_vtk="mem_vtk = $event",
                     memory_arrays="mem_blob = $event",
                 )

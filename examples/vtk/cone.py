@@ -91,6 +91,7 @@ class DemoApp:
                     self.render_window,
                     throttle_rate=20,
                     cache_size=("cache", 0),
+                    emit_memory=True,
                     memory_vtk="mem_vtk = $event",
                     memory_arrays="mem_blob = $event",
                 )

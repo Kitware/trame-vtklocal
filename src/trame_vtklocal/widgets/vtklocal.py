@@ -94,6 +94,8 @@ class LocalView(HtmlElement):
                exec: 'sync' or 'async',
                wasmBaseName: 'vtk',  # base name of the wasm file, will look for `${wasmBaseName}WebAssembly.mjs`
             }
+        emit_memory (bool):
+            Emit memory information events. By default it is skipped.
         updated (event):
             Emitted after each completed client side update.
         memory_vtk (event):
@@ -145,6 +147,7 @@ class LocalView(HtmlElement):
             ("config", ":config"),
             ("progress_enabled", "progressEnabled"),
             ("progress_delay", "progressDelay"),
+            ("emit_memory", "emitMemory"),
         ]
         self._event_names += [
             "updated",

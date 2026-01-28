@@ -63,6 +63,9 @@ export default {
     wsClient: {
       type: Object,
     },
+    emitMemory: {
+      type: Boolean,
+    },
     verbosity: {
       type: Object,
       default: () => ({
@@ -246,11 +249,16 @@ export default {
 
     function checkMemory() {
       wasmManager.freeMemory(props.cacheSize);
-      emit(
-        "memory-vtk",
-        wasmManager.sceneManager.getTotalVTKDataObjectMemoryUsage(),
-      );
-      emit("memory-arrays", wasmManager.sceneManager.getTotalBlobMemoryUsage());
+      if (props.emitMemory) {
+        emit(
+          "memory-vtk",
+          wasmManager.sceneManager.getTotalVTKDataObjectMemoryUsage(),
+        );
+        emit(
+          "memory-arrays",
+          wasmManager.sceneManager.getTotalBlobMemoryUsage(),
+        );
+      }
     }
 
     // Update -----------------------------------------------------------------

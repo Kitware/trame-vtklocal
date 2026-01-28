@@ -1,3 +1,5 @@
+import time
+from functools import wraps
 import zipfile
 import json
 from pathlib import Path
@@ -28,6 +30,21 @@ def map_id_mtime(object_manager, vtk_id):
     if vtk_obj is None:
         return (vtk_id, 0)
     return (vtk_id, vtk_obj.GetMTime())
+
+
+def timeIt(func):
+    """A decorator to measure the execution time of a function."""
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        start_time = time.perf_counter()
+        result = func(*args, **kwargs)
+        end_time = time.perf_counter()
+        execution_time = end_time - start_time
+        print(f"{func.__name__}: {execution_time:.2f}s")
+        return result
+
+    return wrapper
 
 
 class ObjectManagerAPI(LinkProtocol):

@@ -1,14 +1,15 @@
 import asyncio
+import base64
 import io
 import json
-import zipfile
-import base64
 import warnings
+import zipfile
 from pathlib import Path
-from trame_client.widgets.core import AbstractElement
-from trame_vtklocal import module
 
+from trame_client.widgets.core import AbstractElement
 from trame_common.exec.throttle import Throttle
+
+from trame_vtklocal import module
 
 try:
     import zlib  # noqa
@@ -235,7 +236,7 @@ class LocalView(HtmlElement):
     def unregister_vtk_object(self, vtk_instance):
         """Unregister external element (i.e. widget) from the scene so it can removed from tracking"""
         if vtk_instance in self.__registered_obj:
-            self.api.unregister(self._render_window, vtk_instance)
+            self.api.unregister_widget(self._render_window, vtk_instance)
             return True
 
         return False
@@ -243,7 +244,7 @@ class LocalView(HtmlElement):
     def unregister_all_vtk_objects(self):
         """Unregister all external element (i.e. widget) from the scene"""
         for vtk_instance in self.__registered_obj:
-            self.api.unregister(self._render_window, vtk_instance)
+            self.api.unregister_widget(self._render_window, vtk_instance)
             self.__registered_obj.remove(vtk_instance)
 
     def unregister_widgets(self):

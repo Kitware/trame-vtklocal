@@ -1,14 +1,15 @@
-import time
-from functools import wraps
-import zipfile
 import json
+import time
+import zipfile
+from functools import wraps
 from pathlib import Path
-from wslink import register as export_rpc
-from wslink.websocket import LinkProtocol
+
+from vtkmodules.vtkCommonCore import vtkVersion
 
 # from vtkmodules.vtkCommonCore import vtkLogger
 from vtkmodules.vtkSerializationManager import vtkObjectManager
-from vtkmodules.vtkCommonCore import vtkVersion
+from wslink import register as export_rpc
+from wslink.websocket import LinkProtocol
 
 try:
     import zlib  # noqa
@@ -83,9 +84,9 @@ class ObjectManagerAPI(LinkProtocol):
         # print(f"Register widget: {dep_obj.GetClassName()}={dep_id}")
 
     def unregister_widget(self, root_obj, dep_obj):
-        self.vtk_object_manager.UnRegisterObject(dep_obj)
         root_id = self.vtk_object_manager.GetId(root_obj)
         dep_id = self.vtk_object_manager.GetId(dep_obj)
+        self.vtk_object_manager.UnRegisterObject(dep_id)
         if root_id in self._widgets:
             self._widgets[root_id].discard(dep_id)
 

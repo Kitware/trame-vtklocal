@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.16.4 (2026-01-30)
+
+### Bug Fixes
+
+- **unregister_vtkobject**: Fix internal method call
+  ([`3827f76`](https://github.com/Kitware/trame-vtklocal/commit/3827f764bd62d982d6b4937b0d185ae353fcf826))
+
+
 ## v0.16.3 (2026-01-28)
 
 ### Bug Fixes

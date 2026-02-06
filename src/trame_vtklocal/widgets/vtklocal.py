@@ -114,7 +114,7 @@ class LocalView(HtmlElement):
 
     _next_id = 0
 
-    def __init__(self, render_window, throttle_rate=10, **kwargs):
+    def __init__(self, render_window_or_paraview_view, throttle_rate=10, **kwargs):
         # Register response callback if not overridden
         kwargs.setdefault("invoke_response", (self._on_invoke_response, "[$event]"))
         self._pending_invoke_result = None
@@ -128,6 +128,23 @@ class LocalView(HtmlElement):
         if self.__ref is None:
             LocalView._next_id += 1
             self.__ref = f"_vtklocalview_{LocalView._next_id}"
+
+        # Handle provided view
+        render_window = None
+        if render_window_or_paraview_view is None:
+            raise ValueError("render_window_or_paraview_view cannot be None")
+        elif render_window_or_paraview_view.IsA("vtkRenderWindow"):
+            render_window = render_window_or_paraview_view
+        elif render_window_or_paraview_view.IsA("vtkSMRenderViewProxy"):
+            render_window = render_window_or_paraview_view.GetRenderWindow()
+        else:
+            classname = (
+                render_window_or_paraview_view.GetClassName()
+                if hasattr(render_window_or_paraview_view, "GetClassName")
+                else render_window_or_paraview_view.__class__.__name__
+            )
+            msg = f"Unknown view type: {classname}"
+            raise ValueError(msg)
 
         # Must trigger update after registration
         self._render_window = render_window

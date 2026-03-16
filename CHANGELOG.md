@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.16.5 (2026-03-16)
+
+### Bug Fixes
+
+- **canvas**: Bump vtk-wasm for canvas fixes
+  ([`374d68e`](https://github.com/Kitware/trame-vtklocal/commit/374d68ef76f793bc3a4ae915c9789d88f205f7e4))
+
+
 ## v0.16.4 (2026-01-30)
 
 ### Bug Fixes

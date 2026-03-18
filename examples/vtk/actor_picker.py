@@ -5,8 +5,8 @@
 #
 # dependencies = [
 #   "trame>=3.9",
-#   "trame-vtklocal<0.12",
-#   "vtk==9.4.20250510.dev0",
+#   "trame-vtklocal>0.16",
+#   "vtk==9.5.20250712.dev0",
 # ]
 #
 # [[tool.uv.index]]

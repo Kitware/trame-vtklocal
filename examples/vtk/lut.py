@@ -1,12 +1,12 @@
 #!/usr/bin/env -S uv run --script
 #
 # /// script
-# requires-python = ">=3.9"
+# requires-python = ">=3.10"
 # dependencies = [
-#     "trame",
-#     "trame-vtklocal",
-#     "trame-vuetify",
-#     "vtk==9.4.20250510.dev0",
+#     "trame>=3.12",
+#     "trame-vtklocal>=0.16.5",
+#     "trame-vuetify>=3.2",
+#     "vtk==9.6.0",
 # ]
 # [[tool.uv.index]]
 # url = "https://wheels.vtk.org"
@@ -37,8 +37,11 @@ def get_render_window():
     colorTransferFunction.AddRGBPoint(0.0, 0.69, 0.69, 0.69)
     colorTransferFunction.AddRGBPoint(1.0, 1.0, 0.3, 0.3)
     scalar_bar = get_scalar_bar(colorTransferFunction)
-    ren1.AddActor2D(scalar_bar)
+    ren1.AddViewProp(scalar_bar)
     renderWindow = vtk.vtkRenderWindow()
+    interactor = vtk.vtkRenderWindowInteractor()
+    interactor.SetRenderWindow(renderWindow)
+
     renderWindow.AddRenderer(ren1)
     renderWindow.Render()
     return renderWindow

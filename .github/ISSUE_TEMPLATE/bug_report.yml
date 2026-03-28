@@ -1,0 +1,55 @@
+name: Bug Report
+description: Report a bug to help us improve trame-vtklocal
+labels: ["status: needs-triage", "type: bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: Description
+      description: A clear and concise description of what the bug is.
+      placeholder: I encountered an issue when...
+    validations:
+      required: true
+  - type: dropdown
+    id: origin
+    attributes:
+      label: Where does the issue originate?
+      description: Does this feel like a bug in this wrapper/example, or in the core upstream project?
+      options:
+        - "This project (trame-vtklocal)"
+        - "Upstream Project (trame)"
+        - "Upstream Project (vtk.wasm JS bindings)"
+        - "Upstream Project (VTK itself)"
+        - "Unsure / Need help triaging"
+    validations:
+      required: true
+  - type: input
+    id: version-info
+    attributes:
+      label: Version Information
+      description: Please provide the version of this project AND the upstream project version.
+      placeholder: trame-vtklocal - v1.2.3, VTK - v9.6.0
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: How can we make this happen again? If you're not sure, please provide as much detail as you can about what you were doing when the bug happened.
+      placeholder: |
+        1. Run this code snippet...
+        2. Click this button...
+        3. Observe this incorrect behavior instead of the expected behavior
+        4. See error
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Log Output
+      description: Please copy and paste any relevant terminal or browser console output.
+      render: shell

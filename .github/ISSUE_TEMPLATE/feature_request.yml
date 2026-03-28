@@ -1,0 +1,55 @@
+name: "Feature Request"
+description: "Suggest an idea, a new example, or an improvement"
+labels: ["status: needs-triage", "type: enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Got a great idea? We'd love to hear it. Please check if a similar request already exists before opening a new one.
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: "What is the feature or improvement?"
+      description: "A clear and concise description of what you want to happen."
+      placeholder: "I would like the ability to..."
+    validations:
+      required: true
+  - type: dropdown
+    id: request-type
+    attributes:
+      label: "Category"
+      description: "What part of the project does this affect?"
+      options:
+        - "New Example (Code snippets, demos, use-cases)"
+        - "Core Logic (Source code changes)"
+        - "Documentation / Tutorials"
+        - "Upstream Integration (support new VTK features)"
+    validations:
+      required: true
+  - type: textarea
+    id: use-case
+    attributes:
+      label: "The 'Why'"
+      description: "What problem does this solve? What is the use case?"
+      placeholder: "This would allow users to..."
+    validations:
+      required: true
+  - type: textarea
+    id: proposed-example
+    attributes:
+      label: "Proposed Example / Implementation"
+      description: "If this is a request for a new example, what should it demonstrate? If it's a code change, how should the API look?"
+      placeholder: "I'm imagining a demo that shows off..."
+  - type: checkboxes
+    id: upstream-check
+    attributes:
+      label: "Upstream Considerations"
+      options:
+        - label: "This requires a change in the upstream project first"
+        - label: "I am willing to contribute an example or PR for this"
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: "Additional Context"
+      description: "Any other context, screenshots, or links to upstream discussions."
+      placeholder: "Add any other context or screenshots about the feature request here."

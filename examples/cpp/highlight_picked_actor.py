@@ -2,13 +2,26 @@ import pathlib
 import vtk
 from addonModules.addonStyle import (
     HighlightPickedActorStyle,
-    RegisterClasses_addonStyle,
 )  # type: ignore
 
 from trame.app import get_server
 from trame.ui.html import DivLayout
 from trame.widgets import html, client, vtklocal
 from trame.decorators import TrameApp
+
+VTK_VERSION = vtk.vtkVersion()
+# needed for vtk < 9.5.20250920
+MANUAL_SERDES_REGISTRATION_NEEDED = (
+    VTK_VERSION.GetVTKMajorVersion() <= 9
+    and VTK_VERSION.GetVTKMinorVersion() <= 5
+    and VTK_VERSION.GetVTKBuildVersion() < 20250920
+)  # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/12426
+
+addon_serdes_registrars = []
+if MANUAL_SERDES_REGISTRATION_NEEDED:
+    from addonModules.addonStyle import RegisterClasses_addonStyle  # noqa: E402
+
+    addon_serdes_registrars.append(RegisterClasses_addonStyle)
 
 FULL_SCREEN = "position:absolute; left:0; top:0; width:100vw; height:100vh;"
 TOP_RIGHT = "position: absolute; top: 1rem; right: 1rem; z-index: 10;"
@@ -110,7 +123,7 @@ class CustomInteractorStyleApp:
             with html.Div(style=FULL_SCREEN):
                 with vtklocal.LocalView(
                     self.render_window,
-                    addon_serdes_registrars=[RegisterClasses_addonStyle],
+                    addon_serdes_registrars=addon_serdes_registrars,
                     wasm_dir=WASM_DIR,
                     wasm_base_name=WASM_BASE_NAME,
                 ) as view:

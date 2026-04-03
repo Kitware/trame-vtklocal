@@ -99,6 +99,10 @@ export default {
       //    }
       // }
     },
+    autoResize: {
+      type: Boolean,
+      default: true,
+    }
   },
   setup(props, { emit }) {
     // Create global WASM handler if missing
@@ -213,7 +217,7 @@ export default {
 
     function handleMessage([event]) {
       if (event.type === "state") {
-        wasmManager.pushState(event.content);
+        wasmManager.patchState(event.content);
       }
       if (event.type === "blob") {
         wasmManager.pushHash(event.hash, event.content);
@@ -243,7 +247,7 @@ export default {
       const h = Math.floor(height * window.devicePixelRatio + 0.5);
       await wasmManager.setSize(props.renderWindow, w, h);
     }
-    let resizeObserver = new ResizeObserver(resize);
+    let resizeObserver = props.autoResize && new ResizeObserver(resize);
 
     // Memory -----------------------------------------------------------------
 
@@ -305,6 +309,18 @@ export default {
 
     function printSceneManagerInformation() {
       wasmManager.sceneManager.printSceneManagerInformation();
+    }
+
+    // startWebXR ----------------------------------------------------------------
+
+    function startWebXR(mode, requiredFeatures, optionalFeatures) {
+      wasmManager.sceneManager.startWebXR(mode, requiredFeatures, optionalFeatures);
+    }
+
+    // stopWebXR ----------------------------------------------------------------
+
+    function stopWebXR() {
+      wasmManager.sceneManager.stopWebXR();
     }
 
     // Life Cycles ------------------------------------------------------------
@@ -529,6 +545,8 @@ export default {
       statePercent,
       hashPercent,
       wasmLoading,
+      startWebXR,
+      stopWebXR,
     };
   },
   template: `<div ref="container" style="position: relative; width: 100%; height: 100%;">

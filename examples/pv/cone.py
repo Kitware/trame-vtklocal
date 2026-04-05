@@ -20,7 +20,6 @@ class DemoApp:
         self.cone = simple.Cone()
         self.representation = simple.Show()
         self.view = simple.Render()
-        self.render_window = self.view.GetRenderWindow()
         self.server.state.update(dict(mem_blob=0, mem_vtk=0))
         self.html_view = None
         self.ui = self._ui()
@@ -40,7 +39,7 @@ class DemoApp:
                 style="position: absolute; left: 0; top: 0; width: 100vw; height: 100vh;"
             ):
                 self.html_view = vtklocal.LocalView(
-                    self.render_window,
+                    self.view,
                     cache_size=("cache", 0),
                     emit_memory=True,
                     memory_vtk="mem_vtk = $event",

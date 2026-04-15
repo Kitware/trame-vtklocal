@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 from pathlib import Path
 
 import pytest
@@ -411,6 +412,134 @@ class MultiView(TrameApp):
                 )
 
 
+class PartialUpdate(TrameApp):
+    """Scene for exercising ``LocalView.update(obj_to_update=[...])``."""
+
+    HALF = "width:50vw; height:100vh; display:inline-block; vertical-align:top;"
+    BACKGROUND_ACTORS = 60
+
+    def __init__(self, server=None):
+        super().__init__(server)
+        enable_testing(self.server, "local_rendering_ready")
+        self.serialize_log = []
+        self._keep_alive = []
+        self._setup_vtk()
+        self._build_ui()
+        self.ctx.view1.register_vtk_object(self.selected)
+        self._instrument()
+
+    def _make_actor(self, source, color, renderer):
+        mapper = vtk.vtkPolyDataMapper(input_connection=source.output_port)
+        actor = vtk.vtkActor(mapper=mapper)
+        actor.property.color = color
+        renderer.AddActor(actor)
+        self._keep_alive += [source, mapper]
+        return actor
+
+    def _setup_vtk(self):
+        # View 1
+        renderer = vtk.vtkRenderer()
+        window = vtk.vtkRenderWindow()
+        window.AddRenderer(renderer)
+        interactor = vtk.vtkRenderWindowInteractor(render_window=window)
+        interactor.interactor_style.SetCurrentStyleToTrackballCamera()
+        renderer.background = (0.1, 0.2, 0.4)
+
+        self.selected = self._make_actor(
+            vtk.vtkConeSource(center=(-1.5, 0, 0)), (1, 0.5, 0), renderer
+        )
+        self.hovered = self._make_actor(
+            vtk.vtkSphereSource(center=(0, 0, 0), radius=0.5), (1, 1, 1), renderer
+        )
+        self.bystander = self._make_actor(
+            vtk.vtkSphereSource(center=(1.5, 0, 0), radius=0.5), (1, 1, 1), renderer
+        )
+        # grid of many more actors.
+        for i in range(self.BACKGROUND_ACTORS):
+            self._make_actor(
+                vtk.vtkSphereSource(
+                    center=(-3 + (i % 12) * 0.55, 2 + (i // 12) * 0.4, -2),
+                    radius=0.15,
+                    theta_resolution=30,
+                    phi_resolution=30,
+                ),
+                (0.6, 0.6, 0.6),
+                renderer,
+            )
+        renderer.ResetCamera()
+        self.render_window_1 = window
+        self.renderer_1 = renderer
+
+        # View 2
+        renderer_2 = vtk.vtkRenderer()
+        window_2 = vtk.vtkRenderWindow()
+        window_2.AddRenderer(renderer_2)
+        interactor_2 = vtk.vtkRenderWindowInteractor(render_window=window_2)
+        interactor_2.interactor_style.SetCurrentStyleToTrackballCamera()
+        renderer_2.background = (0.4, 0.2, 0.1)
+        self.sphere_2 = vtk.vtkSphereSource(theta_resolution=8, phi_resolution=8)
+        self._make_actor(self.sphere_2, (1, 1, 1), renderer_2)
+        renderer_2.ResetCamera()
+        self.render_window_2 = window_2
+
+    def _instrument(self):
+        api = self.ctx.view1.api
+        original_update = api.update
+
+        def timed_update(push_camera=False, obj_to_update=None, **kwargs):
+            t0 = time.perf_counter()
+            original_update(
+                push_camera=push_camera, obj_to_update=obj_to_update, **kwargs
+            )
+            self.serialize_log.append(
+                {
+                    "roots": None if obj_to_update is None else len(obj_to_update),
+                    "seconds": time.perf_counter() - t0,
+                }
+            )
+
+        api.update = timed_update
+
+    # -- server side edits ---------------------------------------------------
+
+    def replace_selected_mapper(self, source):
+        """Swap the dependency (mapper + input) of the selected actor."""
+        mapper = vtk.vtkPolyDataMapper(input_connection=source.output_port)
+        self.selected.mapper = mapper
+        self._keep_alive += [source, mapper]
+
+    def update_selected_only(self):
+        self.ctx.view1.update(obj_to_update=[self.selected])
+
+    def update_all(self):
+        self.ctx.view1.update()
+
+    def wasm_id(self, vtk_obj):
+        return self.ctx.view1.get_wasm_id(vtk_obj)
+
+    def _build_ui(self):
+        self.state.local_rendering_ready = 0
+        with DivLayout(self.server) as self.ui:
+            html.Div("{{ local_rendering_ready }}", classes="readyCount")
+            client.Style(
+                "body { margin: 0; } .readyCount { z-index: 10; position: absolute; left: 0; top: 0; }"
+            )
+            with html.Div(style=self.HALF):
+                vtklocal.LocalView(
+                    self.render_window_1,
+                    ref="view1",
+                    ctx_name="view1",
+                    updated="local_rendering_ready++",
+                )
+            with html.Div(style=self.HALF):
+                vtklocal.LocalView(
+                    self.render_window_2,
+                    ref="view2",
+                    ctx_name="view2",
+                    updated="local_rendering_ready++",
+                )
+
+
 @pytest.fixture
 def ref_dir() -> Path:
     return Path(__file__).parent / "refs"
@@ -441,6 +570,11 @@ def ConeApp():
 @pytest.fixture
 def MultiViewApp():
     return MultiView
+
+
+@pytest.fixture
+def PartialUpdateApp():
+    return PartialUpdate
 
 
 @pytest.fixture

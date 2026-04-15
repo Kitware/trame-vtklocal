@@ -209,11 +209,20 @@ class LocalView(HtmlElement):
         """
         return self._update_throttle
 
-    def update(self, push_camera=False):
-        """Sync view by pushing updates to client"""
+    def update(self, push_camera=False, obj_to_update=None):
+        """Sync view by pushing updates to client.
+
+        :param push_camera: If ``True``, include camera state in the update.
+        :param obj_to_update: Pass objects registered with :meth:`register_vtk_object`
+            when you only want to update a specific subset of the scene. When not provided,
+            the default behavior is to update the render window together with all
+            registered objects tracked by this view.
+        """
+        if obj_to_update is None:
+            obj_to_update = [self._render_window, *self.__registered_obj]
         self.api.update(
             push_camera=push_camera,
-            obj_to_update=[self._render_window, *self.__registered_obj],
+            obj_to_update=obj_to_update,
         )
         self.server.js_call(self.__ref, "update")
 

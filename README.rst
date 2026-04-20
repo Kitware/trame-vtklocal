@@ -8,7 +8,7 @@ Local Rendering using VTK.wasm to match server side rendering pipeline on the cl
 The current code base is still at its infancy but we aim to make it the default implementation for local rendering using VTK/ParaView with trame.
 This WASM capability is starting to be available with VTK 9.4 but major improvement are happening in VTK 9.6.
 
-Additional documentation can be found on [vtk-wasm documentation](https://kitware.github.io/vtk-wasm/).
+Additional documentation can be found on `vtk-wasm documentation <https://kitware.github.io/vtk-wasm/>`_.
 
 VTK `9.4`, `9.5` and `9.6` are compatible with `trame-vtklocal>=0.16,<1` while `trame-vtklocal>=1` will only be compatible with `VTK 10`.
 What we envision with VTK 10 is the completion of the main work with WASM and WebGPU. We will take that opportunity to cleanup

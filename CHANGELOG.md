@@ -1,6 +1,55 @@
 # CHANGELOG
 
 
+## v0.17.0 (2026-04-20)
+
+### Bug Fixes
+
+- Bump vtk-wasm to 1.7.5
+  ([`3266342`](https://github.com/Kitware/trame-vtklocal/commit/3266342de389c05869d297223b1b04cd2e7698bd))
+
+- **js**: Fix missing function call rename from 180e1e4
+  ([`ade2cd5`](https://github.com/Kitware/trame-vtklocal/commit/ade2cd5bafd5b84d0236696ab25cdf695d674e77))
+
+### Chores
+
+- Add issue templates
+  ([`acf551f`](https://github.com/Kitware/trame-vtklocal/commit/acf551f7f2d39c464976bdaff4cfc383fca0cfe3))
+
+- Bump min emsdk version in readme
+  ([`27a3307`](https://github.com/Kitware/trame-vtklocal/commit/27a330705497192a2725b189e41016fa3d3ed847))
+
+- Import manual registrar func only when vtk < 9.5.20250920
+  ([`a2f3198`](https://github.com/Kitware/trame-vtklocal/commit/a2f31984488bb7d6c19dc0ddb86121c57feed83f))
+
+- closes https://github.com/Kitware/trame-vtklocal/issues/58
+
+### Documentation
+
+- **examples**: Bump vtk-wasm and vtk for picker examples
+  ([#57](https://github.com/Kitware/trame-vtklocal/pull/57),
+  [`ba3bbfd`](https://github.com/Kitware/trame-vtklocal/commit/ba3bbfd52310af35754143f33e4d14e7521c4565))
+
+The actor_picker and actor_picker2 scripts were not working with pinned versions. Bumping versions
+  resolves the issues.
+
+- **readme**: Fix link formatting
+  ([`aeae2cb`](https://github.com/Kitware/trame-vtklocal/commit/aeae2cbf0148448ac10b6f675f7a9dd02b7367b4))
+
+Fix incorrect .md link formatting used in .rst doc.
+
+### Features
+
+- Add autoResize prop
+  ([`b1e883f`](https://github.com/Kitware/trame-vtklocal/commit/b1e883f7b1a5214f3d61a2a6d1c38c8b27ddeaac))
+
+- Add webxr support
+  ([`1e13f90`](https://github.com/Kitware/trame-vtklocal/commit/1e13f90aa9a2591995784df29cd6a83f0789e25d))
+
+- **examples**: Add webxr example
+  ([`7415b02`](https://github.com/Kitware/trame-vtklocal/commit/7415b02f23d056b3356a56498a86033d9191b55f))
+
+
 ## v0.16.5 (2026-03-16)
 
 ### Bug Fixes

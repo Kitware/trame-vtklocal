@@ -1,6 +1,16 @@
 # CHANGELOG
 
 
+## v0.17.1 (2026-04-24)
+
+### Bug Fixes
+
+- Add web versioning ([#67](https://github.com/Kitware/trame-vtklocal/pull/67),
+  [`c357ac5`](https://github.com/Kitware/trame-vtklocal/commit/c357ac5d902e4b369cf9e8ab739457b7720b361a))
+
+Add current package version to served files names
+
+
 ## v0.17.0 (2026-04-20)
 
 ### Bug Fixes

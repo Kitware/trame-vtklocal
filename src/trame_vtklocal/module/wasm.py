@@ -6,6 +6,8 @@ import shutil
 import tarfile
 from packaging.version import parse
 
+from trame_vtklocal import __version__
+
 
 def run_async(coroutine):
     try:
@@ -69,7 +71,7 @@ def register_wasm(serve_path, **kwargs):
     """
     version, wasm_url = get_wasm_info()
     wasm_base_name = kwargs.get("wasm_base_name", "vtk")
-    BASE_URL = f"__trame_vtklocal/wasm/{version}"
+    BASE_URL = f"__trame_vtklocal_{__version__}/wasm/{version}"
     dest_directory = Path(serve_path) / "wasm" / version
 
     # get wasm directory from kwargs or environment variable

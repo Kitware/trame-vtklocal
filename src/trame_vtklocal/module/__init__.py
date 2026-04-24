@@ -1,4 +1,5 @@
 from pathlib import Path
+from trame_vtklocal import __version__
 from trame_vtklocal.module.wasm import register_wasm
 from trame_vtklocal.module.protocol import ObjectManagerHelper
 
@@ -12,9 +13,9 @@ __all__ = [
 
 serve_path = str(Path(__file__).with_name("serve").resolve())
 
-serve = {"__trame_vtklocal": serve_path}
-scripts = ["__trame_vtklocal/js/trame_vtklocal.umd.js"]
-styles = ["__trame_vtklocal/js/trame_vtklocal.css"]
+serve = {f"__trame_vtklocal_{__version__}": serve_path}
+scripts = [f"__trame_vtklocal_{__version__}/js/trame_vtklocal.umd.js"]
+styles = [f"__trame_vtklocal_{__version__}/js/trame_vtklocal.css"]
 vue_use = ["trame_vtklocal"]
 
 # -----------------------------------------------------------------------------

@@ -81,6 +81,7 @@ export default {
       default: () => ({
         rendering: "webgl",
         exec: "sync",
+        mode: "wasm32",
       }),
     },
     listeners: {
@@ -102,17 +103,20 @@ export default {
     autoResize: {
       type: Boolean,
       default: true,
-    }
+    },
   },
   setup(props, { emit }) {
+    const trame = inject("trame");
+
     // Create global WASM handler if missing
     if (props.useHandler && !WASM_HANDLERS[props.useHandler]) {
       WASM_HANDLERS[props.useHandler] = new RemoteSession();
     }
+    const wasmBits = props.config?.mode || "wasm32";
+    const { url: wasmURL, basename: wasmBaseName } = trame.state.get(
+      `__trame_vtklocal_${wasmBits}`,
+    );
 
-    const trame = inject("trame");
-    const wasmURL = trame.state.get("__trame_vtklocal_wasm_url");
-    const wasmBaseName = trame.state.get("__trame_vtklocal_wasm_base_name");
     const cameraTags = [];
     const listenersTags = [];
     const container = ref(null);
@@ -256,11 +260,11 @@ export default {
       if (props.emitMemory) {
         emit(
           "memory-vtk",
-          wasmManager.sceneManager.getTotalVTKDataObjectMemoryUsage(),
+          Number(wasmManager.sceneManager.getTotalVTKDataObjectMemoryUsage()),
         );
         emit(
           "memory-arrays",
-          wasmManager.sceneManager.getTotalBlobMemoryUsage(),
+          Number(wasmManager.sceneManager.getTotalBlobMemoryUsage()),
         );
       }
     }
@@ -314,7 +318,11 @@ export default {
     // startWebXR ----------------------------------------------------------------
 
     function startWebXR(mode, requiredFeatures, optionalFeatures) {
-      wasmManager.sceneManager.startWebXR(mode, requiredFeatures, optionalFeatures);
+      wasmManager.sceneManager.startWebXR(
+        mode,
+        requiredFeatures,
+        optionalFeatures,
+      );
     }
 
     // stopWebXR ----------------------------------------------------------------
@@ -406,12 +414,16 @@ export default {
       } else {
         // New API - starting with vtk 9.5
         wasmManager.cameraIds.forEach((cid) => {
-          cameraTags.push([
-            cid,
-            wasmManager.sceneManager.observe(cid, "ModifiedEvent", () => {
-              emit("camera", wasmManager.getState(cid));
-            }),
-          ]);
+          try {
+            cameraTags.push([
+              cid,
+              wasmManager.sceneManager.observe(cid, "ModifiedEvent", () => {
+                emit("camera", wasmManager.getState(cid));
+              }),
+            ]);
+          } catch (err) {
+            console.error("wasm64 has issue with observer", err);
+          }
         });
       }
 

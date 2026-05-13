@@ -1,10 +1,10 @@
+# Required for vtk factory
+import vtkmodules.vtkRenderingOpenGL2  # noqa
 from trame.app import get_server
-from trame.ui.html import DivLayout
-from trame.widgets import html, client
-from trame_vtklocal.widgets import vtklocal
 from trame.decorators import TrameApp, change, trigger
-
+from trame.ui.html import DivLayout
 from vtkmodules.vtkFiltersSources import vtkConeSource
+from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
 from vtkmodules.vtkRenderingCore import (
     vtkActor,
     vtkPolyDataMapper,
@@ -13,9 +13,8 @@ from vtkmodules.vtkRenderingCore import (
     vtkRenderWindowInteractor,
 )
 
-# Required for vtk factory
-import vtkmodules.vtkRenderingOpenGL2  # noqa
-from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
+from trame.widgets import client, html
+from trame_vtklocal.widgets import vtklocal
 
 CLIENT_TYPE = "vue3"
 
@@ -81,6 +80,9 @@ class DemoApp:
         self.actor.property.opacity = float(opacity)
         self.html_view.update_throttle()
 
+    def on_camera(self, camera):
+        print(camera)
+
     def _ui(self):
         with DivLayout(self.server) as layout:
             client.Style("body { margin: 0; }")
@@ -94,6 +96,10 @@ class DemoApp:
                     emit_memory=True,
                     memory_vtk="mem_vtk = $event",
                     memory_arrays="mem_blob = $event",
+                    config=(
+                        "{rendering: 'webgl', exec: 'sync', mode: 'wasm32'}",
+                    ),  # when using 64 => camera observer is not triggered (internal error)
+                    camera=(self.on_camera, "[$event]"),
                 )
             html.Div(
                 "Scene: {{ (mem_vtk / 1024).toFixed(1) }}KB - "

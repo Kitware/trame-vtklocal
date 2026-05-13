@@ -1,7 +1,8 @@
 from pathlib import Path
+
 from trame_vtklocal import __version__
-from trame_vtklocal.module.wasm import register_wasm
 from trame_vtklocal.module.protocol import ObjectManagerHelper
+from trame_vtklocal.module.wasm import register_wasm
 
 __all__ = [
     "serve",
@@ -34,4 +35,5 @@ def setup(trame_server, **kwargs):
     HELPERS_PER_SERVER[trame_server.name] = ObjectManagerHelper(
         trame_server, addon_serdes_registrars=kwargs.pop("addon_serdes_registrars", [])
     )
-    trame_server.enable_module(register_wasm(serve_path, **kwargs))
+    trame_server.enable_module(register_wasm(serve_path, wasm_bits="wasm64", **kwargs))
+    trame_server.enable_module(register_wasm(serve_path, wasm_bits="wasm32", **kwargs))

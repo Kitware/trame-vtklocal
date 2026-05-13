@@ -1,9 +1,10 @@
 import asyncio
-import aiohttp
-from pathlib import Path
 import os
 import shutil
 import tarfile
+from pathlib import Path
+
+import aiohttp
 from packaging.version import parse
 
 from trame_vtklocal import __version__
@@ -50,18 +51,17 @@ async def setup_wasm_directory(target_directory, wasm_url):
     Path(dest_file).unlink()
 
 
-def get_wasm_info():
+def get_wasm_info(wasm_bits="wasm32"):
     from vtkmodules.vtkCommonCore import vtkVersion
 
     vtk_version = vtkVersion()
-    wasm_bits = "wasm32"
     version = vtk_version.GetVTKVersion()
     url = f"https://gitlab.kitware.com/api/v4/projects/13/packages/generic/vtk-{wasm_bits}-emscripten/{version}/vtk-{version}-{wasm_bits}-emscripten.tar.gz"
 
     return version, url
 
 
-def register_wasm(serve_path, **kwargs):
+def register_wasm(serve_path, wasm_bits="wasm32", **kwargs):
     """Register the VTK WebAssembly files in the given serve path.
     Keywords:
         wasm_url: The URL to the VTK WebAssembly files. It is used if wasm_dir is not provided and VTK_WASM_DIR_OVERRIDE
@@ -69,10 +69,10 @@ def register_wasm(serve_path, **kwargs):
         wasm_base_name: The base name of the VTK WebAssembly files. (default: "vtk")
         wasm_dir: The directory containing the VTK WebAssembly files.
     """
-    version, wasm_url = get_wasm_info()
+    version, wasm_url = get_wasm_info(wasm_bits)
     wasm_base_name = kwargs.get("wasm_base_name", "vtk")
-    BASE_URL = f"__trame_vtklocal_{__version__}/wasm/{version}"
-    dest_directory = Path(serve_path) / "wasm" / version
+    BASE_URL = f"__trame_vtklocal_{__version__}/{wasm_bits}/{version}"
+    dest_directory = Path(serve_path) / wasm_bits / version
 
     # get wasm directory from kwargs or environment variable
     wasm_dir = kwargs.get("wasm_dir", os.environ.get("VTK_WASM_DIR_OVERRIDE"))
@@ -116,7 +116,9 @@ def register_wasm(serve_path, **kwargs):
 
     return dict(
         state={
-            "__trame_vtklocal_wasm_url": BASE_URL,
-            "__trame_vtklocal_wasm_base_name": wasm_base_name,
+            f"__trame_vtklocal_{wasm_bits}": {
+                "url": BASE_URL,
+                "basename": wasm_base_name,
+            },
         },
     )

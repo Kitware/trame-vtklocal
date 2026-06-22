@@ -5,6 +5,7 @@ import json
 import warnings
 import zipfile
 from pathlib import Path
+from typing import Any
 
 from trame_client.widgets.core import AbstractElement
 from trame_common.exec.throttle import Throttle
@@ -213,13 +214,13 @@ class LocalView(HtmlElement):
         """
         return self._update_throttle
 
-    def update(self, push_camera=False):
+    def update(self, push_camera=False, **kwargs: Any):
         """Sync view by pushing updates to client"""
         self.api.update(
             push_camera=push_camera,
             obj_to_update=[self._render_window, *self.__registered_obj],
         )
-        self.server.js_call(self.__ref, "update")
+        self.server.js_call(self.__ref, "update", kwargs)
 
     def register_vtk_object(self, vtk_instance):
         """Register external element (i.e. widget) into the scene so it can be managed and return its wasm_id"""

@@ -530,7 +530,14 @@ export default {
 
     return {
       container,
-      update,
+      async update(){
+        // Server.js_call("update") could potentially send a
+        // payload, so wrap the inner update() function in order
+        // to control the method signature for the Trame callback.
+        // This way, payload arguments to the Trame callback do not
+        // interfere with the internal "bindCanvas" argument.
+        await update(false);
+      },
       resetCamera,
       render,
       evalStateExtract,

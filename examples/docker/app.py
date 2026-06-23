@@ -1,11 +1,13 @@
 import vtk
-
 from trame.app import get_server
-from trame.ui.html import DivLayout
-from trame.widgets import html, client, vtklocal, trame as tw, vuetify3 as v3
-from trame.decorators import TrameApp, change
-from trame.assets.remote import HttpFile
 from trame.assets.local import to_url
+from trame.assets.remote import HttpFile
+from trame.decorators import TrameApp, change
+from trame.ui.html import DivLayout
+
+from trame.widgets import client, html, vtklocal
+from trame.widgets import trame as tw
+from trame.widgets import vuetify3 as v3
 
 FULL_SCREEN = "position:absolute; left:0; top:0; width:100vw; height:100vh;"
 K_RANGE = [0.0, 15.6]
@@ -174,7 +176,7 @@ class App:
                 with vtklocal.LocalView(self.rw) as view:
                     view.update_throttle.rate = 20
                     self.ctrl.view_update = view.update_throttle
-                    self.widget_id = view.register_widget(self.widget)
+                    self.widget_id = view.register_vtk_object(self.widget)
                     view.listeners = (
                         "listeners",
                         {

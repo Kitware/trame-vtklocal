@@ -1,32 +1,31 @@
 # import os
 from pathlib import Path
 
-from trame.app import get_server
-from trame.ui.html import DivLayout
-from trame.widgets import html, client
-from trame_vtklocal.widgets import vtklocal
-from trame.decorators import TrameApp, change
-
 # Required for vtk factory
 import vtkmodules.vtkRenderingOpenGL2  # noqa
-from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
-
+from trame.app import get_server
+from trame.decorators import TrameApp, change
+from trame.ui.html import DivLayout
 from vtkmodules.vtkCommonColor import vtkNamedColors
 from vtkmodules.vtkCommonDataModel import vtkPlane
 from vtkmodules.vtkFiltersCore import vtkCutter
 from vtkmodules.vtkFiltersSources import vtkSphereSource
-from vtkmodules.vtkIOXML import vtkXMLPolyDataReader
+from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
 from vtkmodules.vtkInteractionWidgets import (
     vtkImplicitPlaneRepresentation,
     vtkImplicitPlaneWidget2,
 )
+from vtkmodules.vtkIOXML import vtkXMLPolyDataReader
 from vtkmodules.vtkRenderingCore import (
     vtkActor,
     vtkPolyDataMapper,
+    vtkRenderer,
     vtkRenderWindow,
     vtkRenderWindowInteractor,
-    vtkRenderer,
 )
+
+from trame.widgets import client, html
+from trame_vtklocal.widgets import vtklocal
 
 
 def create_vtk_pipeline(file_to_load):
@@ -191,7 +190,7 @@ class App:
                     throttle_rate=20,
                     listeners=("wasm_listeners", {}),
                 )
-                self.widget_id = self.html_view.register_widget(self.widget)
+                self.widget_id = self.html_view.register_vtk_object(self.widget)
 
         return layout
 

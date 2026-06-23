@@ -1,10 +1,11 @@
 # import os
 import pyvista as pv
 from pyvista import examples
-
 from trame.app import get_server
 from trame.ui.html import DivLayout
-from trame.widgets import html, client, vtk as vtk_widgets
+
+from trame.widgets import client, html
+from trame.widgets import vtk as vtk_widgets
 from trame_vtklocal.widgets import vtklocal
 
 WASM = True  # "USE_WASM" in os.environ
@@ -45,7 +46,7 @@ class TrameApp:
                 if WASM:
                     self.html_view = vtklocal.LocalView(self.render_window)
                     for w in self.widgets:
-                        self.html_view.register_widget(w)
+                        self.html_view.register_vtk_object(w)
                 else:
                     self.html_view = vtk_widgets.VtkRemoteView(
                         self.render_window, interactive_ratio=1

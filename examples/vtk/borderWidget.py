@@ -1,21 +1,20 @@
-from trame.app import TrameApp
-from trame.ui.html import DivLayout
-from trame.widgets import html, client
-from trame_vtklocal.widgets import vtklocal
-
 # Required for vtk factory
 import vtkmodules.vtkRenderingOpenGL2  # noqa
-from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
-
+from trame.app import TrameApp
+from trame.ui.html import DivLayout
 from vtkmodules.vtkFiltersSources import vtkSphereSource
-from vtkmodules.vtkInteractionWidgets import vtkBorderWidget, vtkBorderRepresentation
+from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
+from vtkmodules.vtkInteractionWidgets import vtkBorderRepresentation, vtkBorderWidget
 from vtkmodules.vtkRenderingCore import (
     vtkActor,
     vtkPolyDataMapper,
+    vtkRenderer,
     vtkRenderWindow,
     vtkRenderWindowInteractor,
-    vtkRenderer,
 )
+
+from trame.widgets import client, html
+from trame_vtklocal.widgets import vtklocal
 
 
 def create_vtk_pipeline():
@@ -77,7 +76,7 @@ class BorderWidget(TrameApp):
                     throttle_rate=20,
                     ctx_name="view",
                 )
-                self.widget_id = self.ctx.view.register_widget(self.widget)
+                self.widget_id = self.ctx.view.register_vtk_object(self.widget)
 
         return layout
 

@@ -18,13 +18,15 @@
 # ///
 
 import vtk
-
 from trame.app import TrameApp
-from trame.ui.html import DivLayout
-from trame.widgets import html, client, vtklocal, trame as tw, vuetify3 as v3
-from trame.decorators import change
-from trame.assets.remote import HttpFile
 from trame.assets.local import to_url
+from trame.assets.remote import HttpFile
+from trame.decorators import change
+from trame.ui.html import DivLayout
+
+from trame.widgets import client, html, vtklocal
+from trame.widgets import trame as tw
+from trame.widgets import vuetify3 as v3
 
 FULL_SCREEN = "position:absolute; left:0; top:0; width:100vw; height:100vh;"
 TOP_LEFT_OVERLAY = "position: absolute; top: 1rem; left: 1rem; width: 20vw; height: calc(20vw + 4rem); z-index: 1;"
@@ -183,7 +185,7 @@ class App(TrameApp):
                     self.rw, throttle_rate=20, progress_delay=500, progress_enabled=True
                 ) as view:
                     self.ctrl.view_update = view.update_throttle
-                    self.widget_id = view.register_widget(self.widget)
+                    self.widget_id = view.register_vtk_object(self.widget)
                     view.listeners = (
                         "listeners",
                         {

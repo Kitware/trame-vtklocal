@@ -4,28 +4,51 @@ import {
   ref,
   reactive,
   unref,
+  onBeforeMount,
   onMounted,
   onBeforeUnmount,
   toRef,
   watchEffect,
+  watch,
 } from "vue";
 
 import "@kitware/vtk-wasm/style.css";
-import { RemoteSession } from "@kitware/vtk-wasm/remote";
+import { loadAsync } from "@kitware/vtk-wasm";
 
-const WASM_HANDLERS = {};
+import {
+  debounce,
+  bindNetwork,
+  createExtractCallback,
+  generateNextCanvasId,
+  createFuture,
+} from "../utils";
 
-function createExtractCallback(trame, wasmManager, extractInfo) {
-  return function () {
-    wasmManager.clearStateCache();
-    for (const [name, props] of Object.entries(extractInfo)) {
-      const value = {};
-      for (const [propName, statePath] of Object.entries(props)) {
-        value[propName] = wasmManager.getStateValue(statePath, true);
-      }
-      trame.state.set(name, value);
-    }
-    wasmManager.clearStateCache();
+const WASM_RUNTIMES = {};
+const WASM_REMOTE_SESSIONS = {};
+
+function disposeRemoteSession(runtimeId) {
+  if (WASM_REMOTE_SESSIONS[runtimeId]) {
+    WASM_REMOTE_SESSIONS[runtimeId].dispose();
+    delete WASM_REMOTE_SESSIONS[runtimeId];
+    return true;
+  }
+  return false;
+}
+
+function disposeWasmRuntime(runtimeId) {
+  disposeRemoteSession(runtimeId);
+  if (WASM_RUNTIMES[runtimeId]) {
+    WASM_RUNTIMES[runtimeId].dispose();
+    delete WASM_RUNTIMES[runtimeId];
+    return true;
+  }
+  return false;
+}
+
+if (window.trame.refs) {
+  window.trame.refs.vtkWASM = {
+    disposeRemoteSession,
+    disposeWasmRuntime,
   };
 }
 
@@ -37,6 +60,8 @@ export default {
     "camera",
     "invoke-response",
     "progress",
+    "ready",
+    "unmount",
   ],
   props: {
     progressEnabled: {
@@ -46,11 +71,9 @@ export default {
       type: Number,
       default: 500,
     },
-    useHandler: {
-      type: String,
-    },
     renderWindow: {
       type: Number,
+      default: 0,
     },
     eagerSync: {
       type: Boolean,
@@ -102,26 +125,24 @@ export default {
     autoResize: {
       type: Boolean,
       default: true,
-    }
+    },
   },
   setup(props, { emit }) {
-    // Create global WASM handler if missing
-    if (props.useHandler && !WASM_HANDLERS[props.useHandler]) {
-      WASM_HANDLERS[props.useHandler] = new RemoteSession();
-    }
+    // Local ------------------------------------------------------------------
 
-    const trame = inject("trame");
-    const wasmURL = trame.state.get("__trame_vtklocal_wasm_url");
-    const wasmBaseName = trame.state.get("__trame_vtklocal_wasm_base_name");
+    let remoteSession = null;
+    let removeProgressCallback = null;
     const cameraTags = [];
     const listenersTags = [];
+    const wasmFuture = createFuture();
+
+    // Vue.js -----------------------------------------------------------------
+    const canvasId = generateNextCanvasId();
+    const wasmRuntime = ref(null);
+    const wasmLoading = ref(true);
     const container = ref(null);
-    const client = props.wsClient || trame?.client;
+    const canvas = ref(null);
     const listeners = toRef(props, "listeners");
-    const wasmManager = props.useHandler
-      ? WASM_HANDLERS[props.useHandler]
-      : new RemoteSession();
-    let subscription = null;
     const progress = reactive({
       active: false,
       tsStart: 0,
@@ -135,12 +156,11 @@ export default {
         total: 0,
       },
     });
-    const wasmLoading = ref(!wasmManager.loaded);
     const showLoading = computed(
       () =>
         props.progressEnabled &&
         progress.tsNow - progress.tsStart > props.progressDelay &&
-        (wasmLoading.value || progress.active),
+        progress.active,
     );
     const statePercent = computed(() => {
       if (!progress.state.total) {
@@ -160,144 +180,206 @@ export default {
         Math.floor((progress.hash.current / progress.hash.total) * 100),
       );
     });
-    function updateProgress(payload) {
-      if (!payload) {
-        return;
+
+    // trame ------------------------------------------------------------------
+
+    const trame = inject("trame");
+    const client = unref(props.wsClient) || trame?.client;
+    const url = trame.state.get("__trame_vtklocal_wasm_url");
+    const wasmBaseName = trame.state.get("__trame_vtklocal_wasm_base_name");
+
+    // wasm -------------------------------------------------------------------
+    function hasRemoteSession() {
+      if (!remoteSession || remoteSession.disposed) {
+        return false;
       }
-      progress.tsNow = Date.now();
-      if (!progress.active && payload.active) {
-        progress.tsStart = progress.tsNow;
+      return true;
+    }
+
+    onBeforeMount(async () => {
+      try {
+        const runtime = await loadAsync({
+          url,
+          wasmBaseName,
+          urlIsGzip: false,
+          ...props.config,
+        });
+        WASM_RUNTIMES[runtime.id] = runtime;
+        if (!WASM_REMOTE_SESSIONS[runtime.id]) {
+          WASM_REMOTE_SESSIONS[runtime.id] = runtime.createRemoteSession();
+        }
+        remoteSession = WASM_REMOTE_SESSIONS[runtime.id];
+        bindNetwork(client, remoteSession);
+
+        // Connect progress
+        removeProgressCallback = remoteSession.addProgressCallback(
+          (payload) => {
+            if (!payload) {
+              return;
+            }
+            progress.tsNow = Date.now();
+            if (!progress.active && payload.active) {
+              progress.tsStart = progress.tsNow;
+            }
+            progress.active = !!payload.active;
+            progress.state.current = payload.state?.current || 0;
+            progress.state.total = payload.state?.total || 0;
+            progress.hash.current = payload.hash?.current || 0;
+            progress.hash.total = payload.hash?.total || 0;
+            emit("progress", {
+              active: progress.active,
+              elapsed: progress.tsNow - progress.tsStart,
+              state: {
+                current: progress.state.current,
+                total: progress.state.total,
+              },
+              hash: {
+                current: progress.hash.current,
+                total: progress.hash.total,
+              },
+            });
+          },
+        );
+
+        // Activate component
+        wasmRuntime.value = runtime.id;
+        wasmFuture.resolve();
+      } catch (error) {
+        wasmFuture.reject(error);
       }
-      progress.active = !!payload.active;
-      progress.state.current = payload.state?.current || 0;
-      progress.state.total = payload.state?.total || 0;
-      progress.hash.current = payload.hash?.current || 0;
-      progress.hash.total = payload.hash?.total || 0;
-      emit("progress", {
-        active: progress.active,
-        elapsed: progress.tsNow - progress.tsStart,
-        state: {
-          current: progress.state.current,
-          total: progress.state.total,
+    });
+
+    // Eager state synchronization --------------------------------------------
+
+    if (props.eagerSync) {
+      const rpcSession = client.getConnection().getSession();
+      const subscription = rpcSession.subscribe(
+        "vtklocal.subscriptions",
+        ([event]) => {
+          if (!hasRemoteSession()) return;
+          if (event.type === "state") {
+            remoteSession.patchState(event.content);
+          }
+          if (event.type === "blob") {
+            remoteSession.pushHash(event.hash, event.content);
+          }
         },
-        hash: {
-          current: progress.hash.current,
-          total: progress.hash.total,
-        },
+      );
+      onBeforeUnmount(async () => {
+        rpcSession.unsubscribe(subscription);
+        if (props.renderWindow > 0) {
+          await rpcSession.call("vtklocal.subscribe.update", [
+            props.renderWindow,
+            -1,
+          ]);
+        }
       });
-    }
-    let removeProgressCallback = null;
-    if (wasmManager.addProgressCallback) {
-      removeProgressCallback = wasmManager.addProgressCallback(updateProgress);
-    }
-
-    // network connector ------------------------------------------------------
-
-    async function netFetchState(vtkId) {
-      const session = client.getConnection().getSession();
-      return await session.call("vtklocal.get.state", [vtkId]);
-    }
-
-    async function netFetchBlob(hash) {
-      const session = client.getConnection().getSession();
-      const content = await session.call("vtklocal.get.hash", [hash]);
-      // handle either blob or TypedArray
-      const array = content.arrayBuffer
-        ? new Uint8Array(await content.arrayBuffer())
-        : content;
-      return array;
+      watch(
+        () => props.renderWindow,
+        async (newId, oldId) => {
+          if (oldId > 0) {
+            await rpcSession.call("vtklocal.subscribe.update", [oldId, -1]);
+          }
+          if (newId > 0) {
+            await rpcSession.call("vtklocal.subscribe.update", [newId, +1]);
+          }
+        },
+        { immediate: true },
+      );
     }
 
-    async function netFetchStatus(vtkId) {
-      const session = client.getConnection().getSession();
-      return await session.call("vtklocal.get.status", [vtkId]);
-    }
+    // Logger verbosity synchronization ---------------------------------------
 
-    // Subscription handling --------------------------------------------------
+    watchEffect(() => {
+      const settings = props.verbosity;
+      if (!wasmRuntime.value || !hasRemoteSession()) return;
 
-    function handleMessage([event]) {
-      if (event.type === "state") {
-        wasmManager.patchState(event.content);
+      if (
+        settings.objectManager &&
+        remoteSession.native.setObjectManagerLogVerbosity
+      ) {
+        remoteSession.native.setObjectManagerLogVerbosity(
+          settings.objectManager,
+        );
       }
-      if (event.type === "blob") {
-        wasmManager.pushHash(event.hash, event.content);
+      if (settings.invoker && remoteSession.native.setInvokerLogVerbosity) {
+        remoteSession.native.setInvokerLogVerbosity(settings.invoker);
       }
-    }
-
-    async function subscribe() {
-      const session = client.getConnection().getSession();
-      subscription = session.subscribe("vtklocal.subscriptions", handleMessage);
-      await session.call("vtklocal.subscribe.update", [props.renderWindow, +1]);
-    }
-
-    async function unsubscribe() {
-      const session = client.getConnection().getSession();
-      if (subscription) {
-        session.unsubscribe(subscription);
-        subscription = null;
+      if (
+        settings.deserializer &&
+        remoteSession.native.setDeserializerLogVerbosity
+      ) {
+        remoteSession.native.setDeserializerLogVerbosity(settings.deserializer);
       }
-      await session.call("vtklocal.subscribe.update", [props.renderWindow, -1]);
-    }
+      if (
+        settings.serializer &&
+        remoteSession.native.setSerializerLogVerbosity
+      ) {
+        remoteSession.native.setSerializerLogVerbosity(settings.serializer);
+      }
+    });
 
     // Resize -----------------------------------------------------------------
 
-    async function resize() {
+    const resize = debounce(async () => {
+      if (!hasRemoteSession()) return;
       const { width, height } = container.value.getBoundingClientRect();
       const w = Math.floor(width * window.devicePixelRatio + 0.5);
       const h = Math.floor(height * window.devicePixelRatio + 0.5);
-      await wasmManager.setSize(props.renderWindow, w, h);
-    }
+      await remoteSession.setSizeAsync(props.renderWindow, w, h);
+    }, 100);
+
     let resizeObserver = props.autoResize && new ResizeObserver(resize);
 
     // Memory -----------------------------------------------------------------
 
     function checkMemory() {
-      wasmManager.freeMemory(props.cacheSize);
-      if (props.emitMemory) {
-        emit(
-          "memory-vtk",
-          wasmManager.sceneManager.getTotalVTKDataObjectMemoryUsage(),
-        );
-        emit(
-          "memory-arrays",
-          wasmManager.sceneManager.getTotalBlobMemoryUsage(),
-        );
-      }
+      if (!hasRemoteSession()) return;
+
+      remoteSession.freeMemory(props.cacheSize);
+      if (!props.emitMemory) return;
+      emit(
+        "memory-vtk",
+        remoteSession.native.getTotalVTKDataObjectMemoryUsage(),
+      );
+      emit("memory-arrays", remoteSession.native.getTotalBlobMemoryUsage());
     }
 
     // Update -----------------------------------------------------------------
 
-    async function update(bindCanvas = false) {
-      if (!wasmManager.loaded) {
-        return;
-      }
+    async function update(options) {
+      if (!hasRemoteSession()) return;
 
-      await wasmManager.update(props.renderWindow, bindCanvas);
-      emit("updated");
+      await remoteSession.updateAsync(props.renderWindow);
+      emit("updated", options);
       checkMemory();
     }
 
-    // resetCamera ------------------------------------------------------------
-
-    function resetCamera(rendererId) {
-      wasmManager.sceneManager.resetCamera(rendererId);
-      wasmManager.sceneManager.render(props.renderWindow);
-    }
-
-    // render ------------------------------------------------------------
+    // render / resetCamera ---------------------------------------------------
 
     function render() {
-      wasmManager.sceneManager.render(props.renderWindow);
+      if (!hasRemoteSession()) return;
+
+      remoteSession.native.render(props.renderWindow);
+    }
+
+    function resetCamera(rendererId) {
+      if (!hasRemoteSession()) return;
+
+      remoteSession.native.resetCamera(rendererId);
+      remoteSession.native.render(props.renderWindow);
     }
 
     // invoke ------------------------------------------------------------
 
     async function invoke(objId, method, args) {
-      const result = await wasmManager.sceneManager.invoke(objId, method, args);
+      if (!hasRemoteSession()) return;
+
+      const result = await remoteSession.native.invoke(objId, method, args);
 
       // Extract object state if object is returned
       if (result?.Id && result?.Success) {
-        result.Value = wasmManager.getState(result.Id);
+        result.Value = remoteSession.getState(result.Id);
       }
 
       emit("invoke-response", result);
@@ -308,223 +390,161 @@ export default {
     // debug ------------------------------------------------------------
 
     function printSceneManagerInformation() {
-      wasmManager.sceneManager.printSceneManagerInformation();
+      if (!hasRemoteSession()) return;
+
+      remoteSession.native.printSceneManagerInformation();
     }
 
     // startWebXR ----------------------------------------------------------------
 
     function startWebXR(mode, requiredFeatures, optionalFeatures) {
-      wasmManager.sceneManager.startWebXR(mode, requiredFeatures, optionalFeatures);
+      if (!hasRemoteSession()) return;
+
+      remoteSession.native.startWebXR(mode, requiredFeatures, optionalFeatures);
     }
 
     // stopWebXR ----------------------------------------------------------------
 
     function stopWebXR() {
-      wasmManager.sceneManager.stopWebXR();
+      if (!hasRemoteSession()) return;
+
+      remoteSession.native.stopWebXR();
     }
 
     // Life Cycles ------------------------------------------------------------
 
     onMounted(async () => {
-      // console.log("vtkLocal::mounted");
-      wasmManager.bindNetwork(netFetchState, netFetchBlob, netFetchStatus);
-      if (!wasmManager.loaded) {
-        wasmLoading.value = true;
-        try {
-          await wasmManager.load(wasmURL, props.config, wasmBaseName);
-        } finally {
-          wasmLoading.value = false;
-        }
-      }
-      const selector = wasmManager.bindCanvasToDOM(
-        props.renderWindow,
-        unref(container),
-      );
-      unref(container)
-        .querySelector(selector)
-        .setAttribute(
-          "style",
-          "position: absolute; left: 0; top: 0; width: 100%; height: 100%;",
+      // Wait for wasm to be fully loaded
+      await wasmFuture.promise;
+
+      // Should never happen
+      if (!hasRemoteSession()) {
+        throw new Error(
+          "LocalView is mounting but the remote session is not valid.",
         );
-      if (props.eagerSync) {
-        subscribe();
       }
+
+      // Bind canvas to renderWindow
+      remoteSession.bindCanvas(props.renderWindow, unref(canvas));
 
       // Figure out size
       if (resizeObserver) {
         resizeObserver.observe(unref(container));
       }
-
-      // Update loggers
-      watchEffect(() => {
-        const settings = props.verbosity;
-        if (
-          settings.objectManager &&
-          wasmManager.sceneManager.setObjectManagerLogVerbosity
-        ) {
-          wasmManager.sceneManager.setObjectManagerLogVerbosity(
-            settings.objectManager,
-          );
-        }
-        if (
-          settings.invoker &&
-          wasmManager.sceneManager.setInvokerLogVerbosity
-        ) {
-          wasmManager.sceneManager.setInvokerLogVerbosity(settings.invoker);
-        }
-        if (
-          settings.deserializer &&
-          wasmManager.sceneManager.setDeserializerLogVerbosity
-        ) {
-          wasmManager.sceneManager.setDeserializerLogVerbosity(
-            settings.deserializer,
-          );
-        }
-        if (
-          settings.serializer &&
-          wasmManager.sceneManager.setSerializerLogVerbosity
-        ) {
-          wasmManager.sceneManager.setSerializerLogVerbosity(
-            settings.serializer,
-          );
-        }
-      });
-
-      await update(true);
-
+      await update({ onMounted: props.renderWindow });
+      wasmLoading.value = false;
       // Camera listener
-      if (wasmManager.sceneManager.addObserver) {
-        // Old API - before vtk 9.5
-        wasmManager.cameraIds.forEach((cid) => {
-          cameraTags.push([
-            cid,
-            wasmManager.sceneManager.addObserver(cid, "ModifiedEvent", () => {
-              emit("camera", wasmManager.getState(cid));
-            }),
-          ]);
-        });
-      } else {
-        // New API - starting with vtk 9.5
-        wasmManager.cameraIds.forEach((cid) => {
-          cameraTags.push([
-            cid,
-            wasmManager.sceneManager.observe(cid, "ModifiedEvent", () => {
-              emit("camera", wasmManager.getState(cid));
-            }),
-          ]);
-        });
-      }
-
+      remoteSession.cameraIds.forEach((cid) => {
+        cameraTags.push([
+          cid,
+          remoteSession.native.observe(cid, "ModifiedEvent", () => {
+            emit("camera", remoteSession.getState(cid));
+          }),
+        ]);
+      });
       // Attach listeners
       watchEffect(() => {
-        if (wasmManager.sceneManager.removeObserver) {
-          // Old API - before vtk 9.5
-          while (listenersTags.length) {
-            const [cid, tag] = listenersTags.pop();
-            wasmManager.sceneManager.removeObserver(cid, tag);
-          }
+        // register tracking
+        const allListeners = listeners.value || {};
 
-          for (const [cid, eventMap] of Object.entries(listeners.value || {})) {
-            const wasmId = Number(cid);
-            for (const [eventName, extractInfo] of Object.entries(
-              eventMap || {},
-            )) {
-              const fn = createExtractCallback(trame, wasmManager, extractInfo);
-              listenersTags.push([
-                wasmId,
-                wasmManager.sceneManager.addObserver(wasmId, eventName, fn),
-              ]);
+        // Exit on disposed session
+        if (!hasRemoteSession()) return;
 
-              // Push update at registration
-              fn();
-            }
-          }
-        } else {
-          // New API - starting with vtk 9.5
-          while (listenersTags.length) {
-            const [cid, tag] = listenersTags.pop();
-            wasmManager.sceneManager.unObserve(cid, tag);
-          }
-
-          for (const [cid, eventMap] of Object.entries(listeners.value || {})) {
-            const wasmId = Number(cid);
-            for (const [eventName, extractInfo] of Object.entries(
-              eventMap || {},
-            )) {
-              const fn = createExtractCallback(trame, wasmManager, extractInfo);
-              listenersTags.push([
-                wasmId,
-                wasmManager.sceneManager.observe(wasmId, eventName, fn),
-              ]);
-
-              // Push update at registration
-              fn();
-            }
+        while (listenersTags.length) {
+          const [cid, tag] = listenersTags.pop();
+          remoteSession.native.unObserve(cid, tag);
+        }
+        for (const [cid, eventMap] of Object.entries(allListeners)) {
+          const wasmId = Number(cid);
+          for (const [eventName, extractInfo] of Object.entries(
+            eventMap || {},
+          )) {
+            const fn = createExtractCallback(trame, remoteSession, extractInfo);
+            listenersTags.push([
+              wasmId,
+              remoteSession.native.observe(wasmId, eventName, fn),
+            ]);
+            // Push update at registration
+            fn();
           }
         }
       });
 
-      if (!wasmManager.sceneManager.startEventLoop(props.renderWindow)) {
+      // Start event loop
+      if (!remoteSession.startEventLoop(props.renderWindow)) {
         console.error("Could not startEventLoop for", props.renderWindow);
       }
 
       // trigger an emit right away
-      wasmManager.cameraIds.forEach((cid) => {
-        emit("camera", wasmManager.getState(cid));
+      remoteSession.cameraIds.forEach((cid) => {
+        emit("camera", remoteSession.getState(cid));
       });
+
+      // Send ready event with WASM Runtime Id
+      emit("ready", wasmRuntime.value);
     });
 
-    onBeforeUnmount(() => {
-      if (subscription) {
-        unsubscribe();
-      }
-      if (removeProgressCallback) {
-        removeProgressCallback();
-        removeProgressCallback = null;
-      }
+    onBeforeUnmount(async () => {
+      emit("unmount");
 
-      // Old/New API - detection
-      const removeObserverMethodName = wasmManager.sceneManager.removeObserver
-        ? "removeObserver"
-        : "unObserve";
+      // Remove progress tracking
+      removeProgressCallback && removeProgressCallback();
 
-      // Camera listeners
-      while (cameraTags.length) {
-        const [cid, tag] = cameraTags.pop();
-        wasmManager.sceneManager[removeObserverMethodName](cid, tag);
-      }
-      while (listenersTags.length) {
-        const [cid, tag] = listenersTags.pop();
-        wasmManager.sceneManager[removeObserverMethodName](cid, tag);
-      }
-
-      // console.log("vtkLocal::unmounted");
-      wasmManager.sceneManager.stopEventLoop(props.renderWindow);
+      // Remove size observer
       if (resizeObserver) {
         resizeObserver.disconnect();
         resizeObserver = null;
       }
 
-      // unbind canvas
-      wasmManager.unbindCanvasToDOM(props.renderWindow);
+      // Exit if already disposed
+      if (!hasRemoteSession()) return;
+
+      // Camera listeners
+      while (cameraTags.length) {
+        const [cid, tag] = cameraTags.pop();
+        remoteSession.native.unObserve(cid, tag);
+      }
+      while (listenersTags.length) {
+        const [cid, tag] = listenersTags.pop();
+        remoteSession.native.unObserve(cid, tag);
+      }
+
+      // Cleanup our view in wasm session
+      const rwId = props.renderWindow;
+      remoteSession.stopEventLoop(rwId);
+      remoteSession.unbindCanvas(rwId);
+      await remoteSession.native.invoke(rwId, "Finalize", []);
     });
 
     // Public -----------------------------------------------------------------
 
     function evalStateExtract(definition) {
-      createExtractCallback(trame, wasmManager, definition)();
+      createExtractCallback(trame, remoteSession, definition)();
     }
 
     function getVtkObject(vtkId) {
-      return wasmManager.getVtkObject(vtkId);
+      return remoteSession.getVtkObject(vtkId);
     }
 
     /**
-     * Remove WASM handler from global map to free memory once component unmount.
+     * dispose WASM remoteSession
      */
-    function detachHandler() {
-      if (props.useHandler && WASM_HANDLERS[props.useHandler]) {
-        delete WASM_HANDLERS[props.useHandler];
+    function disposeRemoteSession(runtimeId) {
+      const rId = runtimeId || wasmRuntime.value;
+      if (WASM_REMOTE_SESSIONS[rId]) {
+        WASM_REMOTE_SESSIONS[rId].dispose();
+        delete WASM_REMOTE_SESSIONS[rId];
+      }
+    }
+    /**
+     * dispose wasm runtime
+     */
+    function disposeWasmRuntime(runtimeId) {
+      const rId = runtimeId || wasmRuntime.value;
+      disposeRemoteSession(rId);
+      if (WASM_RUNTIMES[rId]) {
+        WASM_RUNTIMES[rId].dispose();
+        delete WASM_RUNTIMES[rId];
       }
     }
 
@@ -536,9 +556,9 @@ export default {
       evalStateExtract,
       invoke,
       resize,
-      wasmManager,
       printSceneManagerInformation,
-      detachHandler,
+      disposeRemoteSession,
+      disposeWasmRuntime,
       getVtkObject,
       progress,
       showLoading,
@@ -547,9 +567,12 @@ export default {
       wasmLoading,
       startWebXR,
       stopWebXR,
+      canvas,
+      canvasId,
     };
   },
   template: `<div ref="container" style="position: relative; width: 100%; height: 100%;">
+    <canvas :id="canvasId" ref="canvas" tab="-1" style="position:absolute;top:0;left:0;width:100%;height:100%;" />
     <slot
       v-if="showLoading"
       name="loader"

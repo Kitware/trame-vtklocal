@@ -2,7 +2,6 @@ import asyncio
 import base64
 import io
 import json
-import warnings
 import zipfile
 from pathlib import Path
 
@@ -79,10 +78,6 @@ class LocalView(HtmlElement):
         listeners (dict):
             Dynamic structure describing what to observe and how to map internal
             WASM state to trame state variable.
-        use_handler (string):
-            Name of a global instance of WASM handler to use. This is useful for
-            skipping WASM reinitialization when your vue component is going to be
-            mounted/unmounted often. (i.e. used inside VueRouter element)
         progress_enabled (bool):
             Allow the progress synchronization to show (or not).
         progress_delay (int):
@@ -117,10 +112,19 @@ class LocalView(HtmlElement):
 
     _next_id = 0
 
-    def __init__(self, render_window, throttle_rate=10, **kwargs):
+    def __init__(
+        self,
+        render_window,
+        throttle_rate=10,
+        use_async_component=False,
+        **kwargs,
+    ):
         # Register response callback if not overridden
         kwargs.setdefault("invoke_response", (self._on_invoke_response, "[$event]"))
+        kwargs.setdefault("ready", (self._on_ready, "[$event]"))
+        kwargs.setdefault("unmount", self._on_unmount)
         self._pending_invoke_result = None
+        self._mounted = False
 
         super().__init__(
             "vtk-local",
@@ -155,6 +159,8 @@ class LocalView(HtmlElement):
             ("auto_resize", "autoResize"),
         ]
         self._event_names += [
+            "ready",
+            "unmount",
             "updated",
             "camera",
             ("memory_vtk", "memory-vtk"),
@@ -166,6 +172,13 @@ class LocalView(HtmlElement):
         # Generate throttle update function
         self._update_throttle = Throttle(self.update)
         self._update_throttle.rate = throttle_rate
+
+    def _on_ready(self, wasm_runtime_id):
+        self._mounted = True
+        self._wasm_runtime_id = wasm_runtime_id
+
+    def _on_unmount(self):
+        self._mounted = False
 
     def _on_invoke_response(self, response):
         if self._pending_invoke_result is None:
@@ -195,14 +208,25 @@ class LocalView(HtmlElement):
         """
         self.server.js_call(self.__ref, "evalStateExtract", state_mapping)
 
-    def detach_handler(self):
+    def dispose_remote_session(self):
         """
-        When using `use_handler=` property, you may reach a point where you
-        want to free the global WASM handler on the client side.
-        This method will remove the global reference so an unmount would release it,
-        while a new mount will re-create a new handler.
+        This will clear and dispose of the remote session.
         """
-        self.server.js_call(self.__ref, "detachHandler")
+        if self._mounted:
+            self.server.js_call(self.__ref, "disposeRemoteSession")
+        else:
+            self.server.js_call(
+                "vtkWASM", "disposeRemoteSession", self._wasm_runtime_id
+            )
+
+    def dispose_wasm_runtime(self):
+        """
+        This will clear and dispose of the WASM runtime.
+        """
+        if self._mounted:
+            self.server.js_call(self.__ref, "disposeWasmRuntime")
+        else:
+            self.server.js_call("vtkWASM", "disposeWasmRuntime", self._wasm_runtime_id)
 
     @property
     def update_throttle(self):
@@ -213,13 +237,13 @@ class LocalView(HtmlElement):
         """
         return self._update_throttle
 
-    def update(self, push_camera=False):
+    def update(self, push_camera=False, **options):
         """Sync view by pushing updates to client"""
         self.api.update(
             push_camera=push_camera,
             obj_to_update=[self._render_window, *self.__registered_obj],
         )
-        self.server.js_call(self.__ref, "update")
+        self.server.js_call(self.__ref, "update", options)
 
     def register_vtk_object(self, vtk_instance):
         """Register external element (i.e. widget) into the scene so it can be managed and return its wasm_id"""
@@ -229,13 +253,6 @@ class LocalView(HtmlElement):
             self.api.update()
 
         return self.get_wasm_id(vtk_instance)
-
-    def register_widget(self, w):
-        """Register external element (i.e. widget) into the scene so it can be managed and return its wasm_id"""
-        warnings.warn(
-            "register_widget() is deprecated, use register_vtk_object() instead"
-        )
-        return self.register_vtk_object(w)
 
     def unregister_vtk_object(self, vtk_instance):
         """Unregister external element (i.e. widget) from the scene so it can removed from tracking"""
@@ -250,13 +267,6 @@ class LocalView(HtmlElement):
         for vtk_instance in self.__registered_obj:
             self.api.unregister_widget(self._render_window, vtk_instance)
             self.__registered_obj.remove(vtk_instance)
-
-    def unregister_widgets(self):
-        """Unregister all external element (i.e. widget) from the scene"""
-        warnings.warn(
-            "unregister_widgets() is deprecated, use unregister_all_vtk_objects() instead"
-        )
-        self.unregister_all_vtk_objects()
 
     def export(self, format="zip", **kwargs):
         """Export standalone scene for WASMViewer

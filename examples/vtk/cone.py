@@ -1,10 +1,10 @@
+# Required for vtk factory
+import vtkmodules.vtkRenderingOpenGL2  # noqa
 from trame.app import get_server
-from trame.ui.html import DivLayout
-from trame.widgets import html, client
-from trame_vtklocal.widgets import vtklocal
 from trame.decorators import TrameApp, change, trigger
-
+from trame.ui.html import DivLayout
 from vtkmodules.vtkFiltersSources import vtkConeSource
+from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
 from vtkmodules.vtkRenderingCore import (
     vtkActor,
     vtkPolyDataMapper,
@@ -13,9 +13,8 @@ from vtkmodules.vtkRenderingCore import (
     vtkRenderWindowInteractor,
 )
 
-# Required for vtk factory
-import vtkmodules.vtkRenderingOpenGL2  # noqa
-from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
+from trame.widgets import client, html
+from trame_vtklocal.widgets import vtklocal
 
 CLIENT_TYPE = "vue3"
 
@@ -72,14 +71,18 @@ class DemoApp:
         self.html_view.reset_camera()
 
     @change("resolution")
-    def on_resolution_change(self, resolution, **kwargs):
+    def on_resolution_change(self, resolution, **_):
         self.cone.SetResolution(int(resolution))
-        self.html_view.update_throttle()
+        self.html_view.update_throttle(
+            resolution=resolution
+        )  # provide custom content on update
 
     @change("opacity")
-    def on_opacity_change(self, opacity, **kwargs):
+    def on_opacity_change(self, opacity, **_):
         self.actor.property.opacity = float(opacity)
-        self.html_view.update_throttle()
+        self.html_view.update_throttle(
+            opacity=opacity
+        )  # provide custom content on update
 
     def _ui(self):
         with DivLayout(self.server) as layout:
@@ -94,6 +97,7 @@ class DemoApp:
                     emit_memory=True,
                     memory_vtk="mem_vtk = $event",
                     memory_arrays="mem_blob = $event",
+                    updated="console.log('updated', $event)",  # print custom update content
                 )
             html.Div(
                 "Scene: {{ (mem_vtk / 1024).toFixed(1) }}KB - "

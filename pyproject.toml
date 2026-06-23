@@ -10,7 +10,7 @@ dependencies = [
     "trame-common",
     "packaging",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 readme = "README.rst"
 license = {text = "Apache Software License"}
 keywords = ["Python", "Interactive", "Web", "Application", "Framework"]
@@ -27,7 +27,7 @@ classifiers = [
 
 [project.optional-dependencies]
 vtk = [
-    "vtk>=9.4",
+    "vtk>=9.6.1",
 ]
 dev = [
     "pre-commit",

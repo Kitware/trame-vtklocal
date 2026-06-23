@@ -1,24 +1,23 @@
-from trame.app import get_server
-from trame.ui.html import DivLayout
-from trame.widgets import html, client
-from trame_vtklocal.widgets import vtklocal
-from trame.decorators import TrameApp, change
-
 # Required for vtk factory
 import vtkmodules.vtkRenderingOpenGL2  # noqa
-from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
-
+from trame.app import get_server
+from trame.decorators import TrameApp, change
+from trame.ui.html import DivLayout
 from vtkmodules.vtkCommonColor import vtkNamedColors
 from vtkmodules.vtkCommonTransforms import vtkTransform
 from vtkmodules.vtkFiltersSources import vtkConeSource
-from vtkmodules.vtkInteractionWidgets import vtkBoxWidget2, vtkBoxRepresentation
+from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
+from vtkmodules.vtkInteractionWidgets import vtkBoxRepresentation, vtkBoxWidget2
 from vtkmodules.vtkRenderingCore import (
     vtkActor,
     vtkPolyDataMapper,
+    vtkRenderer,
     vtkRenderWindow,
     vtkRenderWindowInteractor,
-    vtkRenderer,
 )
+
+from trame.widgets import client, html
+from trame_vtklocal.widgets import vtklocal
 
 
 def create_vtk_pipeline():
@@ -148,7 +147,7 @@ class App:
                     throttle_rate=20,
                     listeners=("wasm_listeners", {}),
                 )
-                self.widget_id = self.html_view.register_widget(self.widget)
+                self.widget_id = self.html_view.register_vtk_object(self.widget)
 
         return layout
 

@@ -5,26 +5,26 @@
 # import os
 from pathlib import Path
 
-from trame.app import get_server
-from trame.ui.html import DivLayout
-from trame.widgets import html, client, vtk as vtk_widgets
-from trame_vtklocal.widgets import vtklocal
-
 # Required for vtk factory
 import vtkmodules.vtkRenderingOpenGL2  # noqa
-from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
-
+from trame.app import get_server
+from trame.ui.html import DivLayout
 from vtkmodules.vtkCommonColor import vtkNamedColors
-from vtkmodules.vtkIOXML import vtkXMLPolyDataReader
 from vtkmodules.vtkFiltersSources import vtkConeSource
+from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
 from vtkmodules.vtkInteractionWidgets import vtkCameraOrientationWidget
+from vtkmodules.vtkIOXML import vtkXMLPolyDataReader
 from vtkmodules.vtkRenderingCore import (
     vtkActor,
     vtkPolyDataMapper,
+    vtkRenderer,
     vtkRenderWindow,
     vtkRenderWindowInteractor,
-    vtkRenderer,
 )
+
+from trame.widgets import client, html
+from trame.widgets import vtk as vtk_widgets
+from trame_vtklocal.widgets import vtklocal
 
 WASM = True  # "USE_WASM" in os.environ
 
@@ -94,7 +94,7 @@ class App:
             ):
                 if WASM:
                     self.html_view = vtklocal.LocalView(self.render_window)
-                    self.widget_id = self.html_view.register_widget(self.widget)
+                    self.widget_id = self.html_view.register_vtk_object(self.widget)
                 else:
                     self.html_view = vtk_widgets.VtkRemoteView(self.render_window)
 

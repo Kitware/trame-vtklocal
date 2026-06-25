@@ -27,7 +27,13 @@ const WASM_RUNTIMES = {};
 const WASM_REMOTE_SESSIONS = {};
 
 function disposeRemoteSession(runtimeId) {
+  if (!runtimeId) {
+    const ids = Object.keys(WASM_REMOTE_SESSIONS);
+    ids.forEach(disposeRemoteSession);
+    return ids.length > 0;
+  }
   if (WASM_REMOTE_SESSIONS[runtimeId]) {
+    console.log("Removing remote session for wasm runtime", runtimeId);
     WASM_REMOTE_SESSIONS[runtimeId].dispose();
     delete WASM_REMOTE_SESSIONS[runtimeId];
     return true;
@@ -36,8 +42,14 @@ function disposeRemoteSession(runtimeId) {
 }
 
 function disposeWasmRuntime(runtimeId) {
+  if (!runtimeId) {
+    const ids = Object.keys(WASM_RUNTIMES);
+    ids.forEach(disposeWasmRuntime);
+    return ids.length > 0;
+  }
   disposeRemoteSession(runtimeId);
   if (WASM_RUNTIMES[runtimeId]) {
+    console.log("Removing wasm runtime with ID:", runtimeId);
     WASM_RUNTIMES[runtimeId].dispose();
     delete WASM_RUNTIMES[runtimeId];
     return true;
@@ -185,8 +197,8 @@ export default {
 
     const trame = inject("trame");
     const client = unref(props.wsClient) || trame?.client;
-    const url = trame.state.get("__trame_vtklocal_wasm_url");
-    const wasmBaseName = trame.state.get("__trame_vtklocal_wasm_base_name");
+    const bits = props.config?.mode || "wasm32";
+    const { url, wasmBaseName } = trame.state.get(`__trame_vtklocal_${bits}`);
 
     // wasm -------------------------------------------------------------------
     function hasRemoteSession() {
@@ -340,9 +352,12 @@ export default {
       if (!props.emitMemory) return;
       emit(
         "memory-vtk",
-        remoteSession.native.getTotalVTKDataObjectMemoryUsage(),
+        Number(remoteSession.native.getTotalVTKDataObjectMemoryUsage()),
       );
-      emit("memory-arrays", remoteSession.native.getTotalBlobMemoryUsage());
+      emit(
+        "memory-arrays",
+        Number(remoteSession.native.getTotalBlobMemoryUsage()),
+      );
     }
 
     // Update -----------------------------------------------------------------
@@ -435,12 +450,16 @@ export default {
       wasmLoading.value = false;
       // Camera listener
       remoteSession.cameraIds.forEach((cid) => {
-        cameraTags.push([
-          cid,
-          remoteSession.native.observe(cid, "ModifiedEvent", () => {
-            emit("camera", remoteSession.getState(cid));
-          }),
-        ]);
+        try {
+          cameraTags.push([
+            cid,
+            remoteSession.native.observe(cid, "ModifiedEvent", () => {
+              emit("camera", remoteSession.getState(cid));
+            }),
+          ]);
+        } catch (err) {
+          console.error("wasm64 has issue with observer", err);
+        }
       });
       // Attach listeners
       watchEffect(() => {
@@ -532,6 +551,7 @@ export default {
     function disposeRemoteSession(runtimeId) {
       const rId = runtimeId || wasmRuntime.value;
       if (WASM_REMOTE_SESSIONS[rId]) {
+        console.log("Removing remote session for wasm runtime", rId);
         WASM_REMOTE_SESSIONS[rId].dispose();
         delete WASM_REMOTE_SESSIONS[rId];
       }
@@ -543,6 +563,7 @@ export default {
       const rId = runtimeId || wasmRuntime.value;
       disposeRemoteSession(rId);
       if (WASM_RUNTIMES[rId]) {
+        console.log("Removing wasm runtime with ID:", rId);
         WASM_RUNTIMES[rId].dispose();
         delete WASM_RUNTIMES[rId];
       }

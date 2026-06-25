@@ -76,6 +76,7 @@ class DemoApp(TrameApp):
                     self.render_window,
                     ctx_name="view",
                     throttle_rate=20,
+                    config=("{ mode, exec, rendering }",),
                     updated="console.log('updated', $event)",  # print custom update content
                 )
             with html.Div(
@@ -98,6 +99,16 @@ class DemoApp(TrameApp):
                     max=60,
                     step=1,
                 )
+                with html.Select(v_model=("mode", "wasm32")):
+                    html.Option("wasm32")
+                    html.Option("wasm64")
+                with html.Select(v_model=("exec", "sync")):
+                    html.Option("sync")
+                    html.Option("async")
+                with html.Select(v_model=("rendering", "webgl")):
+                    html.Option("webgl")
+                    html.Option("webgpu")
+
                 html.Div("Component mounted")
                 html.Input(
                     type="checkbox",

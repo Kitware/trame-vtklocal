@@ -227,6 +227,7 @@ class LocalView(HtmlElement):
             self.server.js_call(self.__ref, "disposeWasmRuntime")
         else:
             self.server.js_call("vtkWASM", "disposeWasmRuntime", self._wasm_runtime_id)
+            self._wasm_runtime_id = None
 
     @property
     def update_throttle(self):

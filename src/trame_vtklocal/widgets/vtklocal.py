@@ -116,7 +116,6 @@ class LocalView(HtmlElement):
         self,
         render_window,
         throttle_rate=10,
-        use_async_component=False,
         **kwargs,
     ):
         # Register response callback if not overridden
@@ -212,7 +211,7 @@ class LocalView(HtmlElement):
         """
         This will clear and dispose of the remote session.
         """
-        if self._mounted:
+        if self._mounted and self._wasm_runtime_id:
             self.server.js_call(self.__ref, "disposeRemoteSession")
         else:
             self.server.js_call(
@@ -223,7 +222,7 @@ class LocalView(HtmlElement):
         """
         This will clear and dispose of the WASM runtime.
         """
-        if self._mounted:
+        if self._mounted and self._wasm_runtime_id:
             self.server.js_call(self.__ref, "disposeWasmRuntime")
         else:
             self.server.js_call("vtkWASM", "disposeWasmRuntime", self._wasm_runtime_id)
@@ -239,7 +238,7 @@ class LocalView(HtmlElement):
         return self._update_throttle
 
     def update(self, push_camera=False, **options):
-        """Sync view by pushing updates to client"""
+        """Sync view by pushing updates to client. The options are going to be the content of the @updated= event."""
         self.api.update(
             push_camera=push_camera,
             obj_to_update=[self._render_window, *self.__registered_obj],

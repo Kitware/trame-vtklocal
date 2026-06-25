@@ -579,6 +579,8 @@ export default {
       invoke,
       resize,
       printSceneManagerInformation,
+      getRemoteSession: () => remoteSession,
+      getWasmRuntime: () => WASM_RUNTIMES[wasmRuntime.value],
       disposeRemoteSession,
       disposeWasmRuntime,
       getVtkObject,

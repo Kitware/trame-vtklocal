@@ -51,6 +51,22 @@ class DemoApp(TrameApp):
     def __init__(self, server=None):
         # dispose after unmount should only work with vue3
         super().__init__(server, client_type=CLIENT_TYPE)
+        self.server.cli.add_argument(
+            "--mode",
+            default="wasm32",
+        )
+        self.server.cli.add_argument(
+            "--exec",
+            default="sync",
+        )
+        self.server.cli.add_argument(
+            "--rendering",
+            default="webgl",
+        )
+        args, _ = self.server.cli.parse_known_args()
+        self.state.mode = args.mode
+        self.state.exec = args.exec
+        self.state.rendering = args.rendering
 
         self.render_window, self.cone, self.actor = create_vtk_pipeline()
         self._build_ui()

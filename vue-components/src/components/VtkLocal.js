@@ -116,6 +116,7 @@ export default {
       default: () => ({
         rendering: "webgl",
         exec: "sync",
+        mode: "wasm32",
       }),
     },
     listeners: {

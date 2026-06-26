@@ -1,6 +1,6 @@
 [project]
 name = "trame-vtklocal"
-version = "0.17.1"
+version = "1.0.0"
 description = "VTK Local Rendering using WASM"
 authors = [
     {name = "Kitware Inc."},
@@ -37,6 +37,7 @@ dev = [
     "trame-client[test]",
 ]
 
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
@@ -54,6 +55,7 @@ packages = [
     "src/trame",
 ]
 
+
 [tool.semantic_release]
 version_toml = [
     "pyproject.toml:project.version",
@@ -64,10 +66,6 @@ build_command = """
   pip install -U pip build
   python -m build .
 """
-
-[semantic_release.publish]
-dist_glob_patterns = ["dist/*"]
-upload_to_vcs_release = true
 
 [tool.ruff]
 line-length = 88
@@ -94,6 +92,12 @@ docstring-code-line-length = "dynamic"
 
 [tool.ruff.lint.pycodestyle]
 max-line-length = 120
+
+
+[semantic_release.publish]
+dist_glob_patterns = ["dist/*"]
+upload_to_vcs_release = true
+
 
 [lint.pydocstyle]
 convention = "google"

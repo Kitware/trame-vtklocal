@@ -1,6 +1,42 @@
 # CHANGELOG
 
 
+## v1.0.0 (2026-06-26)
+
+### Bug Fixes
+
+- Dispose call from python
+  ([`346accd`](https://github.com/Kitware/trame-vtklocal/commit/346accd4d2b0fb1475da07e0d60118efba0fa6f9))
+
+- **wasm-runtime**: Allow Async/Sync runtime to work in parallel
+  ([`ad4d92e`](https://github.com/Kitware/trame-vtklocal/commit/ad4d92e7b3c6c4df4dc1cad0874b926daa55b58e))
+
+### Documentation
+
+- **example**: Add camera jump
+  ([`c5a136a`](https://github.com/Kitware/trame-vtklocal/commit/c5a136a4b7a6dd4ce537cca0426f935e97e5ffef))
+
+- **example**: Add wasm64 observer validation
+  ([`3c01883`](https://github.com/Kitware/trame-vtklocal/commit/3c01883e27e819bca06a5686295929fc4c51030c))
+
+- **example**: Improve validation example
+  ([`b199108`](https://github.com/Kitware/trame-vtklocal/commit/b1991086acc30b9aebdfb38120b28a026458e4d3))
+
+- **examples**: Replace register_widget by register_vtk_object
+  ([`83f6934`](https://github.com/Kitware/trame-vtklocal/commit/83f69345c7f694250926bc1c904f0e1ba092ec2c))
+
+### Features
+
+- Expose getRemoteSession/getWasmRuntime on vue component
+  ([`78567b2`](https://github.com/Kitware/trame-vtklocal/commit/78567b2c2700cf31ea9ee51de09ea5adc273e9e7))
+
+- **vtk-wasm**: Update to v2 which require vtk>=9.6
+  ([`8085541`](https://github.com/Kitware/trame-vtklocal/commit/8085541a1c3104895268e3d55549a8017a2db2fa))
+
+- **wasm32/64**: Add selection support
+  ([`418bfc5`](https://github.com/Kitware/trame-vtklocal/commit/418bfc5726484d7674ae48a1b2dc24ce63e4fd6d))
+
+
 ## v0.17.1 (2026-04-24)
 
 ### Bug Fixes

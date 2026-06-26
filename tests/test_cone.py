@@ -34,6 +34,7 @@ async def test_cone(ConeApp, utils, config):
     task = app.server.start(exec_mode="task", port=0)
     await app.server.ready
     RESULT_BASE = Path(__file__).with_name("results") / "cone" / conf_key
+    valid_image_comparisons = []
 
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
@@ -42,20 +43,38 @@ async def test_cone(ConeApp, utils, config):
 
         await page.goto(f"http://localhost:{app.server.port}/")
         await expect(page.locator(".readyCount")).to_have_text("1")
-        await utils.assert_screenshot(page, BASELINES[0], RESULT_BASE, threshold=0.1)
+        valid_image_comparisons.append(
+            await utils.compare_screenshot(
+                page, BASELINES[0], RESULT_BASE, threshold=0.1
+            )
+        )
 
         app.resolution = 60
         await expect(page.locator(".readyCount")).to_have_text("2")
-        await utils.assert_screenshot(page, BASELINES[1], RESULT_BASE, threshold=0.1)
+        valid_image_comparisons.append(
+            await utils.compare_screenshot(
+                page, BASELINES[1], RESULT_BASE, threshold=0.1
+            )
+        )
 
         app.mounted = False
         app.resolution = 4
-        await utils.assert_screenshot(page, BASELINES[2], RESULT_BASE, threshold=0.1)
+        valid_image_comparisons.append(
+            await utils.compare_screenshot(
+                page, BASELINES[2], RESULT_BASE, threshold=0.1
+            )
+        )
 
         app.mounted = True
         await asyncio.sleep(0.1)  # Debounced resize needs complete
         await expect(page.locator(".readyCount")).to_have_text("3")
-        await utils.assert_screenshot(page, BASELINES[3], RESULT_BASE, threshold=0.1)
+        valid_image_comparisons.append(
+            await utils.compare_screenshot(
+                page, BASELINES[3], RESULT_BASE, threshold=0.1
+            )
+        )
+
+        assert all(valid_image_comparisons), "Some images don't match"
 
         # Clean up resource
         await browser.close()

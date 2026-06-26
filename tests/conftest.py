@@ -18,7 +18,7 @@ HELPER = FixtureHelper(ROOT_PATH)
 
 class Utils:
     @staticmethod
-    async def assert_screenshot(page, baseline_image, result_directory, threshold=0.1):
+    async def compare_screenshot(page, baseline_image, result_directory, threshold=0.1):
         test_image = result_directory / baseline_image.name
         await page.screenshot(path=test_image)
 
@@ -29,7 +29,7 @@ class Utils:
         file_diff = (test_image.parent / test_image.stem).with_suffix(".diff.png")
         mismatch = pixelmatch(img_ref, img_test, img_diff, threshold=threshold)
         img_diff.save(file_diff)
-        assert mismatch < threshold
+        return mismatch < threshold
 
 
 def create_vtk_pipeline():

@@ -1,3 +1,17 @@
+#!/usr/bin/env -S uv run --script
+#
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#     "trame>=3.13.2",
+#     "trame-vtklocal>=1",
+#     "vtk==9.6.20260517.dev0",
+# ]
+#
+# [[tool.uv.index]]
+# url = "https://wheels.vtk.org"
+# ///
+
 import asyncio
 
 # Required for vtk factory
@@ -100,7 +114,8 @@ class DemoApp(TrameApp):
             if resolution < 4:
                 self.delta = +1
 
-            self.on_resolution_change(resolution + self.delta)
+            with self.state:
+                self.state.resolution = resolution + self.delta
 
     def _build_ui(self):
         with DivLayout(self.server) as self.ui:

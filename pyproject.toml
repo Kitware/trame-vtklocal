@@ -1,6 +1,6 @@
 [project]
 name = "trame-vtklocal"
-version = "1.0.0"
+version = "1.0.1"
 description = "VTK Local Rendering using WASM"
 authors = [
     {name = "Kitware Inc."},
@@ -36,6 +36,7 @@ dev = [
     "pytest-asyncio",
     "trame-client[test]",
 ]
+
 
 
 [build-system]
@@ -94,9 +95,11 @@ docstring-code-line-length = "dynamic"
 max-line-length = 120
 
 
+
 [semantic_release.publish]
 dist_glob_patterns = ["dist/*"]
 upload_to_vcs_release = true
+
 
 
 [lint.pydocstyle]

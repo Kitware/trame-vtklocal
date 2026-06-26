@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v1.0.1 (2026-06-26)
+
+### Bug Fixes
+
+- **validation**: Add utilities for validation examples
+  ([`36696da`](https://github.com/Kitware/trame-vtklocal/commit/36696daa0d54f6846a61b6e2ad91f203f4b2b21b))
+
+### Documentation
+
+- **example**: Add uv annotation for standalone exec
+  ([`16edcd7`](https://github.com/Kitware/trame-vtklocal/commit/16edcd71b2ef3433675e9a774699774bb39cb016))
+
+
 ## v1.0.0 (2026-06-26)
 
 ### Bug Fixes

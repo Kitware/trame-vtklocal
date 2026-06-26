@@ -34,6 +34,9 @@ dev = [
     "ruff",
     "pytest",
     "pytest-asyncio",
+    "pytest-cov >=3",
+    "coverage",
+    "pytest-playwright",
     "trame-client[test]",
 ]
 

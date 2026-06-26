@@ -57,6 +57,17 @@ jobs:
           version: "0.11.24"
           enable-cache: true
 
+      - name: Set Up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Build Vue Components
+        run: |
+          cd vue-components
+          npm i
+          npm run build
+
       - name: Install the project
         run: uv sync --all-extras --dev
 
@@ -82,9 +93,8 @@ jobs:
         with:
           name: pytest-results-${{  matrix.config.name }}
           path: |
-            tests/refs/*.yml
-            tests/refs/**/*.png
-            assets/**
+            tests/results/**/*.png
+
           retention-days: 1
 
   test-npm-build:

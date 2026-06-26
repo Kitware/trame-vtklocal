@@ -7,10 +7,10 @@ from playwright.async_api import async_playwright, expect
 BASELINES = [
     Path(__file__).with_name("assets") / "cone" / name
     for name in [
-        "00_startup.png",
-        "01_update_resolution.png",
-        "02_unmount.png",
-        "03_remount.png",
+        "00_startup",
+        "01_update_resolution",
+        "02_unmount",
+        "03_remount",
     ]
 ]
 

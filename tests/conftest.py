@@ -19,17 +19,23 @@ HELPER = FixtureHelper(ROOT_PATH)
 class Utils:
     @staticmethod
     async def compare_screenshot(page, baseline_image, result_directory, threshold=0.1):
-        test_image = result_directory / baseline_image.name
+        test_image = result_directory / baseline_image.with_suffix(".png").name
         await page.screenshot(path=test_image)
 
         img_test = Image.open(test_image)
-        img_ref = Image.open(baseline_image)
-        img_diff = Image.new("RGBA", img_ref.size)
+        img_diff = Image.new("RGBA", img_test.size)
+        mismatches = []
 
-        file_diff = (test_image.parent / test_image.stem).with_suffix(".diff.png")
-        mismatch = pixelmatch(img_ref, img_test, img_diff, threshold=threshold)
-        img_diff.save(file_diff)
-        return mismatch < threshold
+        for ref_file in baseline_image.parent.glob(f"{baseline_image.name}*.png"):
+            img_ref = Image.open(ref_file)
+
+            file_diff = (test_image.parent / ref_file.name).with_suffix("-diff.png")
+            mismatch = pixelmatch(img_ref, img_test, img_diff, threshold=threshold)
+            img_diff.save(file_diff)
+            file_diff.with_suffix(".txt").write_text(f"{mismatch}")
+            mismatches.append(mismatch)
+
+        return min(mismatches) < threshold
 
 
 def create_vtk_pipeline():

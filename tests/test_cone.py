@@ -42,6 +42,7 @@ async def test_cone(ConeApp, utils, config):
         await page.set_viewport_size({"width": 300, "height": 300})
 
         await page.goto(f"http://localhost:{app.server.port}/")
+        await asyncio.sleep(0.1)  # wait for page load
         await expect(page.locator(".readyCount")).to_have_text("1")
         valid_image_comparisons.append(
             await utils.compare_screenshot(

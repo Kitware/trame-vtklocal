@@ -29,7 +29,7 @@ class Utils:
         for ref_file in baseline_image.parent.glob(f"{baseline_image.name}*.png"):
             img_ref = Image.open(ref_file)
 
-            file_diff = (test_image.parent / ref_file.name).with_suffix("-diff.png")
+            file_diff = (test_image.parent / ref_file.name).with_suffix(".diff.png")
             mismatch = pixelmatch(img_ref, img_test, img_diff, threshold=threshold)
             img_diff.save(file_diff)
             file_diff.with_suffix(".txt").write_text(f"{mismatch}")

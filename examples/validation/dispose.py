@@ -1,3 +1,17 @@
+#!/usr/bin/env -S uv run --script
+#
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#     "trame>=3.13.2",
+#     "trame-vtklocal>=1.0.1",
+#     "vtk==9.6.20260517.dev0",
+# ]
+#
+# [[tool.uv.index]]
+# url = "https://wheels.vtk.org"
+# ///
+
 # Required for vtk factory
 import vtkmodules.vtkRenderingOpenGL2  # noqa
 from trame.app import TrameApp
@@ -15,6 +29,7 @@ from vtkmodules.vtkRenderingCore import (
 
 from trame.widgets import client, html
 from trame_vtklocal.widgets import vtklocal
+from trame_vtklocal.utils import ui
 
 CLIENT_TYPE = "vue3"
 
@@ -51,23 +66,6 @@ class DemoApp(TrameApp):
     def __init__(self, server=None):
         # dispose after unmount should only work with vue3
         super().__init__(server, client_type=CLIENT_TYPE)
-        self.server.cli.add_argument(
-            "--mode",
-            default="wasm32",
-        )
-        self.server.cli.add_argument(
-            "--exec",
-            default="sync",
-        )
-        self.server.cli.add_argument(
-            "--rendering",
-            default="webgl",
-        )
-        args, _ = self.server.cli.parse_known_args()
-        self.state.mode = args.mode
-        self.state.exec = args.exec
-        self.state.rendering = args.rendering
-
         self.render_window, self.cone, self.actor = create_vtk_pipeline()
         self._build_ui()
 
@@ -85,58 +83,48 @@ class DemoApp(TrameApp):
         with DivLayout(self.server) as self.ui:
             client.Style("body { margin: 0; }")
             with html.Div(
-                style="position: absolute; left: 0; top: 0; width: 100vw; height: 100vh;",
+                style=ui.FULL_SCREEN,
                 v_if=("mounted", True),
             ):
-                self.html_view = vtklocal.LocalView(
+                vtklocal.LocalView(
                     self.render_window,
                     ctx_name="view",
                     throttle_rate=20,
                     config=("{ mode, exec, rendering }",),
                     updated="console.log('updated', $event)",  # print custom update content
                 )
-            with html.Div(
-                style="""
-                    position: absolute;
-                    left: 1rem;
-                    right: 1rem;
-                    top: 1rem;
-                    display: flex;
-                    padding: 10px;
-                    background: white;
-                    gap: 15px;
-                """
-            ):
-                html.Div("Resolution")
-                html.Input(
-                    type="range",
-                    v_model=("resolution", 6),
-                    min=3,
-                    max=60,
-                    step=1,
-                )
-                with html.Select(v_model=("mode", "wasm32")):
-                    html.Option("wasm32")
-                    html.Option("wasm64")
-                with html.Select(v_model=("exec", "sync")):
-                    html.Option("sync")
-                    html.Option("async")
-                with html.Select(v_model=("rendering", "webgl")):
-                    html.Option("webgl")
-                    html.Option("webgpu")
-
-                html.Div("Component mounted")
-                html.Input(
-                    type="checkbox",
-                    v_model=("mounted", True),
-                )
-                html.Button("Dispose Runtime", click=self.ctx.view.dispose_wasm_runtime)
-                html.Button(
-                    "Dispose Session", click=self.ctx.view.dispose_remote_session
-                )
+            with ui.Toolbar():
                 html.Button(
                     "Reset Camera",
                     click=self.reset_camera,
+                )
+                with ui.Element("Resolution"):
+                    html.Input(
+                        type="range",
+                        v_model=("resolution", 6),
+                        min=3,
+                        max=60,
+                        step=1,
+                    )
+
+                ui.Separator()
+                ui.WasmConfig()
+                ui.Separator()
+
+                with ui.Element("Mounted"):
+                    html.Input(
+                        type="checkbox",
+                        v_model=("mounted", True),
+                    )
+
+                ui.Separator()
+                html.Button(
+                    "Dispose Runtime",
+                    click=self.ctx.view.dispose_wasm_runtime,
+                )
+                html.Button(
+                    "Dispose Session",
+                    click=self.ctx.view.dispose_remote_session,
                 )
 
 

@@ -94,6 +94,7 @@ jobs:
           name: pytest-results-${{  matrix.config.name }}
           path: |
             tests/results/**/*.png
+            tests/results/**/*.txt
 
           retention-days: 1
 

@@ -125,9 +125,12 @@ class VolumeRendering(TrameApp):
     def _build_ui(self):
         self.state.local_volume_rendering_ready = 0
         with DivLayout(self.server) as self.ui:
-            html.Div("{{ local_volume_rendering_ready }}", classes="readyCount")
+            html.Div(
+                "{{ local_volume_rendering_ready }}",
+                classes="readyCount",
+            )
             client.Style(
-                "body { margin: 0; } .readyCount { z-index: 10; position: absolute; left: 0; top: 0; }"
+                "body { margin: 0; } .readyCount { z-index: 10; position: absolute; left: -100px; top: 0; }"
             )
             with html.Div(
                 style=ui.FULL_SCREEN,

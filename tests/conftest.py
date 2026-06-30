@@ -24,7 +24,7 @@ class Utils:
 
         img_test = Image.open(test_image)
         img_diff = Image.new("RGBA", img_test.size)
-        mismatches = []
+        mismatches = [999]
 
         for ref_file in baseline_image.parent.glob(f"{baseline_image.name}*.png"):
             img_ref = Image.open(ref_file)
@@ -38,23 +38,107 @@ class Utils:
         return min(mismatches) < threshold
 
 
-def create_vtk_pipeline():
-    renderer = vtk.vtkRenderer()
-    rw = vtk.vtkRenderWindow()
-    rw.AddRenderer(renderer)
-    rwi = vtk.vtkRenderWindowInteractor(render_window=rw)
-    rwi.interactor_style.SetCurrentStyleToTrackballCamera()
+MAPPERS = {
+    "FixedPoint": vtk.vtkFixedPointVolumeRayCastMapper,
+    "Smart": vtk.vtkSmartVolumeMapper,
+    "GPU": vtk.vtkOpenGLGPUVolumeRayCastMapper,
+    "RayCast": vtk.vtkGPUVolumeRayCastMapper,
+}
 
-    cone = vtk.vtkConeSource()
 
-    mapper = vtk.vtkPolyDataMapper(input_connection=cone.output_port)
-    actor = vtk.vtkActor(mapper=mapper)
+class VolumeRendering(TrameApp):
+    def __init__(
+        self, server=None, mode="wasm32", exec="sync", rendering="webgl", mapper="Smart"
+    ):
+        super().__init__(server)
+        self.state.wasm_conf = {
+            "mode": mode,
+            "exec": exec,
+            "rendering": rendering,
+        }
+        print(self.state.wasm_conf)
+        enable_testing(self.server, "local_volume_rendering_ready")
+        self._setup_vtk(mapper)
+        self._build_ui()
 
-    renderer.AddActor(actor)
-    renderer.background = (0.1, 0.2, 0.4)
-    renderer.ResetCamera()
+    def _setup_vtk(self, mapper_type):
+        renderer = vtk.vtkRenderer()
+        rw = vtk.vtkRenderWindow()
+        rw.AddRenderer(renderer)
+        rwi = vtk.vtkRenderWindowInteractor(render_window=rw)
+        rwi.interactor_style.SetCurrentStyleToTrackballCamera()
+        renderer.background = (1, 1, 1)
 
-    return rw, cone
+        pwf = vtk.vtkPiecewiseFunction()
+        pwf.AddPoint(20, 0.0)
+        pwf.AddPoint(255, 0.2)
+
+        lut = vtk.vtkColorTransferFunction()
+        lut.AddRGBPoint(0.0, 0.0, 0.0, 0.0)
+        lut.AddRGBPoint(64.0, 1.0, 0.0, 0.0)
+        lut.AddRGBPoint(128.0, 0.0, 0.0, 1.0)
+        lut.AddRGBPoint(192.0, 0.0, 1.0, 0.0)
+        lut.AddRGBPoint(255.0, 0.0, 0.2, 0.0)
+
+        source = vtk.vtkRTAnalyticSource()
+
+        property = vtk.vtkVolumeProperty(color=lut, scalar_opacity=pwf, shade=True)
+        property.SetColor(lut)
+        property.SetScalarOpacity(pwf)
+        property.ShadeOn()
+        property.SetScalarOpacityUnitDistance(10)
+        property.SetInterpolationTypeToLinear()
+
+        mapper = MAPPERS[mapper_type]()
+        source >> mapper
+
+        volume = vtk.vtkVolume(mapper=mapper, property=property)
+        renderer.AddVolume(volume)
+
+        cube = vtk.vtkCubeAxesActor()
+        cube.SetCamera(renderer.GetActiveCamera())
+        cube.SetBounds(source.GetOutput().GetBounds())
+        renderer.AddActor(cube)
+
+        renderer.ResetCamera()
+
+        self.render_window = rw
+        self.pwf = pwf
+        self.lut = lut
+
+    def update_pwf(self):
+        self.pwf.RemoveAllPoints()
+        self.pwf.AddPoint(20, 0.0)
+        self.pwf.AddPoint(150, 1.0)
+        self.pwf.AddPoint(255, 0.0)
+        self.ctx.view.update()
+
+    @property
+    def mounted(self):
+        return self.state.mounted
+
+    @mounted.setter
+    def mounted(self, v):
+        with self.state:
+            self.state.mounted = bool(v)
+
+    def _build_ui(self):
+        self.state.local_volume_rendering_ready = 0
+        with DivLayout(self.server) as self.ui:
+            html.Div("{{ local_volume_rendering_ready }}", classes="readyCount")
+            client.Style(
+                "body { margin: 0; } .readyCount { z-index: 10; position: absolute; left: 0; top: 0; }"
+            )
+            with html.Div(
+                style=ui.FULL_SCREEN,
+                v_if=("mounted", True),
+            ):
+                vtklocal.LocalView(
+                    self.render_window,
+                    ctx_name="view",
+                    config=["wasm_conf"],
+                    updated="local_volume_rendering_ready++",
+                )
 
 
 class Cone(TrameApp):
@@ -66,8 +150,27 @@ class Cone(TrameApp):
             "rendering": rendering,
         }
         enable_testing(self.server, "local_rendering_ready")
-        self.render_window, self.cone = create_vtk_pipeline()
+        self._setup_vtk()
         self._build_ui()
+
+    def _setup_vtk(self):
+        renderer = vtk.vtkRenderer()
+        rw = vtk.vtkRenderWindow()
+        rw.AddRenderer(renderer)
+        rwi = vtk.vtkRenderWindowInteractor(render_window=rw)
+        rwi.interactor_style.SetCurrentStyleToTrackballCamera()
+
+        cone = vtk.vtkConeSource()
+
+        mapper = vtk.vtkPolyDataMapper(input_connection=cone.output_port)
+        actor = vtk.vtkActor(mapper=mapper)
+
+        renderer.AddActor(actor)
+        renderer.background = (0.1, 0.2, 0.4)
+        renderer.ResetCamera()
+
+        self.render_window = rw
+        self.cone = cone
 
     @property
     def resolution(self):
@@ -136,3 +239,8 @@ def utils():
 @pytest.fixture
 def ConeApp():
     return Cone
+
+
+@pytest.fixture
+def VolumeApp():
+    return VolumeRendering

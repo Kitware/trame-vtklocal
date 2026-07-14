@@ -1,6 +1,36 @@
 # CHANGELOG
 
 
+## v1.0.2 (2026-07-14)
+
+### Bug Fixes
+
+- **multi-view**: Update vtk-wasm
+  ([`42e9f93`](https://github.com/Kitware/trame-vtklocal/commit/42e9f93f620da1f63566b216c18fa8f3e3207996))
+
+### Chores
+
+- **example**: Call getEventPosition on interactor instead of property that does not exist
+  ([`118391e`](https://github.com/Kitware/trame-vtklocal/commit/118391e715fa715b83f8f2f8053228ce77c1469c))
+
+### Continuous Integration
+
+- Wait for page load
+  ([`18f0a11`](https://github.com/Kitware/trame-vtklocal/commit/18f0a118607488bb68986eea3d3e5068dc9adfc9))
+
+### Testing
+
+- All configs + mount/unmount + mesh change
+  ([`778d3e3`](https://github.com/Kitware/trame-vtklocal/commit/778d3e3b074ce67ecf5318f677cff019b8296f89))
+
+- **download**: Wait for wasm bundle to be downloaded
+  ([`98d5729`](https://github.com/Kitware/trame-vtklocal/commit/98d5729db142e92744b955a797507761cc3e5152))
+
+- **volume-rendering**: Add testing with volume rendering
+  ([#74](https://github.com/Kitware/trame-vtklocal/pull/74),
+  [`ca7f0d3`](https://github.com/Kitware/trame-vtklocal/commit/ca7f0d37a9c4e90ef4dd806ecf44cfe7c1045ddc))
+
+
 ## v1.0.1 (2026-06-26)
 
 ### Bug Fixes

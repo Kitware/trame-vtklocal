@@ -217,6 +217,62 @@ class Cone(TrameApp):
                 )
 
 
+class MultiView(TrameApp):
+    """Two LocalViews sharing one WASM session (issues/76 and issues/77).
+
+    Regression check: with a shared session, an update targeting one view must
+    not blank the other. A blacked-out half exceeds the screenshot threshold.
+    """
+
+    HALF = "width:50vw; height:100vh; display:inline-block; vertical-align:top;"
+
+    def __init__(self, server=None):
+        super().__init__(server)
+        enable_testing(self.server, "local_rendering_ready")
+        self.render_window_1 = self._create_pipeline(
+            vtk.vtkConeSource(), (0.1, 0.2, 0.4)
+        )
+        self.render_window_2 = self._create_pipeline(
+            vtk.vtkSphereSource(), (0.4, 0.2, 0.1)
+        )
+        self._build_ui()
+
+    @staticmethod
+    def _create_pipeline(source, background):
+        renderer = vtk.vtkRenderer()
+        rw = vtk.vtkRenderWindow()
+        rw.AddRenderer(renderer)
+        rwi = vtk.vtkRenderWindowInteractor(render_window=rw)
+        rwi.interactor_style.SetCurrentStyleToTrackballCamera()
+
+        mapper = vtk.vtkPolyDataMapper(input_connection=source.output_port)
+        actor = vtk.vtkActor(mapper=mapper)
+
+        renderer.AddActor(actor)
+        renderer.background = background
+        renderer.ResetCamera()
+
+        return rw
+
+    def _build_ui(self):
+        # Each view bumps the counter once when it first finishes updating, so
+        # the test waits for it to reach 2 (both views rendered).
+        self.state.local_rendering_ready = 0
+        with DivLayout(self.server) as self.ui:
+            html.Div("{{ local_rendering_ready }}", classes="readyCount")
+            client.Style(
+                "body { margin: 0; } .readyCount { z-index: 10; position: absolute; left: 0; top: 0; }"
+            )
+            with html.Div(style=self.HALF):
+                vtklocal.LocalView(
+                    self.render_window_1, updated="local_rendering_ready++"
+                )
+            with html.Div(style=self.HALF):
+                vtklocal.LocalView(
+                    self.render_window_2, updated="local_rendering_ready++"
+                )
+
+
 @pytest.fixture
 def ref_dir() -> Path:
     return Path(__file__).parent / "refs"
@@ -242,6 +298,11 @@ def utils():
 @pytest.fixture
 def ConeApp():
     return Cone
+
+
+@pytest.fixture
+def MultiViewApp():
+    return MultiView
 
 
 @pytest.fixture

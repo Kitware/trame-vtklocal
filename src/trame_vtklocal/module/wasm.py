@@ -9,6 +9,13 @@ from packaging.version import parse
 
 from trame_vtklocal import __version__
 
+WASM_DOWNLOADING = []
+
+
+async def wasm_downloaded():
+    while WASM_DOWNLOADING:
+        await WASM_DOWNLOADING.pop()
+
 
 def run_async(coroutine):
     try:
@@ -41,6 +48,9 @@ async def setup_wasm_directory(target_directory, wasm_url):
     dest_file = str((target_directory / "vtk-wasm.tgz").resolve())
     dest_folder = str(target_directory.resolve())
 
+    loop = asyncio.get_running_loop()
+    future = loop.create_future()
+    WASM_DOWNLOADING.append(future)
     await download_file(wasm_url, dest_file)
 
     # unpack
@@ -49,6 +59,7 @@ async def setup_wasm_directory(target_directory, wasm_url):
 
     print(f"Downloaded WASM:\n - from: {wasm_url}\n - to: {dest_folder}")
     Path(dest_file).unlink()
+    future.set_result(str(target_directory))
 
 
 def get_wasm_info(wasm_bits="wasm32"):

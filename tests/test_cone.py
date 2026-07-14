@@ -1,5 +1,6 @@
 import asyncio
 from pathlib import Path
+from trame_vtklocal.module.wasm import wasm_downloaded
 
 import pytest
 from playwright.async_api import async_playwright, expect
@@ -33,6 +34,8 @@ async def test_cone(ConeApp, utils, config):
     app = ConeApp(f"cone-{conf_key}", wasm_mode, wasm_exec, wasm_rendering)
     task = app.server.start(exec_mode="task", port=0)
     await app.server.ready
+    await wasm_downloaded()
+
     RESULT_BASE = Path(__file__).with_name("results") / "cone" / conf_key
     valid_image_comparisons = []
 

@@ -4,6 +4,8 @@ from pathlib import Path
 import pytest
 from playwright.async_api import async_playwright, expect
 
+from trame_vtklocal.module.wasm import wasm_downloaded
+
 BASELINES = [
     Path(__file__).with_name("assets") / "volume" / name
     for name in [
@@ -48,6 +50,7 @@ async def test_volume_rendering(VolumeApp, utils, config, mapper_type):
     )
     task = app.server.start(exec_mode="task", port=0)
     await app.server.ready
+    await wasm_downloaded()
     RESULT_BASE = Path(__file__).with_name("results") / "volume" / conf_key
     valid_image_comparisons = []
 

@@ -82,6 +82,10 @@ jobs:
           uv sync --all-extras --dev
           source .venv/bin/activate
           playwright install
+
+      - name: Run tests
+        run: |
+          source .venv/bin/activate
           pytest -s ./tests --cov=src --cov-report=xml
 
       - name: Upload Coverage to Codecov

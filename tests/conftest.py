@@ -1,9 +1,9 @@
+import sys
 from pathlib import Path
 
 import pytest
 import vtk
-from PIL import Image
-from pixelmatch.contrib.PIL import pixelmatch
+from vtkmodules.test import Testing as vtk_testing
 from trame.app import TrameApp
 from trame.decorators import change
 from trame.ui.html import DivLayout
@@ -16,26 +16,44 @@ ROOT_PATH = Path(__file__).parent.parent.absolute()
 HELPER = FixtureHelper(ROOT_PATH)
 
 
+def webgpu_args():
+    """Chromium flags needed to obtain a working WebGPU adapter, per platform.
+
+    Playwright's bundled Chromium exposes no WebGPU adapter by default, and
+    --enable-unsafe-webgpu alone only yields a SwiftShader adapter that renders a
+    blank frame on macOS. Selecting the platform's native ANGLE backend gives a
+    real adapter VTK can draw with. Apply only for webgpu configs, since the
+    angle backend override also shifts webgl pixels.
+    """
+    backend = {"darwin": "metal", "win32": "d3d11"}.get(sys.platform, "vulkan")
+    return [f"--use-angle={backend}", "--enable-unsafe-webgpu"]
+
+
 class Utils:
     @staticmethod
-    async def compare_screenshot(page, baseline_image, result_directory, threshold=0.1):
+    async def compare_screenshot(
+        page, baseline_image, result_directory, threshold=0.05
+    ):
         test_image = result_directory / baseline_image.with_suffix(".png").name
         await page.screenshot(path=test_image)
 
-        img_test = Image.open(test_image)
-        img_diff = Image.new("RGBA", img_test.size)
-        mismatches = [999]
+        reader = vtk.vtkPNGReader(file_name=str(test_image))
+        reader.Update()
 
-        for ref_file in baseline_image.parent.glob(f"{baseline_image.name}*.png"):
-            img_ref = Image.open(ref_file)
+        # vtkTesting writes the .diff/.valid/error images into VTK_TEMP_DIR
+        vtk_testing.VTK_TEMP_DIR = str(result_directory)
 
-            file_diff = (test_image.parent / ref_file.name).with_suffix(".diff.png")
-            mismatch = pixelmatch(img_ref, img_test, img_diff, threshold=threshold)
-            img_diff.save(file_diff)
-            file_diff.with_suffix(".txt").write_text(f"{mismatch}")
-            mismatches.append(mismatch)
-
-        return min(mismatches) < threshold
+        try:
+            # src_img must be a vtkAlgorithm (image source), not vtkImageData
+            vtk_testing.compareImageWithSavedImage(
+                reader,
+                str(baseline_image.with_suffix(".png")),
+                threshold=threshold,
+            )
+            return True
+        except RuntimeError as e:
+            print(e)
+            return False
 
 
 MAPPERS = {

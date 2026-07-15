@@ -5,6 +5,8 @@ from trame_vtklocal.module.wasm import wasm_downloaded
 import pytest
 from playwright.async_api import async_playwright, expect
 
+from conftest import webgpu_args
+
 BASELINES = [
     Path(__file__).with_name("assets") / "cone" / name
     for name in [
@@ -40,7 +42,8 @@ async def test_cone(ConeApp, utils, config):
     valid_image_comparisons = []
 
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
+        args = webgpu_args() if wasm_rendering == "webgpu" else []
+        browser = await p.chromium.launch(headless=True, args=args)
         page = await browser.new_page()
         await page.set_viewport_size({"width": 300, "height": 300})
 

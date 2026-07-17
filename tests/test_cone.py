@@ -1,4 +1,3 @@
-import asyncio
 from pathlib import Path
 from trame_vtklocal.module.wasm import wasm_downloaded
 
@@ -52,7 +51,7 @@ async def test_cone(ConeApp, utils, config):
         await page.set_viewport_size({"width": 300, "height": 300})
 
         await page.goto(f"http://localhost:{app.server.port}/")
-        await asyncio.sleep(0.1)  # wait for page load
+        await utils.wait_for_render(page)  # wait for page load
         await expect(page.locator(".readyCount")).to_have_text("1")
         valid_image_comparisons.append(
             await utils.compare_screenshot(
@@ -62,6 +61,7 @@ async def test_cone(ConeApp, utils, config):
 
         app.resolution = 60
         await expect(page.locator(".readyCount")).to_have_text("2")
+        await utils.wait_for_render(page)
         valid_image_comparisons.append(
             await utils.compare_screenshot(
                 page, BASELINES[1], RESULT_BASE, threshold=0.1
@@ -77,7 +77,7 @@ async def test_cone(ConeApp, utils, config):
         )
 
         app.mounted = True
-        await asyncio.sleep(0.1)  # Debounced resize needs complete
+        await utils.wait_for_render(page)
         await expect(page.locator(".readyCount")).to_have_text("3")
         valid_image_comparisons.append(
             await utils.compare_screenshot(

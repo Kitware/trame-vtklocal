@@ -1,4 +1,3 @@
-import asyncio
 from pathlib import Path
 
 import pytest
@@ -63,7 +62,7 @@ async def test_volume_rendering(VolumeApp, utils, config, mapper_type):
         await page.set_viewport_size({"width": 300, "height": 300})
 
         await page.goto(f"http://localhost:{app.server.port}/")
-        await asyncio.sleep(0.1)  # wait for page load
+        await utils.wait_for_render(page)
         await expect(page.locator(".readyCount")).to_have_text("1")
         valid_image_comparisons.append(
             await utils.compare_screenshot(
@@ -88,7 +87,7 @@ async def test_volume_rendering(VolumeApp, utils, config, mapper_type):
         )
 
         app.mounted = True
-        await asyncio.sleep(0.1)  # Debounced resize needs complete
+        await utils.wait_for_render(page)
         await expect(page.locator(".readyCount")).to_have_text("3")
         valid_image_comparisons.append(
             await utils.compare_screenshot(

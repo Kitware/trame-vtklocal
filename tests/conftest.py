@@ -39,6 +39,50 @@ def webgpu_args():
 
 class Utils:
     @staticmethod
+    async def wait_for_render(page):
+        """Wait until every LocalView canvas is sized and painted.
+
+        Two timing hazards make a bare screenshot unreliable:
+
+        * The `updated` event fires when the client finishes applying a state
+          update, but WebGPU presents the new frame on a *later* animation
+          frame, so an immediate capture grabs a blank pre-present buffer.
+        * On (re)mount the canvas starts at its 300x150 HTML default and only
+          reaches the container size after the 100ms debounced ResizeObserver
+          calls setSizeAsync, which does not bump `updated`. Capturing before
+          then yields a wrong-sized frame.
+
+        Poll on requestAnimationFrame until every canvas drawing buffer matches
+        its layout size (same floor(size * dpr + 0.5) formula the component
+        uses) and has stayed stable for two consecutive frames, which also
+        gives the compositor time to present. A frame cap keeps it from hanging
+        if a canvas never settles.
+        """
+        await page.evaluate(
+            """() => new Promise((resolve) => {
+                let stable = 0;
+                let frames = 0;
+                const settled = () => {
+                    const canvases = [...document.querySelectorAll('canvas')];
+                    if (!canvases.length) return false;
+                    const dpr = window.devicePixelRatio;
+                    return canvases.every((c) => {
+                        const r = c.getBoundingClientRect();
+                        const w = Math.floor(r.width * dpr + 0.5);
+                        const h = Math.floor(r.height * dpr + 0.5);
+                        return w > 0 && h > 0 && c.width === w && c.height === h;
+                    });
+                };
+                const tick = () => {
+                    stable = settled() ? stable + 1 : 0;
+                    if (stable >= 2 || ++frames > 180) resolve();
+                    else requestAnimationFrame(tick);
+                };
+                requestAnimationFrame(tick);
+            })"""
+        )
+
+    @staticmethod
     async def compare_screenshot(
         page, baseline_image, result_directory, threshold=0.05
     ):

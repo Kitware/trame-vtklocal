@@ -1,4 +1,3 @@
-import asyncio
 from pathlib import Path
 from trame_vtklocal.module.wasm import wasm_downloaded
 
@@ -36,7 +35,7 @@ async def test_multi_view(MultiViewApp, utils):
         await page.set_viewport_size({"width": 600, "height": 300})
 
         await page.goto(f"http://localhost:{app.server.port}/")
-        await asyncio.sleep(0.1)  # wait for page load
+        await utils.wait_for_render(page)
         # Both views increment the counter once they have rendered.
         await expect(page.locator(".readyCount")).to_have_text("2")
         valid_image_comparisons.append(

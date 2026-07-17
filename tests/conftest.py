@@ -240,6 +240,7 @@ class Cone(TrameApp):
             ):
                 vtklocal.LocalView(
                     self.render_window,
+                    ref="cone_view",
                     ctx_name="view",
                     config=["wasm_conf"],
                     updated="local_rendering_ready++",

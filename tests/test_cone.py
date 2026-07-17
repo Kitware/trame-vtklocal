@@ -16,6 +16,10 @@ BASELINES = [
         "03_remount",
     ]
 ]
+EXPECTED_WINDOW_CLASSNAMES = {
+    "webgl": "vtkWebAssemblyOpenGLRenderWindow",
+    "webgpu": "vtkWebGPURenderWindow",
+}
 
 
 @pytest.mark.asyncio
@@ -80,6 +84,14 @@ async def test_cone(ConeApp, utils, config):
                 page, BASELINES[3], RESULT_BASE, threshold=0.1
             )
         )
+
+        # Assert the active rendering backend last: getVtkObject() runs a
+        # client-side serialize that currently corrupts the WebGPU render window
+        # (VTK webgpu bug; harmless on webgl), so keep it after every screenshot.
+        result = await page.evaluate(
+            "window.trame.refs.cone_view.getVtkObject(1).state.className"
+        )
+        assert result == EXPECTED_WINDOW_CLASSNAMES[wasm_rendering]
 
         assert all(valid_image_comparisons), "Some images don't match"
 

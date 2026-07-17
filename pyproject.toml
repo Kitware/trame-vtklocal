@@ -38,9 +38,20 @@ dev = [
     "coverage",
     "pytest-playwright",
     "trame-client[test]",
+    # Dev wheel from wheels.vtk.org (see [tool.uv] below)
+    "vtk==9.7.20260712.dev0",
 ]
 
+# Resolve the pinned vtk dev build from the VTK nightly wheel index instead of
+# PyPI. `explicit = true` keeps every other dependency on PyPI; only packages
+# mapped in [tool.uv.sources] use this index.
+[[tool.uv.index]]
+name = "vtk-wheels"
+url = "https://wheels.vtk.org"
+explicit = true
 
+[tool.uv.sources]
+vtk = { index = "vtk-wheels" }
 
 
 [build-system]

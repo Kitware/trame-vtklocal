@@ -31,7 +31,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10"]
+        python-version: ["3.13"]
         config:
           - { name: "Linux", os: ubuntu-latest }
           - { name: "MacOSX", os: macos-latest }
@@ -40,6 +40,11 @@ jobs:
     defaults:
       run:
         shell: bash
+
+    # Pin uv to the matrix interpreter; without this uv picks its own default
+    # and the vtk dev wheel is only published for the interpreters listed above.
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
 
     steps:
       - name: Checkout

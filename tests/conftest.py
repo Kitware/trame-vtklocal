@@ -37,6 +37,34 @@ def webgpu_args():
     return args
 
 
+async def webgpu_hardware_available(page):
+    """Return True only if the page has a non-software WebGPU adapter.
+
+    Playwright's headless Chromium always exposes *an* adapter once
+    --enable-unsafe-webgpu is set, but on a GPU-less runner (GitHub's
+    windows-latest and ubuntu-latest) it is a software fallback -- WARP on
+    Windows, SwiftShader/llvmpipe on Linux -- which VTK's WebGPU backend
+    cannot present with, so the canvas stays blank. macOS runners have a real
+    Metal GPU and render correctly. Detect the fallback case so webgpu configs
+    can skip where no real GPU exists instead of failing on a blank frame.
+    """
+    return await page.evaluate(
+        """async () => {
+            if (!navigator.gpu) return false;
+            const a = await navigator.gpu.requestAdapter();
+            if (!a) return false;
+            if (a.isFallbackAdapter) return false;
+            const i = a.info || {};
+            const desc = [i.vendor, i.architecture, i.device, i.description]
+                .join(' ')
+                .toLowerCase();
+            return !/swiftshader|llvmpipe|basic render|warp|software|microsoft basic/.test(
+                desc
+            );
+        }"""
+    )
+
+
 class Utils:
     @staticmethod
     async def wait_for_render(page):

@@ -4,7 +4,7 @@ from trame_vtklocal.module.wasm import wasm_downloaded
 import pytest
 from playwright.async_api import async_playwright, expect
 
-from conftest import webgpu_args
+from conftest import webgpu_args, webgpu_hardware_available
 
 BASELINES = [
     Path(__file__).with_name("assets") / "cone" / name
@@ -51,6 +51,9 @@ async def test_cone(ConeApp, utils, config):
         await page.set_viewport_size({"width": 300, "height": 300})
 
         await page.goto(f"http://localhost:{app.server.port}/")
+        if wasm_rendering == "webgpu" and not await webgpu_hardware_available(page):
+            await browser.close()
+            pytest.skip("No hardware WebGPU adapter; software fallback renders blank")
         await utils.wait_for_render(page)  # wait for page load
         await expect(page.locator(".readyCount")).to_have_text("1")
         valid_image_comparisons.append(

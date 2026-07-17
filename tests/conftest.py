@@ -44,10 +44,13 @@ class Utils:
         vtk_testing.VTK_TEMP_DIR = str(result_directory)
 
         try:
-            # src_img must be a vtkAlgorithm (image source), not vtkImageData
+            # src_img must be a vtkAlgorithm (image source), not vtkImageData.
+            # Use a posix-style path: vtkTesting derives the .diff/.valid output
+            # names by splitting the baseline path on '/' only, so a Windows
+            # backslash path makes it append the whole absolute path to tmpDir.
             vtk_testing.compareImageWithSavedImage(
                 reader,
-                str(baseline_image.with_suffix(".png")),
+                baseline_image.with_suffix(".png").as_posix(),
                 threshold=threshold,
             )
             return True

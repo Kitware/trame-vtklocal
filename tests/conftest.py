@@ -24,9 +24,17 @@ def webgpu_args():
     blank frame on macOS. Selecting the platform's native ANGLE backend gives a
     real adapter VTK can draw with. Apply only for webgpu configs, since the
     angle backend override also shifts webgl pixels.
+
+    On Windows, Dawn's D3D12 backend fails to create a device because the
+    Chromium build ships a dxil.dll it cannot load (EnsureDXCLibraries ->
+    "DynamicLib.Open: dxil.dll Windows Error: 87"). Disabling the use_dxc Dawn
+    feature falls back to the FXC shader compiler, which needs no external DLL.
     """
     backend = {"darwin": "metal", "win32": "d3d11"}.get(sys.platform, "vulkan")
-    return [f"--use-angle={backend}", "--enable-unsafe-webgpu"]
+    args = [f"--use-angle={backend}", "--enable-unsafe-webgpu"]
+    if sys.platform == "win32":
+        args.append("--disable-dawn-features=use_dxc")
+    return args
 
 
 class Utils:

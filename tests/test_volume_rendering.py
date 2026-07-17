@@ -35,8 +35,20 @@ BASELINES = [
         ("wasm32", "async", "webgl"),
         ("wasm64", "sync", "webgl"),
         ("wasm64", "async", "webgl"),
-        ("wasm32", "async", "webgpu"),
-        ("wasm64", "async", "webgpu"),
+        pytest.param(
+            ("wasm32", "async", "webgpu"),
+            marks=pytest.mark.xfail(
+                reason="Volume rendering is unsupported on the WebGPU backend in VTK",
+                run=False,
+            ),
+        ),
+        pytest.param(
+            ("wasm64", "async", "webgpu"),
+            marks=pytest.mark.xfail(
+                reason="Volume rendering is unsupported on the WebGPU backend in VTK",
+                run=False,
+            ),
+        ),
     ],
 )
 async def test_volume_rendering(VolumeApp, utils, config, mapper_type):

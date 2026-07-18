@@ -31,21 +31,20 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10"]
+        python-version: ["3.13"]
         config:
           - { name: "Linux", os: ubuntu-latest }
-        # - {
-        #     name: "MacOSX",
-        #     os: macos-latest
-        #   }
-        # - {
-        #     name: "Windows",
-        #     os: windows-latest
-        #   }
+          - { name: "MacOSX", os: macos-latest }
+          - { name: "Windows", os: windows-latest }
 
     defaults:
       run:
         shell: bash
+
+    # Pin uv to the matrix interpreter; without this uv picks its own default
+    # and the vtk dev wheel is only published for the interpreters listed above.
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
 
     steps:
       - name: Checkout
@@ -77,12 +76,23 @@ jobs:
           sudo apt update
           sudo apt-get install -y libosmesa6-dev
 
+      - name: Install OSMesa for Windows
+        if: matrix.config.os == 'windows-latest'
+        # 25.0.7 is the last mesa-dist-win release that ships osmesa.dll
+        # (removed in 25.1.0). PATH is searched by LoadLibrary, which is how
+        # VTK's vtkOSOpenGLRenderWindow locates osmesa.dll at runtime.
+        run: |
+          curl -sSL -o mesa.7z https://github.com/pal1000/mesa-dist-win/releases/download/25.0.7/mesa3d-25.0.7-release-msvc.7z
+          7z x mesa.7z -omesa
+          cygpath -w "$PWD/mesa/x64" >> "$GITHUB_PATH"
+
       - name: Install dependencies
         run: |
           uv sync --all-extras --dev
-          source .venv/bin/activate
-          playwright install
-          pytest -s ./tests --cov=src --cov-report=xml
+          uv run playwright install
+
+      - name: Run tests
+        run: uv run pytest -s ./tests --cov=src --cov-report=xml
 
       - name: Upload Coverage to Codecov
         uses: codecov/codecov-action@v3

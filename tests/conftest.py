@@ -1,9 +1,9 @@
+import sys
 from pathlib import Path
 
 import pytest
 import vtk
-from PIL import Image
-from pixelmatch.contrib.PIL import pixelmatch
+from vtkmodules.test import Testing as vtk_testing
 from trame.app import TrameApp
 from trame.decorators import change
 from trame.ui.html import DivLayout
@@ -16,26 +16,127 @@ ROOT_PATH = Path(__file__).parent.parent.absolute()
 HELPER = FixtureHelper(ROOT_PATH)
 
 
+def webgpu_args():
+    """Chromium flags needed to obtain a working WebGPU adapter, per platform.
+
+    Playwright's bundled Chromium exposes no WebGPU adapter by default, and
+    --enable-unsafe-webgpu alone only yields a SwiftShader adapter that renders a
+    blank frame on macOS. Selecting the platform's native ANGLE backend gives a
+    real adapter VTK can draw with. Apply only for webgpu configs, since the
+    angle backend override also shifts webgl pixels.
+
+    On Windows, Dawn's D3D12 backend fails to create a device because the
+    Chromium build ships a dxil.dll it cannot load (EnsureDXCLibraries ->
+    "DynamicLib.Open: dxil.dll Windows Error: 87"). Disabling the use_dxc Dawn
+    feature falls back to the FXC shader compiler, which needs no external DLL.
+    """
+    backend = {"darwin": "metal", "win32": "d3d11"}.get(sys.platform, "vulkan")
+    args = [f"--use-angle={backend}", "--enable-unsafe-webgpu"]
+    if sys.platform == "win32":
+        args.append("--disable-dawn-features=use_dxc")
+    return args
+
+
+async def webgpu_hardware_available(page):
+    """Return True only if the page has a non-software WebGPU adapter.
+
+    Playwright's headless Chromium always exposes *an* adapter once
+    --enable-unsafe-webgpu is set, but on a GPU-less runner (GitHub's
+    windows-latest and ubuntu-latest) it is a software fallback -- WARP on
+    Windows, SwiftShader/llvmpipe on Linux -- which VTK's WebGPU backend
+    cannot present with, so the canvas stays blank. macOS runners have a real
+    Metal GPU and render correctly. Detect the fallback case so webgpu configs
+    can skip where no real GPU exists instead of failing on a blank frame.
+    """
+    return await page.evaluate(
+        """async () => {
+            if (!navigator.gpu) return false;
+            const a = await navigator.gpu.requestAdapter();
+            if (!a) return false;
+            if (a.isFallbackAdapter) return false;
+            const i = a.info || {};
+            const desc = [i.vendor, i.architecture, i.device, i.description]
+                .join(' ')
+                .toLowerCase();
+            return !/swiftshader|llvmpipe|basic render|warp|software|microsoft basic/.test(
+                desc
+            );
+        }"""
+    )
+
+
 class Utils:
     @staticmethod
-    async def compare_screenshot(page, baseline_image, result_directory, threshold=0.1):
+    async def wait_for_render(page):
+        """Wait until every LocalView canvas is sized and painted.
+
+        Two timing hazards make a bare screenshot unreliable:
+
+        * The `updated` event fires when the client finishes applying a state
+          update, but WebGPU presents the new frame on a *later* animation
+          frame, so an immediate capture grabs a blank pre-present buffer.
+        * On (re)mount the canvas starts at its 300x150 HTML default and only
+          reaches the container size after the 100ms debounced ResizeObserver
+          calls setSizeAsync, which does not bump `updated`. Capturing before
+          then yields a wrong-sized frame.
+
+        Poll on requestAnimationFrame until every canvas drawing buffer matches
+        its layout size (same floor(size * dpr + 0.5) formula the component
+        uses) and has stayed stable for two consecutive frames, which also
+        gives the compositor time to present. A frame cap keeps it from hanging
+        if a canvas never settles.
+        """
+        await page.evaluate(
+            """() => new Promise((resolve) => {
+                let stable = 0;
+                let frames = 0;
+                const settled = () => {
+                    const canvases = [...document.querySelectorAll('canvas')];
+                    if (!canvases.length) return false;
+                    const dpr = window.devicePixelRatio;
+                    return canvases.every((c) => {
+                        const r = c.getBoundingClientRect();
+                        const w = Math.floor(r.width * dpr + 0.5);
+                        const h = Math.floor(r.height * dpr + 0.5);
+                        return w > 0 && h > 0 && c.width === w && c.height === h;
+                    });
+                };
+                const tick = () => {
+                    stable = settled() ? stable + 1 : 0;
+                    if (stable >= 2 || ++frames > 180) resolve();
+                    else requestAnimationFrame(tick);
+                };
+                requestAnimationFrame(tick);
+            })"""
+        )
+
+    @staticmethod
+    async def compare_screenshot(
+        page, baseline_image, result_directory, threshold=0.05
+    ):
         test_image = result_directory / baseline_image.with_suffix(".png").name
         await page.screenshot(path=test_image)
 
-        img_test = Image.open(test_image)
-        img_diff = Image.new("RGBA", img_test.size)
-        mismatches = [999]
+        reader = vtk.vtkPNGReader(file_name=str(test_image))
+        reader.Update()
 
-        for ref_file in baseline_image.parent.glob(f"{baseline_image.name}*.png"):
-            img_ref = Image.open(ref_file)
+        # vtkTesting writes the .diff/.valid/error images into VTK_TEMP_DIR
+        vtk_testing.VTK_TEMP_DIR = str(result_directory)
 
-            file_diff = (test_image.parent / ref_file.name).with_suffix(".diff.png")
-            mismatch = pixelmatch(img_ref, img_test, img_diff, threshold=threshold)
-            img_diff.save(file_diff)
-            file_diff.with_suffix(".txt").write_text(f"{mismatch}")
-            mismatches.append(mismatch)
-
-        return min(mismatches) < threshold
+        try:
+            # src_img must be a vtkAlgorithm (image source), not vtkImageData.
+            # Use a posix-style path: vtkTesting derives the .diff/.valid output
+            # names by splitting the baseline path on '/' only, so a Windows
+            # backslash path makes it append the whole absolute path to tmpDir.
+            vtk_testing.compareImageWithSavedImage(
+                reader,
+                baseline_image.with_suffix(".png").as_posix(),
+                threshold=threshold,
+            )
+            return True
+        except RuntimeError as e:
+            print(e)
+            return False
 
 
 MAPPERS = {
@@ -211,6 +312,7 @@ class Cone(TrameApp):
             ):
                 vtklocal.LocalView(
                     self.render_window,
+                    ref="cone_view",
                     ctx_name="view",
                     config=["wasm_conf"],
                     updated="local_rendering_ready++",

@@ -1,10 +1,11 @@
-import asyncio
 from pathlib import Path
 
 import pytest
 from playwright.async_api import async_playwright, expect
 
 from trame_vtklocal.module.wasm import wasm_downloaded
+
+from conftest import webgpu_args
 
 BASELINES = [
     Path(__file__).with_name("assets") / "volume" / name
@@ -34,8 +35,20 @@ BASELINES = [
         ("wasm32", "async", "webgl"),
         ("wasm64", "sync", "webgl"),
         ("wasm64", "async", "webgl"),
-        ("wasm32", "async", "webgpu"),
-        ("wasm64", "async", "webgpu"),
+        pytest.param(
+            ("wasm32", "async", "webgpu"),
+            marks=pytest.mark.xfail(
+                reason="Volume rendering is unsupported on the WebGPU backend in VTK",
+                run=False,
+            ),
+        ),
+        pytest.param(
+            ("wasm64", "async", "webgpu"),
+            marks=pytest.mark.xfail(
+                reason="Volume rendering is unsupported on the WebGPU backend in VTK",
+                run=False,
+            ),
+        ),
     ],
 )
 async def test_volume_rendering(VolumeApp, utils, config, mapper_type):
@@ -55,12 +68,13 @@ async def test_volume_rendering(VolumeApp, utils, config, mapper_type):
     valid_image_comparisons = []
 
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
+        args = webgpu_args() if wasm_rendering == "webgpu" else []
+        browser = await p.chromium.launch(headless=True, args=args)
         page = await browser.new_page()
         await page.set_viewport_size({"width": 300, "height": 300})
 
         await page.goto(f"http://localhost:{app.server.port}/")
-        await asyncio.sleep(0.1)  # wait for page load
+        await utils.wait_for_render(page)
         await expect(page.locator(".readyCount")).to_have_text("1")
         valid_image_comparisons.append(
             await utils.compare_screenshot(
@@ -85,7 +99,7 @@ async def test_volume_rendering(VolumeApp, utils, config, mapper_type):
         )
 
         app.mounted = True
-        await asyncio.sleep(0.1)  # Debounced resize needs complete
+        await utils.wait_for_render(page)
         await expect(page.locator(".readyCount")).to_have_text("3")
         valid_image_comparisons.append(
             await utils.compare_screenshot(

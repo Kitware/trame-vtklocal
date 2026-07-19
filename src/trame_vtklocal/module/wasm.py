@@ -36,6 +36,7 @@ async def download_file(url, filename):
     elif url.startswith("http://") or url.startswith("https://"):
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
+                response.raise_for_status()
                 data = await response.read()
                 with open(filename, "wb") as f:
                     f.write(data)
@@ -51,15 +52,23 @@ async def setup_wasm_directory(target_directory, wasm_url):
     loop = asyncio.get_running_loop()
     future = loop.create_future()
     WASM_DOWNLOADING.append(future)
-    await download_file(wasm_url, dest_file)
+    try:
+        await download_file(wasm_url, dest_file)
 
-    # unpack
-    with tarfile.open(dest_file) as tgz:
-        tgz.extractall(dest_folder)
+        # unpack
+        with tarfile.open(dest_file) as tgz:
+            tgz.extractall(dest_folder)
 
-    print(f"Downloaded WASM:\n - from: {wasm_url}\n - to: {dest_folder}")
-    Path(dest_file).unlink()
-    future.set_result(str(target_directory))
+        print(f"Downloaded WASM:\n - from: {wasm_url}\n - to: {dest_folder}")
+        Path(dest_file).unlink()
+    except BaseException as e:
+        # Propagate the failure to anyone awaiting wasm_downloaded(); without
+        # this the future never resolves and callers hang forever (e.g. when
+        # the wasm archive for the installed VTK version is not published yet).
+        future.set_exception(e)
+        raise
+    else:
+        future.set_result(str(target_directory))
 
 
 def get_wasm_info(wasm_bits="wasm32"):

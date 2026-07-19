@@ -110,29 +110,31 @@ def register_wasm(serve_path, wasm_bits="wasm32", **kwargs):
         wasm_url = kwargs.get("wasm_url", wasm_url)
 
         # if the required wasm files do not exist, we need to download them
-        # Versions before 9.5.20250531 use different WASM file naming conventions.
-        # this cutoff distinguishes between old and new formats.
+        # The archive contents changed over time; these cutoffs distinguish the formats:
+        # - before 9.5.20250531: vtkWasmSceneManager.{mjs,wasm}
+        # - before 9.7.20260716: separate webgl ({base}WebAssembly.{mjs,wasm}) and
+        #   webgpu ({base}WebAssemblyAsync.{mjs,wasm}) builds
+        # - from 9.7.20260716: single {base}WebAssembly.{mjs,wasm} build with both
+        #   webgl and webgpu support
         if parse(version) < parse("9.5.20250531"):
-            # For older versions, the wasm files are named differently.
-            if (
-                not dest_directory.joinpath("vtkWasmSceneManager.mjs").exists()
-                or not dest_directory.joinpath("vtkWasmSceneManager.wasm").exists()
-            ):
-                run_async(setup_wasm_directory(dest_directory, wasm_url))
+            required_files = [
+                "vtkWasmSceneManager.mjs",
+                "vtkWasmSceneManager.wasm",
+            ]
+        elif parse(version) < parse("9.7.20260716"):
+            required_files = [
+                f"{wasm_base_name}WebAssembly.mjs",
+                f"{wasm_base_name}WebAssembly.wasm",
+                f"{wasm_base_name}WebAssemblyAsync.mjs",
+                f"{wasm_base_name}WebAssemblyAsync.wasm",
+            ]
         else:
-            if (
-                not dest_directory.joinpath(f"{wasm_base_name}WebAssembly.mjs").exists()
-                or not dest_directory.joinpath(
-                    f"{wasm_base_name}WebAssembly.wasm"
-                ).exists()
-                or not dest_directory.joinpath(
-                    f"{wasm_base_name}WebAssemblyAsync.mjs"
-                ).exists()
-                or not dest_directory.joinpath(
-                    f"{wasm_base_name}WebAssemblyAsync.wasm"
-                ).exists()
-            ):
-                run_async(setup_wasm_directory(dest_directory, wasm_url))
+            required_files = [
+                f"{wasm_base_name}WebAssembly.mjs",
+                f"{wasm_base_name}WebAssembly.wasm",
+            ]
+        if any(not dest_directory.joinpath(f).exists() for f in required_files):
+            run_async(setup_wasm_directory(dest_directory, wasm_url))
 
     return dict(
         state={

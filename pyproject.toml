@@ -39,7 +39,7 @@ dev = [
     "pytest-playwright",
     "trame-client[test]",
     # Dev wheel from wheels.vtk.org (see [tool.uv] below)
-    "vtk==9.7.20260712.dev0",
+    "vtk==9.7.20260719.dev0",
 ]
 
 # Resolve the pinned vtk dev build from the VTK nightly wheel index instead of

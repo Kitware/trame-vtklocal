@@ -115,11 +115,11 @@ class ActorPicker(TrameApp):
         self.LastPickedActor = None
         self.LastPickedProperty = vtkProperty()
         self.picker = vtkPropPicker()
+        self.pick_pending = False
 
         # ---------------------------------------------------------------------
         # Build UI
         # ---------------------------------------------------------------------
-        self.state.setdefault("clicked_pos", None)
         with DivLayout(self.server) as self.ui:
             client.Style("body { margin: 0; }")
             with html.Div(
@@ -137,54 +137,67 @@ class ActorPicker(TrameApp):
                         {
                             wasm_interactor_id: {
                                 "LeftButtonPressEvent": {
-                                    "clicked_pos": {
-                                        "x": (wasm_interactor_id, "EventPosition", 0),
-                                        "y": (wasm_interactor_id, "EventPosition", 1),
+                                    "clicked": {
+                                        # any still-marshalled scalar; only used to
+                                        # signal that a click happened
+                                        "pointer": (wasm_interactor_id, "PointerIndex"),
                                     },
                                 },
                             },
                         },
                     )
+                    self.state.clicked = None
                     # Add a picker on client side
                     view.register_vtk_object(self.picker)
 
-    @change("clicked_pos")
-    def on_actor_clicked(self, clicked_pos, **_):
-        if clicked_pos is None:
+    @change("clicked")
+    def on_actor_clicked(self, clicked, **_):
+        if clicked is None:
             return
+        if not self.pick_pending:
+            asynchronous.create_task(self._activate_actor())
 
-        asynchronous.create_task(self._activate_actor(**clicked_pos))
-
-    async def _activate_actor(self, x, y):
-        picked_worked = await self.ctx.wasm_view.invoke(
-            self.picker, "Pick", (x, y, 0), self.renderer
-        )
-        if not picked_worked:
-            # prevent calling a method returning a null pointer
+    async def _activate_actor(self):
+        if self.pick_pending:
             return
+        try:
+            self.pick_pending = True
+            # EventPosition is excluded from marshalling, so fetch the current
+            # click coordinates on demand instead of reading them from state.
+            pos = await self.ctx.wasm_view.invoke(self.interactor, "GetEventPosition")
+            x, y = pos[0], pos[1]
+            picked_worked = await self.ctx.wasm_view.invoke(
+                self.picker, "Pick", (x, y, 0), self.renderer
+            )
+            if picked_worked:
+                if actor := await self.ctx.wasm_view.invoke(self.picker, "GetActor"):
+                    actor_prop = actor.property
 
-        actor = await self.ctx.wasm_view.invoke(self.picker, "GetActor")
-        if actor:
-            actor_prop = actor.property
+                    # Restore previous state
+                    if self.LastPickedActor:
+                        self.LastPickedActor.GetProperty().DeepCopy(self.LastPickedProperty)
 
-            # Restore previous state
-            if self.LastPickedActor:
-                self.LastPickedActor.GetProperty().DeepCopy(self.LastPickedProperty)
+                    # Save previous state
+                    self.LastPickedProperty.DeepCopy(actor_prop)
 
-            # Save previous state
-            self.LastPickedProperty.DeepCopy(actor_prop)
+                    # Highlight actor
+                    actor_prop.color = colors.GetColor3d("Red")
+                    actor_prop.diffuse = 1
+                    actor_prop.specular = 0
+                    actor_prop.EdgeVisibilityOn()
 
-            # Highlight actor
-            actor_prop.color = colors.GetColor3d("Red")
-            actor_prop.diffuse = 1
-            actor_prop.specular = 0
-            actor_prop.EdgeVisibilityOn()
+                    # Save actor for later reset
+                    self.LastPickedActor = actor
 
-            # Save actor for later reset
-            self.LastPickedActor = actor
-
-            # Render
-            self.ctx.wasm_view.update()
+                    # Render
+                    self.ctx.wasm_view.update()
+        finally:
+            self.pick_pending = False
+            # Reset the trigger so the next click re-fires @change even though
+            # the marshalled "clicked" value is identical (trame dedups equal
+            # values before dispatching state-change listeners).
+            with self.state:
+                self.state.clicked = None
 
 
 def main():

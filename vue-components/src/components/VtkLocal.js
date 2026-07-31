@@ -199,7 +199,9 @@ export default {
     const trame = inject("trame");
     const client = unref(props.wsClient) || trame?.client;
     const bits = props.config?.mode || "wasm32";
-    const { url, wasmBaseName } = trame.state.get(`__trame_vtklocal_${bits}`);
+    const { url, wasmBaseName, tgz_url } = trame.state.get(
+      `__trame_vtklocal_${bits}`,
+    );
 
     // wasm -------------------------------------------------------------------
     function hasRemoteSession() {
@@ -211,12 +213,19 @@ export default {
 
     onBeforeMount(async () => {
       try {
-        const runtime = await loadAsync({
-          url,
-          wasmBaseName,
-          urlIsGzip: false,
-          ...props.config,
-        });
+        const runtime = await loadAsync(
+          tgz_url
+            ? {
+                url: tgz_url,
+                ...props.config,
+              }
+            : {
+                url,
+                wasmBaseName,
+                urlIsGzip: false,
+                ...props.config,
+              },
+        );
         WASM_RUNTIMES[runtime.id] = runtime;
         if (!WASM_REMOTE_SESSIONS[runtime.id]) {
           WASM_REMOTE_SESSIONS[runtime.id] = runtime.createRemoteSession();

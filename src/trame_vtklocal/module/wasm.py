@@ -60,7 +60,9 @@ async def setup_wasm_directory(target_directory, wasm_url):
             tgz.extractall(dest_folder)
 
         print(f"Downloaded WASM:\n - from: {wasm_url}\n - to: {dest_folder}")
-        Path(dest_file).unlink()
+
+        # Keep tgz so it can be served compressed
+        # Path(dest_file).unlink()
     except BaseException as e:
         # Propagate the failure to anyone awaiting wasm_downloaded(); without
         # this the future never resolves and callers hang forever (e.g. when
@@ -136,11 +138,18 @@ def register_wasm(serve_path, wasm_bits="wasm32", **kwargs):
         if any(not dest_directory.joinpath(f).exists() for f in required_files):
             run_async(setup_wasm_directory(dest_directory, wasm_url))
 
+    # If tgz file available provide url
+    add_on = {}
+    tgz_file = dest_directory / "vtk-wasm.tgz"
+    if tgz_file.exists():
+        add_on["tgz_url"] = f"{BASE_URL}/vtk-wasm.tgz"
+
     return dict(
         state={
             f"__trame_vtklocal_{wasm_bits}": {
                 "url": BASE_URL,
                 "wasmBaseName": wasm_base_name,
+                **add_on,
             }
         },
     )

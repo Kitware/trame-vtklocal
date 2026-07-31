@@ -1,6 +1,141 @@
 # CHANGELOG
 
 
+## v1.1.0 (2026-07-31)
+
+### Bug Fixes
+
+- **wasm**: Handle vtk >= 9.7.20260716 wasm package
+  ([`79abb12`](https://github.com/Kitware/trame-vtklocal/commit/79abb127e627fa052f45bf83ceac95e64d88e874))
+
+### Chores
+
+- **ci**: Run pytest in a separate step from dependency install
+  ([`60b7922`](https://github.com/Kitware/trame-vtklocal/commit/60b79228a84dc9a1e624f685f4a237d0fd824516))
+
+- **deps**: Bump vtk-wasm dependency
+  ([`7c8f14e`](https://github.com/Kitware/trame-vtklocal/commit/7c8f14e4e0493a15c2ba5f9c778767a9b8f6545d))
+
+- **deps**: Update vtk dev version
+  ([`97b99f9`](https://github.com/Kitware/trame-vtklocal/commit/97b99f9eac7cd4f7c30481c9713faffc6244b9ce))
+
+- **eslint**: Update version
+  ([`4e74f19`](https://github.com/Kitware/trame-vtklocal/commit/4e74f19469416d3f4a85f08a731c4a8a96467ef5))
+
+- **examples**: Fix actor picker example
+  ([`8653a12`](https://github.com/Kitware/trame-vtklocal/commit/8653a1213b998e3ba2a27a29fe138de1f1b997c3))
+
+- similar to https://github.com/Kitware/trame-vtklocal/pull/79 and
+  https://github.com/Kitware/vtk-wasm/pull/55
+
+- **wasm**: Fix hang in wasm download step
+  ([`4610c44`](https://github.com/Kitware/trame-vtklocal/commit/4610c44ed44787d19209803a4a01c16e4f77c274))
+
+### Continuous Integration
+
+- Install OSMesa on the Windows runner
+  ([`b53618b`](https://github.com/Kitware/trame-vtklocal/commit/b53618b5a363b87e11a4218422fda59390d23d3e))
+
+GitHub windows runners have no GPU-accelerated OpenGL, so vtkWin32OpenGLRenderWindow fails to get a
+  pixel format and VTK falls back to vtkOSOpenGLRenderWindow, which crashes when LoadLibrary cannot
+  find osmesa.dll. Download mesa-dist-win 25.0.7 (last release shipping osmesa.dll) and put its x64
+  directory on PATH.
+
+- Run pytest job on macOS and Windows runners
+  ([`936ceb2`](https://github.com/Kitware/trame-vtklocal/commit/936ceb251c501140f265cd910f789b7ae831dd58))
+
+Use uv run instead of sourcing the venv activate script, which lives under Scripts/ instead of bin/
+  on Windows.
+
+- Use vtk dev wheel for tests and run CI on Python 3.13
+  ([`8ab9f2c`](https://github.com/Kitware/trame-vtklocal/commit/8ab9f2cae9da3bd86788572a1ffd1642962f92d2))
+
+Add vtk 9.7.20260712.dev0 to the dev group, tests need it to pass.
+
+That dev wheel is published for Windows only as cp313/cp314 (no cp310 win_amd64), so bump the pytest
+  matrix to Python 3.13 and pin uv to the matrix interpreter via UV_PYTHON, which the workflow
+  previously left to uv's default.
+
+### Documentation
+
+- **example**: Add pyvista example
+  ([`2d6483b`](https://github.com/Kitware/trame-vtklocal/commit/2d6483b731fcec574fe0c47a0e5d32b91661ebd4))
+
+### Features
+
+- **tgz**: Enable tgz to be served
+  ([`84c2d61`](https://github.com/Kitware/trame-vtklocal/commit/84c2d61fee683f4eb9d79e084c524d1955bf3272))
+
+### Testing
+
+- Add multi-view test
+  ([`d0a5d7a`](https://github.com/Kitware/trame-vtklocal/commit/d0a5d7ac1d997a731d1e9eb2cf4dd5365ef02139))
+
+- Create WebGPU device on Windows by disabling Dawn use_dxc
+  ([`db33f4f`](https://github.com/Kitware/trame-vtklocal/commit/db33f4f8e4182e6263e0de54280fecc310b4a882))
+
+On Windows, Dawn's D3D12 backend fails to create a device because the bundled Chromium ships a
+  dxil.dll it cannot load in the sandboxed GPU process (EnsureDXCLibraries -> "DynamicLib.Open:
+  dxil.dll Windows Error: 87"). The adapter is obtained fine; only requestDevice fails. Disabling
+  the use_dxc Dawn feature falls back to the FXC shader compiler, which needs no external DLL. macOS
+  (metal) and Linux (vulkan) do not use DXC, so the flag is applied only on win32.
+
+- Replace fixed sleeps with rAF-based wait_for_render helper
+  ([`17619f3`](https://github.com/Kitware/trame-vtklocal/commit/17619f366f69d983202f0815cfd602945f6e9c35))
+
+Fixed asyncio.sleep(0.1) waits were both flaky and masking a real bug: on (re)mount the canvas
+  starts at its 300x150 HTML default and only reaches the container size after the 100ms debounced
+  ResizeObserver calls setSizeAsync, which does not bump the `updated` counter. A short sleep could
+  capture the wrong-sized frame. WebGPU also presents the updated frame a frame later than the
+  `updated` event, so an immediate capture grabs a blank pre-present buffer.
+
+Add Utils.wait_for_render, which polls on requestAnimationFrame until every canvas drawing buffer
+  matches its layout size (the same floor(size * dpr + 0.5) formula the component uses) and stays
+  stable for two frames, giving the compositor time to present. Use it in the cone, volume, and
+  multi-view tests in place of every sleep.
+
+- Skip webgpu tests when gpu is unavailable
+  ([`93c9717`](https://github.com/Kitware/trame-vtklocal/commit/93c9717d114dcb4eae3b0d1d9013b5b8077bd233))
+
+- Write diff images on Windows via posix baseline path
+  ([`359543e`](https://github.com/Kitware/trame-vtklocal/commit/359543e857c0a0d6889321b53c235145de7ed17e))
+
+vtkTesting derives the .diff/.valid output names by splitting the baseline path on "/" only, so a
+  Windows backslash path made it append the whole absolute path to the temp results dir and fail to
+  write the difference image. Pass the baseline as a posix-style path.
+
+- **cone**: Pin LocalView ref and assert render backend class last
+  ([`53272da`](https://github.com/Kitware/trame-vtklocal/commit/53272dac305690991b84a72ff017842241f36957))
+
+Pin the cone view to a fixed ref ("cone_view") so the test can address it regardless of the
+  process-global _vtklocalview_N counter, and assert the active render window class (webgl vs
+  webgpu) against it.
+
+Run that assertion after every screenshot: getVtkObject() performs a client-side serialize that
+  currently corrupts the WebGPU render window permanently (a VTK bug; harmless on webgl), which
+  would blank all later frames if done mid-sequence. The className comes from static server state,
+  so ordering it last does not weaken the check.
+
+- **imagecompare**: Use VTK image comparison instead of pixelmatch
+  ([`6a88c44`](https://github.com/Kitware/trame-vtklocal/commit/6a88c44f4a90d847b0b79e5c5d8e29c838ef9f10))
+
+- Replace PIL/pixelmatch screenshot comparison in conftest with
+  vtkmodules.test.Testing.compareImageWithSavedImage. Diff and valid images are written to the
+  result directory via VTK_TEMP_DIR.
+
+- Keep only the CI-generated baselines: promote *_github.png to the primary baseline name and
+  *_github_gpu.png to the VTK alternate baseline convention (name_1.png), which RegressionTest tries
+  automatically. Drop the locally generated variants.
+
+- Also launch Chromium with platform-specific ANGLE flags for webgpu configs so a real WebGPU
+  adapter is available.
+
+- **volume**: Xfail volume rendering on the WebGPU backend
+  ([`26cb473`](https://github.com/Kitware/trame-vtklocal/commit/26cb473b95fd931fb681b710c1b52707d13b4a39))
+
+VTK does not support volume rendering on the WebGPU backend
+
+
 ## v1.0.2 (2026-07-14)
 
 ### Bug Fixes

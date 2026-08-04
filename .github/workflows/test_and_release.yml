@@ -146,7 +146,6 @@ jobs:
           uv run playwright install
 
       - name: Verify browser GPU
-        if: matrix.config.name == 'Linux'
         run: uv run python tests/check_gpu.py
 
       - name: Run tests

@@ -43,7 +43,9 @@ jobs:
               # Default caps are compute,utility, which mount no rendering
               # driver at all. "all" pulls in graphics/display so
               # libEGL_nvidia and libGLX_nvidia reach the container.
-              container-options: "--gpus all -e NVIDIA_DRIVER_CAPABILITIES=all -e NVIDIA_VISIBLE_DEVICES=all",
+              # TRAME_TEST_NO_SANDBOX: container runs as root, where Chromium's
+              # setuid sandbox refuses to start, so launch with --no-sandbox.
+              container-options: "--gpus all -e NVIDIA_DRIVER_CAPABILITIES=all -e NVIDIA_VISIBLE_DEVICES=all -e TRAME_TEST_NO_SANDBOX=1",
             }
           - { name: "MacOSX", os: [macos-latest], container: "", container-options: "" }
           - {
@@ -67,10 +69,6 @@ jobs:
       # The Playwright image already ships libvulkan1/libegl1/libgles2 (webkit
       # pulls them in), so no apt step is needed. The NVIDIA libraries those
       # loaders dispatch to are mounted by the container toolkit, not installed.
-      - name: Enable GPU tests
-        if: matrix.config.name == 'Linux'
-        run: echo "TRAME_TEST_GPU=1" >> "$GITHUB_ENV"
-
       - name: Report GPU
         if: matrix.config.name == 'Linux'
         run: nvidia-smi

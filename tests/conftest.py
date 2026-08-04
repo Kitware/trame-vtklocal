@@ -20,7 +20,7 @@ HELPER = FixtureHelper(ROOT_PATH)
 async def chromium_launch(p, args=None):
     """Launch headless Chromium"""
     args = list(args or [])
-    if os.environ.get("TRAME_TEST_GPU") == "1":
+    if os.environ.get("TRAME_TEST_NO_SANDBOX") == "1":
         # The container runs as root, where the setuid sandbox refuses to start.
         args += ["--no-sandbox", "--ignore-gpu-blocklist"]
     return await p.chromium.launch(args=args, headless=True)

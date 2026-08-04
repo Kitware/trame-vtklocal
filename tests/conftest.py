@@ -200,7 +200,7 @@ class VolumeRendering(TrameApp):
 
     def _setup_vtk(self, mapper_type):
         renderer = vtk.vtkRenderer()
-        rw = vtk.vtkRenderWindow()
+        rw = vtk.vtkRenderWindow(off_screen_rendering=True)
         rw.AddRenderer(renderer)
         rwi = vtk.vtkRenderWindowInteractor(render_window=rw)
         rwi.interactor_style.SetCurrentStyleToTrackballCamera()
@@ -295,7 +295,7 @@ class Cone(TrameApp):
 
     def _setup_vtk(self):
         renderer = vtk.vtkRenderer()
-        rw = vtk.vtkRenderWindow()
+        rw = vtk.vtkRenderWindow(off_screen_rendering=True)
         rw.AddRenderer(renderer)
         rwi = vtk.vtkRenderWindowInteractor(render_window=rw)
         rwi.interactor_style.SetCurrentStyleToTrackballCamera()
@@ -378,7 +378,7 @@ class MultiView(TrameApp):
     @staticmethod
     def _create_pipeline(source, background):
         renderer = vtk.vtkRenderer()
-        rw = vtk.vtkRenderWindow()
+        rw = vtk.vtkRenderWindow(off_screen_rendering=True)
         rw.AddRenderer(renderer)
         rwi = vtk.vtkRenderWindowInteractor(render_window=rw)
         rwi.interactor_style.SetCurrentStyleToTrackballCamera()

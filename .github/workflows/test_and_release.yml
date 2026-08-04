@@ -108,6 +108,15 @@ jobs:
 
           retention-days: 1
 
+  gpu-check:
+    runs-on: [self-hosted, gpu]
+    container:
+      image: nvidia/cuda:13.0.0-base-ubuntu24.04
+      options: --gpus all
+    steps:
+      - name: Run nvidia-smi
+        run: nvidia-smi
+
   test-npm-build:
     runs-on: ubuntu-latest
 

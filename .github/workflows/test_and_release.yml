@@ -66,15 +66,8 @@ jobs:
       UV_PYTHON: ${{ matrix.python-version }}
 
     steps:
-      # The Playwright image already ships libvulkan1/libegl1/libgles2 (webkit
-      # pulls them in), so no apt step is needed. The NVIDIA libraries those
-      # loaders dispatch to are mounted by the container toolkit, not installed.
-      - name: Report GPU
-        if: matrix.config.name == 'Linux'
-        run: nvidia-smi
-
       # Write manifests when they are missing.
-      # without the Vulkan one, ANGLE's vulkan backend finds no device and
+      # Without the Vulkan one, ANGLE's vulkan backend finds no device and
       # WebGPU silently drops to SwiftShader (undesired)
       - name: Backfill GPU ICD manifests
         if: matrix.config.name == 'Linux'

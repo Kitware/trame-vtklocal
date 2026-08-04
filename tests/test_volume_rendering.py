@@ -5,7 +5,7 @@ from playwright.async_api import async_playwright, expect
 
 from trame_vtklocal.module.wasm import wasm_downloaded
 
-from conftest import webgpu_args
+from conftest import chromium_launch, webgpu_args
 
 BASELINES = [
     Path(__file__).with_name("assets") / "volume" / name
@@ -69,7 +69,7 @@ async def test_volume_rendering(VolumeApp, utils, config, mapper_type):
 
     async with async_playwright() as p:
         args = webgpu_args() if wasm_rendering == "webgpu" else []
-        browser = await p.chromium.launch(headless=True, args=args)
+        browser = await chromium_launch(p, args)
         page = await browser.new_page()
         await page.set_viewport_size({"width": 300, "height": 300})
 

@@ -1,3 +1,4 @@
+import os
 import sys
 from pathlib import Path
 
@@ -16,6 +17,15 @@ ROOT_PATH = Path(__file__).parent.parent.absolute()
 HELPER = FixtureHelper(ROOT_PATH)
 
 
+async def chromium_launch(p, args=None):
+    """Launch headless Chromium"""
+    args = list(args or [])
+    if os.environ.get("TRAME_TEST_GPU") == "1":
+        # The container runs as root, where the setuid sandbox refuses to start.
+        args += ["--no-sandbox", "--ignore-gpu-blocklist"]
+    return await p.chromium.launch(args=args, headless=True)
+
+
 def webgpu_args():
     """Chromium flags needed to obtain a working WebGPU adapter, per platform.
 
@@ -29,11 +39,22 @@ def webgpu_args():
     Chromium build ships a dxil.dll it cannot load (EnsureDXCLibraries ->
     "DynamicLib.Open: dxil.dll Windows Error: 87"). Disabling the use_dxc Dawn
     feature falls back to the FXC shader compiler, which needs no external DLL.
+
+    On Linux, use the headless-WebGPU flag set from
+    https://developer.chrome.com/blog/supercharge-web-ai-testing:
+    --enable-features=Vulkan turns on Chrome's Vulkan path, and
+    --disable-vulkan-surface makes it present via bit-blit instead of a
+    VK_KHR_surface swapchain, which headless has no window to back. Without
+    the latter Vulkan init fails and Dawn silently drops to SwiftShader.
+    (--enable-features=Vulkan,VulkanFromANGLE from the gpuweb wiki kills the
+    GPU process outright here: WebGL and WebGPU both go dark.)
     """
     backend = {"darwin": "metal", "win32": "d3d11"}.get(sys.platform, "vulkan")
     args = [f"--use-angle={backend}", "--enable-unsafe-webgpu"]
     if sys.platform == "win32":
         args.append("--disable-dawn-features=use_dxc")
+    elif sys.platform.startswith("linux"):
+        args += ["--enable-features=Vulkan", "--disable-vulkan-surface"]
     return args
 
 
@@ -47,11 +68,26 @@ async def webgpu_hardware_available(page):
     cannot present with, so the canvas stays blank. macOS runners have a real
     Metal GPU and render correctly. Detect the fallback case so webgpu configs
     can skip where no real GPU exists instead of failing on a blank frame.
+
+    Request with powerPreference high-performance because that is what VTK
+    requests (vtkWebGPUConfiguration defaults PowerPreference to
+    HighPerformance). The two are not equivalent: on the Linux/NVIDIA GPU
+    runner the preference-less request resolves to null while the
+    high-performance one returns the hardware adapter, so probing without
+    the preference would skip tests that VTK can actually run.
     """
     return await page.evaluate(
         """async () => {
             if (!navigator.gpu) return false;
-            const a = await navigator.gpu.requestAdapter();
+            // First call after GPU-process startup can resolve null while
+            // Dawn initializes (Linux/NVIDIA); retry briefly before deciding.
+            let a = null;
+            for (let attempt = 0; attempt < 20 && !a; attempt++) {
+                if (attempt > 0) await new Promise((r) => setTimeout(r, 250));
+                a = await navigator.gpu.requestAdapter({
+                    powerPreference: 'high-performance',
+                });
+            }
             if (!a) return false;
             if (a.isFallbackAdapter) return false;
             const i = a.info || {};

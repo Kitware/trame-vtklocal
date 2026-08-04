@@ -28,14 +28,25 @@ jobs:
   pytest:
     name: Pytest ${{ matrix.config.name }}
     runs-on: ${{ matrix.config.os }}
+    container:
+      image: ${{ matrix.config.container }}
+      options: ${{ matrix.config.container-options }}
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.13"]
         config:
-          - { name: "Linux", os: ubuntu-latest }
-          - { name: "MacOSX", os: macos-latest }
-          - { name: "Windows", os: windows-latest }
+          - {
+              name: "Linux",
+              os: [self-hosted, gpu],
+              container: "mcr.microsoft.com/playwright:v1.61.0-noble",
+              # Default caps are compute,utility, which mount no rendering
+              # driver at all. "all" pulls in graphics/display so
+              # libEGL_nvidia and libGLX_nvidia reach the container.
+              container-options: "--gpus all -e NVIDIA_DRIVER_CAPABILITIES=all -e NVIDIA_VISIBLE_DEVICES=all",
+            }
+          - { name: "MacOSX", os: [macos-latest], container: "", container-options: "" }
+          - { name: "Windows", os: [windows-latest], container: "", container-options: "" }
 
     defaults:
       run:
@@ -47,6 +58,56 @@ jobs:
       UV_PYTHON: ${{ matrix.python-version }}
 
     steps:
+      # The Playwright image already ships libvulkan1/libegl1/libgles2 (webkit
+      # pulls them in), so no apt step is needed. The NVIDIA libraries those
+      # loaders dispatch to are mounted by the container toolkit, not installed.
+      - name: Enable GPU tests
+        if: matrix.config.name == 'Linux'
+        run: echo "TRAME_TEST_GPU=1" >> "$GITHUB_ENV"
+
+      - name: Report GPU
+        if: matrix.config.name == 'Linux'
+        run: nvidia-smi
+
+      # Write manifests when they are missing.
+      # without the Vulkan one, ANGLE's vulkan backend finds no device and
+      # WebGPU silently drops to SwiftShader (undesired)
+      - name: Backfill GPU ICD manifests
+        if: matrix.config.name == 'Linux'
+        run: |
+          if ! ls /usr/share/vulkan/icd.d/*nvidia*.json /etc/vulkan/icd.d/*nvidia*.json >/dev/null 2>&1; then
+            if ldconfig -p | grep -q libGLX_nvidia; then
+              api=$(nvidia-smi --query-gpu=driver_version --format=csv,noheader | head -1)
+              echo "no Vulkan ICD found; writing one for driver $api"
+              mkdir -p /usr/share/vulkan/icd.d
+              cat > /usr/share/vulkan/icd.d/nvidia_icd.json <<'JSON'
+          {
+              "file_format_version": "1.0.0",
+              "ICD": {
+                  "library_path": "libGLX_nvidia.so.0",
+                  "api_version": "1.3.277"
+              }
+          }
+          JSON
+            else
+              echo "libGLX_nvidia is not mounted -- the graphics capability is not reaching the container"
+            fi
+          fi
+          if ! ls /usr/share/glvnd/egl_vendor.d/*nvidia*.json >/dev/null 2>&1; then
+            if ldconfig -p | grep -q libEGL_nvidia; then
+              echo "no EGL vendor manifest found; writing one"
+              mkdir -p /usr/share/glvnd/egl_vendor.d
+              cat > /usr/share/glvnd/egl_vendor.d/10_nvidia.json <<'JSON'
+          {
+              "file_format_version": "1.0.0",
+              "ICD": {
+                  "library_path": "libEGL_nvidia.so.0"
+              }
+          }
+          JSON
+            fi
+          fi
+
       - name: Checkout
         uses: actions/checkout@v6
 
@@ -56,7 +117,10 @@ jobs:
           version: "0.11.24"
           enable-cache: true
 
+      # The Playwright image already ships node 24, which is what this action
+      # would install. Keep the pin in sync with the image's NODE_VERSION.
       - name: Set Up Node
+        if: matrix.config.name != 'Linux'
         uses: actions/setup-node@v6
         with:
           node-version: 24
@@ -70,14 +134,8 @@ jobs:
       - name: Install the project
         run: uv sync --all-extras --dev
 
-      - name: Install OSMesa for Linux
-        if: matrix.config.os == 'ubuntu-latest'
-        run: |
-          sudo apt update
-          sudo apt-get install -y libosmesa6-dev
-
       - name: Install OSMesa for Windows
-        if: matrix.config.os == 'windows-latest'
+        if: matrix.config.name == 'Windows'
         # 25.0.7 is the last mesa-dist-win release that ships osmesa.dll
         # (removed in 25.1.0). PATH is searched by LoadLibrary, which is how
         # VTK's vtkOSOpenGLRenderWindow locates osmesa.dll at runtime.
@@ -90,6 +148,10 @@ jobs:
         run: |
           uv sync --all-extras --dev
           uv run playwright install
+
+      - name: Verify browser GPU
+        if: matrix.config.name == 'Linux'
+        run: uv run python tests/check_gpu.py
 
       - name: Run tests
         run: uv run pytest -s ./tests --cov=src --cov-report=xml

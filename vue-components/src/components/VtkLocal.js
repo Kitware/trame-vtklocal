@@ -374,8 +374,10 @@ export default {
 
     async function update(options) {
       if (!hasRemoteSession()) return;
-
+      const t0 = Date.now();
       await remoteSession.updateAsync(props.renderWindow);
+      const t1 = Date.now();
+      console.log("Updated in", t1 - t0);
       emit("updated", options);
       checkMemory();
     }

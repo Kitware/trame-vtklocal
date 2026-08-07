@@ -185,6 +185,20 @@ class ObjectManagerAPI(LinkProtocol):
         # print("get_hash", hash)
         return self.addAttachment(memoryview(self.vtk_object_manager.GetBlob(hash)))
 
+    @export_rpc("vtklocal.get.batch")
+    def get_batch(self, state_ids, hashes):
+        states = [
+            json.loads(self.vtk_object_manager.GetState(obj_id)) for obj_id in state_ids
+        ]
+        hashes = {
+            hash: memoryview(self.vtk_object_manager.GetBlob(hash)) for hash in hashes
+        }
+
+        # size = sum((array.nbytes for array in hashes.values()))
+        # print(f"blobs size: {size}")
+
+        return {"states": states, "hashes": hashes}
+
     @export_rpc("vtklocal.get.status")
     def get_status(self, obj_id):
         # print("get_status", obj_id)

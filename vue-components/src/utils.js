@@ -47,7 +47,11 @@ export function bindNetwork(client, remoteSession) {
     return await rpcSession.call("vtklocal.get.status", [vtkId]);
   }
 
-  remoteSession.bindNetwork(netFetchState, netFetchBlob, netFetchStatus);
+  async function netFetchBatch(ids, hashes) {
+    return await rpcSession.call("vtklocal.get.batch", [ids, hashes]);
+  }
+
+  remoteSession.bindNetwork(netFetchState, netFetchBlob, netFetchStatus, netFetchBatch);
 }
 
 export function createExtractCallback(trame, remoteSession, extractInfo) {

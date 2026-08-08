@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v1.1.1 (2026-08-08)
+
+### Bug Fixes
+
+- **invoke**: Allow concurrent invokes
+  ([`4baeb5e`](https://github.com/Kitware/trame-vtklocal/commit/4baeb5eee3adb8cd7ce8d6789a7161d70e84c3e2))
+
+### Continuous Integration
+
+- Use gpu runner for linux
+  ([`77fadac`](https://github.com/Kitware/trame-vtklocal/commit/77fadaca9e32c90082fcf8f0e98fa0b5a290b7dc))
+
+
 ## v1.1.0 (2026-07-31)
 
 ### Bug Fixes

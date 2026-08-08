@@ -4,6 +4,7 @@ import io
 import json
 import zipfile
 from pathlib import Path
+import logging
 
 from trame_client.widgets.core import AbstractElement
 from trame_common.exec.throttle import Throttle
@@ -16,6 +17,8 @@ try:
     ZIP_COMPRESSION = zipfile.ZIP_DEFLATED
 except ImportError:
     ZIP_COMPRESSION = zipfile.ZIP_STORED
+
+logger = logging.getLogger(__name__)
 
 
 class HtmlElement(AbstractElement):
@@ -119,10 +122,11 @@ class LocalView(HtmlElement):
         **kwargs,
     ):
         # Register response callback if not overridden
-        kwargs.setdefault("invoke_response", (self._on_invoke_response, "[$event]"))
+        kwargs.setdefault("invoke_response", (self._on_invoke_response, "$event"))
         kwargs.setdefault("ready", (self._on_ready, "[$event]"))
         kwargs.setdefault("unmount", self._on_unmount)
-        self._pending_invoke_result = None
+        self._pending_invoke_result = {}
+        self._pending_result_id = 0
         self._mounted = False
 
         super().__init__(
@@ -179,10 +183,12 @@ class LocalView(HtmlElement):
     def _on_unmount(self):
         self._mounted = False
 
-    def _on_invoke_response(self, response):
-        if self._pending_invoke_result is None:
+    def _on_invoke_response(self, request_id, response):
+        future = self._pending_invoke_result.pop(request_id, None)
+        if future is None:
+            logger.error("No pending invoke for id %s", request_id)
             return
-        self._pending_invoke_result.set_result(response)
+        future.set_result(response)
 
     @property
     def api(self):
@@ -367,6 +373,15 @@ class LocalView(HtmlElement):
 
         self.object_manager.UpdateObjectFromState(state_obj)
 
+    def _generate_pending_future(self):
+        future = asyncio.get_running_loop().create_future()
+        self._pending_result_id += 1
+        self._pending_invoke_result[self._pending_result_id] = future
+        return future, self._pending_result_id
+
+    def render(self):
+        self.server.js_call(self.__ref, "render")
+
     async def invoke(self, vtk_obj, method, *args, unwrap_vtk_object=True):
         wasm_id = self.get_wasm_id(vtk_obj)
 
@@ -375,10 +390,10 @@ class LocalView(HtmlElement):
         else:
             args = list(map(self.get_wasm_id, args))
 
-        self._pending_invoke_result = asyncio.get_running_loop().create_future()
-        self.server.js_call(self.__ref, "invoke", wasm_id, method, args)
-        await self._pending_invoke_result
-        result_from_client = self._pending_invoke_result.result()
+        future, req_id = self._generate_pending_future()
+        self.server.js_call(self.__ref, "invoke", (req_id, wasm_id), method, args)
+        await future
+        result_from_client = future.result()
 
         # auto unwrap vtk objects
         if (

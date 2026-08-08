@@ -400,14 +400,23 @@ export default {
     async function invoke(objId, method, args) {
       if (!hasRemoteSession()) return;
 
-      const result = await remoteSession.native.invoke(objId, method, args);
+      let reqId, wasmId;
+      if (Array.isArray(objId)) {
+        [reqId, wasmId] = objId;
+      } else {
+        wasmId = objId;
+      }
+
+      const result = await remoteSession.native.invoke(wasmId, method, args);
 
       // Extract object state if object is returned
       if (result?.Id && result?.Success) {
         result.Value = remoteSession.getState(result.Id);
       }
 
-      emit("invoke-response", result);
+      if (reqId) {
+        emit("invoke-response", [reqId, result]);
+      }
 
       return result;
     }

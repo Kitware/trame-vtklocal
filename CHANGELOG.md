@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v1.2.0 (2026-08-09)
+
+### Features
+
+- **batch**: Add fetch batch
+  ([`d0dbb01`](https://github.com/Kitware/trame-vtklocal/commit/d0dbb019ec22bcbce5fc35d4779bdcc5eae65d2c))
+
+
 ## v1.1.1 (2026-08-08)
 
 ### Bug Fixes

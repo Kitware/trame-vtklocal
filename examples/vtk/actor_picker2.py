@@ -181,7 +181,7 @@ function setupJSPicking(refName, interactorId, pickerId, renderWindowId, rendere
     const renderWindow = getVtkObject(renderWindowId);
     const prop = getVtkObject(propId);
 
-    interactor.observe("MouseMoveEvent", async () => {
+    interactor.$observe("MouseMoveEvent", async () => {
           const pos = await interactor.getEventPosition();
           await pick([pos[0], pos[1], 0], picker, renderWindow, renderer, prop);
     });

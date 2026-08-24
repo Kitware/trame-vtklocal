@@ -92,7 +92,7 @@ async def test_cone(ConeApp, utils, config):
         # client-side serialize that currently corrupts the WebGPU render window
         # (VTK webgpu bug; harmless on webgl), so keep it after every screenshot.
         result = await page.evaluate(
-            "window.trame.refs.cone_view.getVtkObject(1).state.className"
+            "window.trame.refs.cone_view.getVtkObject(1).$state.className"
         )
         assert result == EXPECTED_WINDOW_CLASSNAMES[wasm_rendering]
 

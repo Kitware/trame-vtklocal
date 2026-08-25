@@ -1,3 +1,4 @@
+import os
 import json
 import time
 import zipfile
@@ -186,18 +187,25 @@ class ObjectManagerAPI(LinkProtocol):
         return self.addAttachment(memoryview(self.vtk_object_manager.GetBlob(hash)))
 
     @export_rpc("vtklocal.get.batch")
-    def get_batch(self, state_ids, hashes):
+    def get_batch(self, state_ids, hash_keys):
+        blob_chunk_size = 0
+        chunk_threshold = int(os.environ.get("WSLINK_MAX_MSG_SIZE", "4194304"))
+        next_hashes = []
+        hashes = {}
         states = [
             json.loads(self.vtk_object_manager.GetState(obj_id)) for obj_id in state_ids
         ]
-        hashes = {
-            hash: memoryview(self.vtk_object_manager.GetBlob(hash)) for hash in hashes
-        }
+        for hash in hash_keys:
+            if blob_chunk_size < chunk_threshold:
+                blob = memoryview(self.vtk_object_manager.GetBlob(hash))
+                blob_chunk_size += blob.nbytes
+                hashes[hash] = blob
+            else:
+                next_hashes.append(hash)
 
-        # size = sum((array.nbytes for array in hashes.values()))
-        # print(f"blobs size: {size}")
+        next = {"states": [], "hashes": next_hashes} if next_hashes else False
 
-        return {"states": states, "hashes": hashes}
+        return {"states": states, "hashes": hashes, "next": next}
 
     @export_rpc("vtklocal.get.status")
     def get_status(self, obj_id):

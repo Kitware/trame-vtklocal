@@ -169,11 +169,34 @@ export default {
         total: 0,
       },
     });
+    const progressVisible = ref(false);
+    let progressTimeout = null;
+    function updateProgressVisibility() {
+      const busy = wasmLoading.value || progress.active;
+      if (!busy) {
+        if (progressTimeout) {
+          clearTimeout(progressTimeout);
+          progressTimeout = null;
+        }
+        progressVisible.value = false;
+        return;
+      }
+      if (progressVisible.value || progressTimeout) {
+        return;
+      }
+      const delay = Number(props.progressDelay) || 0;
+      if (delay <= 0) {
+        progressVisible.value = true;
+        return;
+      }
+      progressTimeout = setTimeout(() => {
+        progressTimeout = null;
+        progressVisible.value = wasmLoading.value || progress.active;
+      }, delay);
+    }
+    updateProgressVisibility();
     const showLoading = computed(
-      () =>
-        props.progressEnabled &&
-        progress.tsNow - progress.tsStart > props.progressDelay &&
-        progress.active,
+      () => props.progressEnabled && progressVisible.value,
     );
     const statePercent = computed(() => {
       if (!progress.state.total) {
@@ -248,6 +271,7 @@ export default {
             progress.state.total = payload.state?.total || 0;
             progress.hash.current = payload.hash?.current || 0;
             progress.hash.total = payload.hash?.total || 0;
+            updateProgressVisibility();
             emit("progress", {
               active: progress.active,
               elapsed: progress.tsNow - progress.tsStart,
@@ -469,6 +493,7 @@ export default {
       }
       await update({ onMounted: props.renderWindow });
       wasmLoading.value = false;
+      updateProgressVisibility();
       // Camera listener
       remoteSession.cameraIds.forEach((cid) => {
         try {
@@ -528,6 +553,10 @@ export default {
       emit("unmount");
 
       // Remove progress tracking
+      if (progressTimeout) {
+        clearTimeout(progressTimeout);
+        progressTimeout = null;
+      }
       removeProgressCallback && removeProgressCallback();
 
       // Remove size observer

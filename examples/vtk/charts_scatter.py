@@ -1,4 +1,4 @@
-import os
+# DOES NOT WORK
 import math
 from vtkmodules.vtkChartsCore import vtkChart, vtkChartXY, vtkPlotPoints
 from vtkmodules.vtkCommonColor import vtkNamedColors
@@ -12,12 +12,10 @@ import vtkmodules.vtkRenderingContextOpenGL2  # noqa
 import vtkmodules.vtkRenderingOpenGL2  # noqa
 from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
 
-from trame.app import get_server
+from trame.app import TrameApp
 from trame.ui.html import DivLayout
-from trame.widgets import html, client, vtk as vtk_widgets
+from trame.widgets import html, client
 from trame_vtklocal.widgets import vtklocal
-
-WASM = "USE_WASM" in os.environ
 
 
 def create_vtk_pipeline():
@@ -84,12 +82,11 @@ def create_vtk_pipeline():
     return view.GetRenderWindow()
 
 
-class App:
+class ChartApp(TrameApp):
     def __init__(self, server=None):
-        self.server = get_server(server, client_type="vue3")
+        super().__init__(server)
 
         self.render_window = create_vtk_pipeline()
-        self.html_view = None
         self.ui = self._ui()
 
     def _ui(self):
@@ -98,12 +95,7 @@ class App:
             with html.Div(
                 style="position: absolute; left: 0; top: 0; width: 100vw; height: 100vh;"
             ):
-                if WASM:
-                    self.html_view = vtklocal.LocalView(self.render_window)
-                else:
-                    self.html_view = vtk_widgets.VtkRemoteView(
-                        self.render_window, interactive_ratio=1
-                    )
+                vtklocal.LocalView(self.render_window)
 
         return layout
 
@@ -113,5 +105,5 @@ class App:
 # -----------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    app = App()
+    app = ChartApp()
     app.server.start()

@@ -38,6 +38,7 @@ dev = [
     "coverage",
     "pytest-playwright",
     "trame-client[test]",
+    "trame-vuetify",
     # Dev wheel from wheels.vtk.org (see [tool.uv] below)
     "vtk==9.7.20260816.dev0",
 ]

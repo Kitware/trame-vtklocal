@@ -22,6 +22,7 @@ def create_vtk_pipeline():
 
     mapper = vtk.vtkPolyDataMapper(input_connection=sphere.output_port)
     actor = vtk.vtkActor(mapper=mapper)
+    actor.property.edge_visibility = True
 
     renderer.AddActor(actor)
     renderer.background = (0.1, 0.2, 0.4)

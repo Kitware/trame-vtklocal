@@ -1,5 +1,5 @@
-from trame.app import get_server
-from trame.decorators import TrameApp, change
+from trame.app import TrameApp
+from trame.decorators import change
 from trame.ui.vuetify3 import SinglePageLayout
 from trame.widgets import vtk as vtk_widgets, vuetify3
 from trame_vtklocal.widgets import vtklocal
@@ -52,11 +52,9 @@ def setup_vtk():
     return renderWindow, cone_source
 
 
-@TrameApp()
-class SilhouetteApp:
+class SilhouetteApp(TrameApp):
     def __init__(self, server=None):
-        self.server = get_server(server, client_type="vue3")
-
+        super().__init__(server)
         self.render_window, self.cone_source = setup_vtk()
         self.ui = self._build_ui()
 
@@ -80,7 +78,9 @@ class SilhouetteApp:
     def _build_ui(self):
         with SinglePageLayout(self.server) as layout:
             layout.icon.click = self.ctrl.view_reset_camera
-            layout.title.set_text("Cone Application")
+            layout.title.set_text(
+                "Interact with VtkRemoteView on right, and click the update view button"
+            )
 
             with layout.toolbar:
                 vuetify3.VSpacer()

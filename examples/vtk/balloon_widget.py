@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
-
-# noinspection PyUnresolvedReferences
+# DOES NOT WORK
+from trame.app import TrameApp
+from trame.ui.html import DivLayout
+from trame.widgets import client, html
+from trame_vtklocal.widgets import vtklocal
 
 # noinspection PyUnresolvedReferences
 from vtkmodules.vtkCommonColor import vtkNamedColors
@@ -14,8 +17,12 @@ from vtkmodules.vtkRenderingCore import (
     vtkRenderer,
 )
 
+# Required for vtk factory
+import vtkmodules.vtkRenderingOpenGL2  # noqa
+from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
 
-def main():
+
+def create_vtk_pipeline():
     colors = vtkNamedColors()
 
     # Sphere.
@@ -49,7 +56,7 @@ def main():
     ren_win.SetWindowName("BalloonWidget")
 
     # An interactor.
-    iren = vtkRenderWindowInteractor()
+    iren = vtkRenderWindowInteractor(track_interactor_observer_instances=True)
     iren.SetRenderWindow(ren_win)
 
     # Create the widget.
@@ -67,14 +74,33 @@ def main():
     ren.AddActor(regularPolygonActor)
     ren.SetBackground(colors.GetColor3d("SlateGray"))
 
-    # Render an image (lights and cameras are created automatically).
-    ren_win.Render()
-    balloonWidget.EnabledOn()
+    return ren_win, balloonWidget
 
-    # Begin mouse interaction.
-    iren.Start()
-    iren.Initialize()
+
+class BalloonWidgetApp(TrameApp):
+    def __init__(self, server=None):
+        super().__init__(server)
+
+        self.render_window = create_vtk_pipeline()
+        self.widget.On()
+        self._build_ui()
+
+    def _build_ui(self):
+        with DivLayout(self.server) as layout:
+            client.Style("body { margin: 0; }")
+            with html.Div(
+                style="position: absolute; left: 0; top: 0; width: 100vw; height: 100vh;"
+            ):
+                vtklocal.LocalView(
+                    self.render_window,
+                    throttle_rate=20,
+                    ctx_name="view",
+                )
+
+        return layout
 
 
 if __name__ == "__main__":
-    main()
+    print("FIXME: Ballon widget does not show in client")
+    app = BalloonWidgetApp()
+    app.server.start()

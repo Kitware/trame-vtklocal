@@ -1,9 +1,9 @@
-from trame.app import get_server
+from trame.app import TrameApp
 from trame.ui.vuetify3 import SinglePageLayout
 from trame.widgets import vuetify3 as vuetify
 from trame.widgets.vtk import VtkRemoteView
 from trame_vtklocal.widgets import vtklocal
-from trame.decorators import TrameApp, change
+from trame.decorators import change
 
 from vtkmodules.vtkCommonColor import vtkNamedColors
 from vtkmodules.vtkFiltersCore import vtkElevationFilter, vtkGlyph3D
@@ -115,11 +115,9 @@ def setup_vtk():
 # -----------------------------------------------------------------------------
 
 
-@TrameApp()
-class App:
+class GlyphApp(TrameApp):
     def __init__(self, server=None):
-        self.server = get_server(server, client_type="vue3")
-
+        super().__init__(server)
         self.render_window, self.renderer, self.cone, self.sphere = setup_vtk()
         self.view_local = None
         self.view_remote = None
@@ -158,6 +156,7 @@ class App:
     def _build_ui(self):
         with SinglePageLayout(self.server) as layout:
             layout.icon.click = self.reset_camera
+            layout.title.set_text("WASM LocalView on Left, VtkRemoteView on right")
             with layout.toolbar:
                 vuetify.VSpacer()
                 vuetify.VSlider(
@@ -207,5 +206,5 @@ class App:
 # -----------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    app = App()
+    app = GlyphApp()
     app.server.start()

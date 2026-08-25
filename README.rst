@@ -104,7 +104,12 @@ Running examples
 
 .. code-block:: console
 
-    pip install trame "trame-vtklocal[vtk]" trame-vuetify trame-vtk
+    uv sync --all-extras --dev
+
+    # Activate environment
+    source .venv/bin/activate
+
+    pip install -r ./examples/requirements.txt
 
     # regular trame app
     python ./examples/vtk/cone.py
@@ -112,6 +117,234 @@ Running examples
 
 Some example are meant to test and validate WASM rendering.
 Some will default for remote rendering but if you want to force them to use WASM just run `export USE_WASM=1` before executing them.
+
+Example gallery
+----------------------------------------
+
+The examples below live in `examples/vtk <https://github.com/Kitware/trame-vtklocal/tree/master/examples/vtk>`_.
+Click a screenshot to open its source.
+
+.. |cone| image:: https://raw.githubusercontent.com/Kitware/trame-vtklocal/refs/heads/master/examples/vtk/screenshots/cone.png
+   :target: https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/cone.py
+   :alt: cone.py
+   :width: 100%
+
+.. |axes_actor| image:: https://raw.githubusercontent.com/Kitware/trame-vtklocal/refs/heads/master/examples/vtk/screenshots/axes_actor.png
+   :target: https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/axes_actor.py
+   :alt: axes_actor.py
+   :width: 100%
+
+.. |glyph| image:: https://raw.githubusercontent.com/Kitware/trame-vtklocal/refs/heads/master/examples/vtk/screenshots/glyph.png
+   :target: https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/glyph.py
+   :alt: glyph.py
+   :width: 100%
+
+.. |lut| image:: https://raw.githubusercontent.com/Kitware/trame-vtklocal/refs/heads/master/examples/vtk/screenshots/lut.png
+   :target: https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/lut.py
+   :alt: lut.py
+   :width: 100%
+
+.. |silhouette| image:: https://raw.githubusercontent.com/Kitware/trame-vtklocal/refs/heads/master/examples/vtk/screenshots/silhouette.png
+   :target: https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/silhouette.py
+   :alt: silhouette.py
+   :width: 100%
+
+.. |volume| image:: https://raw.githubusercontent.com/Kitware/trame-vtklocal/refs/heads/master/examples/vtk/screenshots/volume.png
+   :target: https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/volume.py
+   :alt: volume.py
+   :width: 100%
+
+.. |flow| image:: https://raw.githubusercontent.com/Kitware/trame-vtklocal/refs/heads/master/examples/vtk/screenshots/flow.png
+   :target: https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/flow.py
+   :alt: flow.py
+   :width: 100%
+
+.. |file_viewer| image:: https://raw.githubusercontent.com/Kitware/trame-vtklocal/refs/heads/master/examples/vtk/screenshots/file_viewer.png
+   :target: https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/file_viewer.py
+   :alt: file_viewer.py
+   :width: 100%
+
+.. |invoke| image:: https://raw.githubusercontent.com/Kitware/trame-vtklocal/refs/heads/master/examples/vtk/screenshots/invoke.png
+   :target: https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/invoke.py
+   :alt: invoke.py
+   :width: 100%
+
+.. |actor_picker| image:: https://raw.githubusercontent.com/Kitware/trame-vtklocal/refs/heads/master/examples/vtk/screenshots/actor_picker.png
+   :target: https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/actor_picker.py
+   :alt: actor_picker.py
+   :width: 100%
+
+.. |actor_highlight_on_hover| image:: https://raw.githubusercontent.com/Kitware/trame-vtklocal/refs/heads/master/examples/vtk/screenshots/actor_highlight_on_hover.png
+   :target: https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/actor_highlight_on_hover.py
+   :alt: actor_highlight_on_hover.py
+   :width: 100%
+
+.. |many_actors| image:: https://raw.githubusercontent.com/Kitware/trame-vtklocal/refs/heads/master/examples/vtk/screenshots/many_actors.png
+   :target: https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/many_actors.py
+   :alt: many_actors.py
+   :width: 100%
+
+.. |render_benchmark| image:: https://raw.githubusercontent.com/Kitware/trame-vtklocal/refs/heads/master/examples/vtk/screenshots/render_benchmark.png
+   :target: https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/render_benchmark.py
+   :alt: render_benchmark.py
+   :width: 100%
+
+.. |wasm64_large_mesh| image:: https://raw.githubusercontent.com/Kitware/trame-vtklocal/refs/heads/master/examples/vtk/screenshots/wasm64_large_mesh.png
+   :target: https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/wasm64_large_mesh.py
+   :alt: wasm64_large_mesh.py
+   :width: 100%
+
+.. |border_widget| image:: https://raw.githubusercontent.com/Kitware/trame-vtklocal/refs/heads/master/examples/vtk/screenshots/border_widget.png
+   :target: https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/border_widget.py
+   :alt: border_widget.py
+   :width: 100%
+
+.. |widgets_box| image:: https://raw.githubusercontent.com/Kitware/trame-vtklocal/refs/heads/master/examples/vtk/screenshots/widgets_box.png
+   :target: https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/widgets_box.py
+   :alt: widgets_box.py
+   :width: 100%
+
+.. |widgets_camera| image:: https://raw.githubusercontent.com/Kitware/trame-vtklocal/refs/heads/master/examples/vtk/screenshots/widgets_camera.png
+   :target: https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/widgets_camera.py
+   :alt: widgets_camera.py
+   :width: 100%
+
+.. |widgets_plane_clip| image:: https://raw.githubusercontent.com/Kitware/trame-vtklocal/refs/heads/master/examples/vtk/screenshots/widgets_plane_clip.png
+   :target: https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/widgets_plane_clip.py
+   :alt: widgets_plane_clip.py
+   :width: 100%
+
+.. |widgets_plane_slice| image:: https://raw.githubusercontent.com/Kitware/trame-vtklocal/refs/heads/master/examples/vtk/screenshots/widgets_plane_slice.png
+   :target: https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/widgets_plane_slice.py
+   :alt: widgets_plane_slice.py
+   :width: 100%
+
+.. list-table::
+   :widths: 33 33 33
+
+   * - |cone|
+
+       `cone.py <https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/cone.py>`_
+
+       Minimal cone with resolution slider.
+
+     - |axes_actor|
+
+       `axes_actor.py <https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/axes_actor.py>`_
+
+       Orientation axes rendered next to a cone.
+
+     - |glyph|
+
+       `glyph.py <https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/glyph.py>`_
+
+       ``vtkGlyph3D`` with switchable glyph sources.
+
+   * - |lut|
+
+       `lut.py <https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/lut.py>`_
+
+       Lookup table and color map editing.
+
+     - |silhouette|
+
+       `silhouette.py <https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/silhouette.py>`_
+
+       ``vtkPolyDataSilhouette`` outlines.
+
+     - |volume|
+
+       `volume.py <https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/volume.py>`_
+
+       Volume rendering with selectable mapper.
+
+   * - |flow|
+
+       `flow.py <https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/flow.py>`_
+
+       Contours and streamlines of a flow dataset.
+
+     - |file_viewer|
+
+       `file_viewer.py <https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/file_viewer.py>`_
+
+       Load and display VTP / VTM files.
+
+     - |invoke|
+
+       `invoke.py <https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/invoke.py>`_
+
+       Call VTK methods on the client-side objects.
+
+   * - |actor_picker|
+
+       `actor_picker.py <https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/actor_picker.py>`_
+
+       Pick actors from the browser.
+
+     - |actor_highlight_on_hover|
+
+       `actor_highlight_on_hover.py <https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/actor_highlight_on_hover.py>`_
+
+       Highlight the actor under the cursor.
+
+     - |many_actors|
+
+       `many_actors.py <https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/many_actors.py>`_
+
+       Stress test with many independent actors.
+
+   * - |render_benchmark|
+
+       `render_benchmark.py <https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/render_benchmark.py>`_
+
+       Many-actor render benchmark on a process plant scene.
+
+     - |wasm64_large_mesh|
+
+       `wasm64_large_mesh.py <https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/wasm64_large_mesh.py>`_
+
+       Mesh above 4 GiB requiring the wasm64 runtime.
+
+     - |border_widget|
+
+       `border_widget.py <https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/border_widget.py>`_
+
+       ``vtkBorderWidget`` over a sphere.
+
+   * - |widgets_box|
+
+       `widgets_box.py <https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/widgets_box.py>`_
+
+       ``vtkBoxWidget2`` transforming an actor.
+
+     - |widgets_camera|
+
+       `widgets_camera.py <https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/widgets_camera.py>`_
+
+       ``vtkCameraOrientationWidget``.
+
+     - |widgets_plane_clip|
+
+       `widgets_plane_clip.py <https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/widgets_plane_clip.py>`_
+
+       Interactive plane clipping.
+
+   * - |widgets_plane_slice|
+
+       `widgets_plane_slice.py <https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/widgets_plane_slice.py>`_
+
+       Interactive plane slicing (uses wasm64 for 64-bit ids).
+
+     -
+
+     -
+
+Two examples are kept as known limitations and have no screenshot:
+
+- `balloon_widget.py <https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/balloon_widget.py>`_: ``vtkBalloonWidget``
+- `charts_scatter.py <https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/charts_scatter.py>`_: ``vtkChartXY`` scatter plot
+
 
 Progress events
 ----------------------------------------

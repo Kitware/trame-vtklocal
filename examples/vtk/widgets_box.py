@@ -1,7 +1,7 @@
 # Required for vtk factory
 import vtkmodules.vtkRenderingOpenGL2  # noqa
-from trame.app import get_server
-from trame.decorators import TrameApp, change
+from trame.app import TrameApp
+from trame.decorators import change
 from trame.ui.html import DivLayout
 from vtkmodules.vtkCommonColor import vtkNamedColors
 from vtkmodules.vtkCommonTransforms import vtkTransform
@@ -44,7 +44,7 @@ def create_vtk_pipeline():
     renwin.AddRenderer(renderer)
 
     # An interactor
-    interactor = vtkRenderWindowInteractor()
+    interactor = vtkRenderWindowInteractor(track_interactor_observer_instances=True)
     interactor.SetRenderWindow(renwin)
     interactor.GetInteractorStyle().SetCurrentStyleToTrackballCamera()
 
@@ -52,7 +52,8 @@ def create_vtk_pipeline():
     rep = vtkBoxRepresentation(place_factor=2)
     rep.PlaceWidget(input_bounds)
 
-    boxWidget = vtkBoxWidget2(interactor=interactor, representation=rep)
+    boxWidget = vtkBoxWidget2(interactor=interactor)
+    boxWidget.SetRepresentation(rep)
 
     renderer.ResetCamera()
     renwin.Render()
@@ -67,11 +68,9 @@ def create_vtk_pipeline():
 # -----------------------------------------------------------------------------
 
 
-@TrameApp()
-class App:
+class BoxWidgetApp(TrameApp):
     def __init__(self, server=None):
-        self.server = get_server(server, client_type="vue3")
-
+        super().__init__(server)
         # Allocation state variable for widget state
         self.state.widget_state = None
 
@@ -99,12 +98,14 @@ class App:
         if self.state.wasm_listeners is not None and len(self.state.wasm_listeners):
             self.state.wasm_listeners = {}
         else:
+            widget_id = self.html_view.object_manager.GetId(self.widget)
+            assert widget_id is not None and widget_id > 0
             self.state.wasm_listeners = {
-                self.widget_id: {
+                widget_id: {
                     "InteractionEvent": {
                         "widget_state": {
                             "corners": (
-                                self.widget_id,
+                                widget_id,
                                 "WidgetRepresentation",
                                 "Corners",
                             ),
@@ -130,7 +131,7 @@ class App:
         with DivLayout(self.server) as layout:
             client.Style("body { margin: 0; }")
             html.Button(
-                "Toggle listeners",
+                "Toggle listeners (currently {{ Object.keys(wasm_listeners).length === 0 ? 'Off' : 'On' }})",
                 click=self.toggle_listeners,
                 style="position: absolute; left: 1rem; top: 1rem; z-index: 10;",
             )
@@ -147,7 +148,6 @@ class App:
                     throttle_rate=20,
                     listeners=("wasm_listeners", {}),
                 )
-                self.widget_id = self.html_view.register_vtk_object(self.widget)
 
         return layout
 
@@ -157,5 +157,5 @@ class App:
 # -----------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    app = App()
+    app = BoxWidgetApp()
     app.server.start()

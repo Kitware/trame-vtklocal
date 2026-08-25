@@ -1,6 +1,6 @@
 from trame.app import get_server
 from trame.ui.vuetify3 import SinglePageLayout
-from trame.widgets import vuetify3, vtk as vtk_widgets
+from trame.widgets import vuetify3
 
 from vtkmodules.vtkFiltersSources import vtkConeSource
 from vtkmodules.vtkRenderingCore import (
@@ -57,7 +57,7 @@ class App:
 
     def _build_ui(self):
         with SinglePageLayout(self.server) as layout:
-            layout.title.set_text("Hello trame")
+            layout.title.set_text("Hello trame-vtklocal")
 
             with layout.content:
                 with vuetify3.VContainer(
@@ -66,10 +66,6 @@ class App:
                 ):
                     with vuetify3.VCol(classes="pa-0 ma-1 fill-height"):
                         vtklocal.LocalView(self.render_window)
-                    with vuetify3.VCol(classes="pa-0 ma-1 fill-height"):
-                        vtk_widgets.VtkRemoteView(
-                            self.render_window, interactive_ratio=1
-                        )
 
 
 if __name__ == "__main__":

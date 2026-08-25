@@ -1,14 +1,15 @@
-# import os
+# This example uses wasm64 because the output of plane cutter uses 64-bit ids
+# which corrupts the connectivity array in wasm32 client.
 from pathlib import Path
 
 # Required for vtk factory
 import vtkmodules.vtkRenderingOpenGL2  # noqa
-from trame.app import get_server
-from trame.decorators import TrameApp, change
+from trame.app import TrameApp
+from trame.decorators import change
 from trame.ui.html import DivLayout
 from vtkmodules.vtkCommonColor import vtkNamedColors
 from vtkmodules.vtkCommonDataModel import vtkPlane
-from vtkmodules.vtkFiltersCore import vtkCutter
+from vtkmodules.vtkFiltersCore import vtkPlaneCutter
 from vtkmodules.vtkFiltersSources import vtkSphereSource
 from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
 from vtkmodules.vtkInteractionWidgets import (
@@ -56,8 +57,8 @@ def create_vtk_pipeline(file_to_load):
         )
     )
 
-    clipper = vtkCutter(
-        cut_function=plane,
+    clipper = vtkPlaneCutter(
+        plane=plane,
         input_connection=source.output_port,
     )
 
@@ -78,7 +79,9 @@ def create_vtk_pipeline(file_to_load):
     ren_win.AddRenderer(renderer)
 
     # An interactor
-    iren = vtkRenderWindowInteractor(render_window=ren_win)
+    iren = vtkRenderWindowInteractor(
+        render_window=ren_win, track_interactor_observer_instances=True
+    )
     iren.GetInteractorStyle().SetCurrentStyleToTrackballCamera()
 
     rep = vtkImplicitPlaneRepresentation(
@@ -89,7 +92,8 @@ def create_vtk_pipeline(file_to_load):
     rep.normal = plane.normal
     rep.origin = plane.origin
 
-    plane_widget = vtkImplicitPlaneWidget2(interactor=iren, representation=rep)
+    plane_widget = vtkImplicitPlaneWidget2(interactor=iren)
+    plane_widget.SetRepresentation(rep)
 
     renderer.ResetCamera(input_bounds)
     ren_win.Render()
@@ -104,10 +108,9 @@ def create_vtk_pipeline(file_to_load):
 # -----------------------------------------------------------------------------
 
 
-@TrameApp()
-class App:
+class PlaneWidgetSlicerApp(TrameApp):
     def __init__(self, server=None):
-        self.server = get_server(server, client_type="vue3")
+        super().__init__(server)
 
         self.server.cli.add_argument("--data")
         args, _ = self.server.cli.parse_known_args()
@@ -140,17 +143,19 @@ class App:
         if self.state.wasm_listeners is not None and len(self.state.wasm_listeners):
             self.state.wasm_listeners = {}
         else:
+            widget_id = self.html_view.object_manager.GetId(self.widget)
+            assert widget_id is not None and widget_id > 0
             self.state.wasm_listeners = {
-                self.widget_id: {
+                widget_id: {
                     "InteractionEvent": {
                         "plane_widget": {
                             "normal": (
-                                self.widget_id,
+                                widget_id,
                                 "WidgetRepresentation",
                                 "Normal",
                             ),
                             "origin": (
-                                self.widget_id,
+                                widget_id,
                                 "WidgetRepresentation",
                                 "Origin",
                             ),
@@ -160,11 +165,13 @@ class App:
             }
 
     def one_time_update(self):
+        widget_id = self.html_view.object_manager.GetId(self.widget)
+        assert widget_id is not None and widget_id > 0
         self.html_view.eval(
             {
                 "plane_widget": {
-                    "origin": (self.widget_id, "WidgetRepresentation", "Origin"),
-                    "normal": (self.widget_id, "WidgetRepresentation", "Normal"),
+                    "origin": (widget_id, "WidgetRepresentation", "Origin"),
+                    "normal": (widget_id, "WidgetRepresentation", "Normal"),
                 }
             }
         )
@@ -173,7 +180,7 @@ class App:
         with DivLayout(self.server) as layout:
             client.Style("body { margin: 0; }")
             html.Button(
-                "Toggle listeners",
+                "Toggle listeners (currently {{ Object.keys(wasm_listeners).length === 0 ? 'Off' : 'On' }})",
                 click=self.toggle_listeners,
                 style="position: absolute; left: 1rem; top: 1rem; z-index: 10;",
             )
@@ -188,9 +195,9 @@ class App:
                 self.html_view = vtklocal.LocalView(
                     self.render_window,
                     throttle_rate=20,
+                    config=("{ mode: 'wasm64' }",),
                     listeners=("wasm_listeners", {}),
                 )
-                self.widget_id = self.html_view.register_vtk_object(self.widget)
 
         return layout
 
@@ -200,5 +207,5 @@ class App:
 # -----------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    app = App()
+    app = PlaneWidgetSlicerApp()
     app.server.start()

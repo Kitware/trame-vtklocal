@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from trame.app import get_server
+from trame.app import TrameApp
 from trame.ui.html import DivLayout
 from trame.widgets import vtklocal, client
 
@@ -27,7 +27,6 @@ from vtkmodules.vtkRenderingCore import (
 import vtkmodules.vtkRenderingOpenGL2  # noqa
 from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
 
-CLIENT_TYPE = "vue3"
 DATA_FILE = str((Path(__file__).parent.with_name("data") / "carotid.vtk").resolve())
 
 # -----------------------------------------------------------------------------
@@ -53,7 +52,7 @@ def create_vtk_pipeline():
 
     threshold = vtkThresholdPoints()
     threshold.SetInputConnection(reader.GetOutputPort())
-    threshold.ThresholdByUpper(200)
+    threshold.upper_threshold = 200
 
     mask = vtkMaskPoints()
     mask.SetInputConnection(threshold.GetOutputPort())
@@ -133,20 +132,17 @@ def create_vtk_pipeline():
 # -----------------------------------------------------------------------------
 
 
-class DemoApp:
+class FlowApp(TrameApp):
     def __init__(self, server=None):
-        self.server = get_server(server, client_type=CLIENT_TYPE)
-
+        super().__init__(server)
         self.render_window = create_vtk_pipeline()
-        self.html_view = None
         self.ui = self._ui()
 
     def _ui(self):
         with DivLayout(self.server) as layout:
             layout.root.style = "width: 100vw; height: 100vh;"
             client.Style("body { margin: 0; }")
-            self.html_view = vtklocal.LocalView(self.render_window)
-            # vtk_widgets.VtkRemoteView(self.render_window)
+            vtklocal.LocalView(self.render_window)
 
         return layout
 
@@ -156,5 +152,5 @@ class DemoApp:
 # -----------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    app = DemoApp()
+    app = FlowApp()
     app.server.start()

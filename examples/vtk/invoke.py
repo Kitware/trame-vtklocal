@@ -1,8 +1,8 @@
-from trame.app import get_server, asynchronous
+from trame.app import TrameApp, asynchronous
 from trame.ui.html import DivLayout
 from trame.widgets import html, client
 from trame_vtklocal.widgets import vtklocal
-from trame.decorators import TrameApp, change
+from trame.decorators import change
 
 from vtkmodules.vtkFiltersSources import vtkConeSource
 from vtkmodules.vtkRenderingCore import (
@@ -16,8 +16,6 @@ from vtkmodules.vtkRenderingCore import (
 # Required for vtk factory
 import vtkmodules.vtkRenderingOpenGL2  # noqa
 from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
-
-CLIENT_TYPE = "vue3"
 
 # -----------------------------------------------------------------------------
 # VTK pipeline
@@ -53,16 +51,13 @@ def create_vtk_pipeline():
 # -----------------------------------------------------------------------------
 
 
-@TrameApp()
-class DemoApp:
+class DemoApp(TrameApp):
     def __init__(self, server=None):
-        self.server = get_server(server, client_type=CLIENT_TYPE)
-
+        super().__init__(server)
         self.render_window, self.renderer, self.cone = create_vtk_pipeline()
         self.server.state.update(dict(mem_blob=0, mem_vtk=0))
         self.html_view = None
         self.ui = self._ui()
-        # print(self.ui)
 
     def reset_camera(self):
         self.html_view.reset_camera()

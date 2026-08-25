@@ -1,10 +1,10 @@
 import random
 
-from trame.app import get_server
+from trame.app import TrameApp
 from trame.ui.html import DivLayout
 from trame.widgets import html, client
 from trame_vtklocal.widgets import vtklocal
-from trame.decorators import TrameApp, change, trigger
+from trame.decorators import change, trigger
 
 from vtkmodules.vtkFiltersSources import vtkSphereSource
 from vtkmodules.vtkRenderingCore import (
@@ -18,8 +18,6 @@ from vtkmodules.vtkRenderingCore import (
 # Required for vtk factory
 import vtkmodules.vtkRenderingOpenGL2  # noqa
 from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
-
-CLIENT_TYPE = "vue3"
 
 # -----------------------------------------------------------------------------
 # VTK pipeline
@@ -61,16 +59,13 @@ def create_vtk_pipeline():
 # -----------------------------------------------------------------------------
 
 
-@TrameApp()
-class DemoApp:
+class DemoApp(TrameApp):
     def __init__(self, server=None):
-        self.server = get_server(server, client_type=CLIENT_TYPE)
-
+        super().__init__(server)
         self.render_window, self.actors = create_vtk_pipeline()
         self.server.state.update(dict(mem_blob=0, mem_vtk=0))
         self.html_view = None
         self.ui = self._ui()
-        # print(self.ui)
 
     @trigger("export")
     def export(self, format):
@@ -109,13 +104,22 @@ class DemoApp:
                     "padding: 1rem; border-radius: 1rem;"
                 ),
             )
+            # OpacitySlider
+            html.Label(
+                "Opacity {{opacity}}",
+                style="position: absolute; top: 1rem; right: 1rem; z-index: 10; color: white;",
+            )
             html.Input(
                 type="range",
                 v_model=("opacity", 1),
                 min=0.01,
                 max=1,
                 step=0.01,
-                style="position: absolute; top: 1rem; right: 1rem; z-index: 10;",
+                style="position: absolute; top: 2.5rem; right: 1rem; z-index: 10;",
+            )
+            html.Label(
+                "Cache {{ (cache / 1024).toFixed(1) }} KB",
+                style="position: absolute; top: 1rem; right: 10rem; z-index: 10; color: white;",
             )
             html.Input(
                 type="range",
@@ -123,22 +127,22 @@ class DemoApp:
                 min=0,
                 max=100000,
                 step=1000,
-                style="position: absolute; top: 1rem; right: 10rem; z-index: 10;",
+                style="position: absolute; top: 2.5rem; right: 10rem; z-index: 10;",
             )
             html.Button(
                 "Export json",
                 click="utils.download('scene-wasm.json', trigger('export', ['json']), 'application/octet-stream')",
-                style="position: absolute; top: 3rem; right: 1rem; z-index: 10;",
+                style="position: absolute; top: 6rem; left: 1rem; z-index: 10;",
             )
             html.Button(
                 "Export zip",
                 click="utils.download('scene-wasm.zip', trigger('export', ['zip']), 'application/octet-stream')",
-                style="position: absolute; top: 3rem; right: 7rem; z-index: 10;",
+                style="position: absolute; top: 6rem; left: 7rem; z-index: 10;",
             )
             html.Button(
                 "Reset Camera",
                 click=self.reset_camera,
-                style="position: absolute; top: 3rem; right: 14rem; z-index: 10;",
+                style="position: absolute; top: 6rem; left: 14rem; z-index: 10;",
             )
 
         return layout

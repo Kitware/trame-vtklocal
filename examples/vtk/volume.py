@@ -89,6 +89,9 @@ class App:
 
     def _build_ui(self):
         with SinglePageLayout(self.server) as layout:
+            layout.title.set_text(
+                "Volume rendering: click update to copy camera from VtkRemoteView (right) to WASM (left)"
+            )
             layout.icon.click = self.ctrl.view_reset_camera
 
             with layout.toolbar:

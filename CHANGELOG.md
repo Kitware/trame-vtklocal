@@ -1,6 +1,27 @@
 # CHANGELOG
 
 
+## v1.3.0 (2026-08-25)
+
+### Features
+
+- **deps**: Bump vtk-wasm to 3.0
+  ([`66515a3`](https://github.com/Kitware/trame-vtklocal/commit/66515a3fb72e7d82be9f38d235df8e590c97ae56))
+
+vtk-wasm v3.0 adds typescript definitions for VTK classes. In order to avoid conflicts, the proxy
+  returned by `getVtkObject(id)` was amended like:
+
+| old | new | | -- | -- | | id | $id | | obj |$obj | | observe() | $observe() | | set() | $set() | |
+  toJSON() | toJSON() | | toString() | toString() | | unObserve() | $unObserve | | unObserveAll() |
+  $unObserveAll | | userData | $userData |
+
+For this reason, tests and examples which use these, were renamed. If you use `getVtkObject()` and
+  use any old name in Python (inline JS) or through custom JavaScript, you will need to update the
+  code. See
+  https://kitware.github.io/vtk-wasm/api/@kitware/vtk-wasm/interfaces/VtkObjectProxyBase.html for
+  the exact API.
+
+
 ## v1.2.0 (2026-08-09)
 
 ### Features

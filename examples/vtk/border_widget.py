@@ -32,7 +32,7 @@ def create_vtk_pipeline():
     renwin.AddRenderer(renderer)
 
     # An interactor
-    interactor = vtkRenderWindowInteractor()
+    interactor = vtkRenderWindowInteractor(track_interactor_observer_instances=True)
     interactor.SetRenderWindow(renwin)
     interactor.GetInteractorStyle().SetCurrentStyleToTrackballCamera()
 
@@ -46,10 +46,11 @@ def create_vtk_pipeline():
     widget.SetInteractor(interactor)
     widget.SetRepresentation(rep)
     widget.SelectableOff()
+    widget.On()
     renderer.ResetCamera()
     renwin.Render()
 
-    return renwin, widget, actor
+    return renwin
 
 
 # -----------------------------------------------------------------------------
@@ -61,8 +62,7 @@ class BorderWidget(TrameApp):
     def __init__(self, server=None):
         super().__init__(server)
 
-        self.render_window, self.widget, self.actor = create_vtk_pipeline()
-        self.widget.On()
+        self.render_window = create_vtk_pipeline()
         self._build_ui()
 
     def _build_ui(self):
@@ -76,7 +76,6 @@ class BorderWidget(TrameApp):
                     throttle_rate=20,
                     ctx_name="view",
                 )
-                self.widget_id = self.ctx.view.register_vtk_object(self.widget)
 
         return layout
 

@@ -11,7 +11,18 @@
 # [[tool.uv.index]]
 # url = "https://wheels.vtk.org"
 # ///
-import vtk
+
+from vtkmodules.vtkRenderingAnnotation import vtkScalarBarActor
+from vtkmodules.vtkRenderingCore import (
+    vtkColorTransferFunction,
+    vtkRenderer,
+    vtkRenderWindow,
+    vtkRenderWindowInteractor,
+)
+
+# Required for vtk factory
+import vtkmodules.vtkRenderingOpenGL2  # noqa
+from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
 
 # trame imports
 from trame.app import TrameApp
@@ -20,7 +31,7 @@ from trame.widgets import vuetify3, vtklocal
 
 
 def get_scalar_bar(colorTransferFunction):
-    scalar_bar = vtk.vtkScalarBarActor()
+    scalar_bar = vtkScalarBarActor()
     scalar_bar.SetLookupTable(colorTransferFunction)
     scalar_bar.SetTitle("Color Temp")
     scalar_bar.UnconstrainedFontSizeOn()
@@ -32,14 +43,14 @@ def get_scalar_bar(colorTransferFunction):
 
 
 def get_render_window():
-    ren1 = vtk.vtkRenderer()
-    colorTransferFunction = vtk.vtkColorTransferFunction()
+    ren1 = vtkRenderer()
+    colorTransferFunction = vtkColorTransferFunction()
     colorTransferFunction.AddRGBPoint(0.0, 0.69, 0.69, 0.69)
     colorTransferFunction.AddRGBPoint(1.0, 1.0, 0.3, 0.3)
     scalar_bar = get_scalar_bar(colorTransferFunction)
     ren1.AddViewProp(scalar_bar)
-    renderWindow = vtk.vtkRenderWindow()
-    interactor = vtk.vtkRenderWindowInteractor()
+    renderWindow = vtkRenderWindow()
+    interactor = vtkRenderWindowInteractor()
     interactor.SetRenderWindow(renderWindow)
 
     renderWindow.AddRenderer(ren1)
@@ -53,7 +64,7 @@ class App(TrameApp):
         renderWindow = get_render_window()
 
         with SinglePageLayout(self.server) as layout:
-            layout.title.set_text("2D View")
+            layout.title.set_text("Scalar Bar Actor")
             with layout.content:
                 with vuetify3.VContainer(
                     fluid=True,

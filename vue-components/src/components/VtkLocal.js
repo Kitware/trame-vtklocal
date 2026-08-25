@@ -452,6 +452,7 @@ export default {
     onMounted(async () => {
       // Wait for wasm to be fully loaded
       await wasmFuture.promise;
+      wasmLoading.value = false;
 
       // Should never happen
       if (!hasRemoteSession()) {
@@ -468,7 +469,7 @@ export default {
         resizeObserver.observe(unref(container));
       }
       await update({ onMounted: props.renderWindow });
-      wasmLoading.value = false;
+
       // Camera listener
       remoteSession.cameraIds.forEach((cid) => {
         try {

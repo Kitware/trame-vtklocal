@@ -1,13 +1,8 @@
-# ---------------------------------------------------------
-# # NOT FINISHED - NOT EXPECTED TO WORK OR DO ANYTHING
-# ---------------------------------------------------------
-
-# import os
 from pathlib import Path
 
 # Required for vtk factory
 import vtkmodules.vtkRenderingOpenGL2  # noqa
-from trame.app import get_server
+from trame.app import TrameApp
 from trame.ui.html import DivLayout
 from vtkmodules.vtkCommonColor import vtkNamedColors
 from vtkmodules.vtkFiltersSources import vtkConeSource
@@ -23,10 +18,7 @@ from vtkmodules.vtkRenderingCore import (
 )
 
 from trame.widgets import client, html
-from trame.widgets import vtk as vtk_widgets
 from trame_vtklocal.widgets import vtklocal
-
-WASM = True  # "USE_WASM" in os.environ
 
 
 def create_vtk_pipeline(path):
@@ -41,7 +33,7 @@ def create_vtk_pipeline(path):
 
     renderer = vtkRenderer()
     ren_win = vtkRenderWindow()
-    interactor = vtkRenderWindowInteractor()
+    interactor = vtkRenderWindowInteractor(track_interactor_observer_instances=True)
 
     mapper = vtkPolyDataMapper()
     mapper.SetInputConnection(data_source.GetOutputPort())
@@ -60,15 +52,14 @@ def create_vtk_pipeline(path):
     interactor.SetRenderWindow(ren_win)
 
     cam_orient_manipulator = vtkCameraOrientationWidget()
-    # cam_orient_manipulator.AnimateOn()
-    # cam_orient_manipulator.SetInteractor(interactor)
+    cam_orient_manipulator.AnimateOn()
     cam_orient_manipulator.SetParentRenderer(renderer)
     # Enable the widget.
     cam_orient_manipulator.On()
 
     ren_win.Render()
 
-    return ren_win, cam_orient_manipulator
+    return ren_win
 
 
 # -----------------------------------------------------------------------------
@@ -76,13 +67,12 @@ def create_vtk_pipeline(path):
 # -----------------------------------------------------------------------------
 
 
-class App:
+class CameraOrientationWidgetApp(TrameApp):
     def __init__(self, server=None):
-        self.server = get_server(server, client_type="vue3")
-
+        super().__init__(server)
         self.server.cli.add_argument("--data")
         args, _ = self.server.cli.parse_known_args()
-        self.render_window, self.widget = create_vtk_pipeline(args.data)
+        self.render_window = create_vtk_pipeline(args.data)
         self.html_view = None
         self.ui = self._ui()
 
@@ -92,11 +82,7 @@ class App:
             with html.Div(
                 style="position: absolute; left: 0; top: 0; width: 100vw; height: 100vh;"
             ):
-                if WASM:
-                    self.html_view = vtklocal.LocalView(self.render_window)
-                    self.widget_id = self.html_view.register_vtk_object(self.widget)
-                else:
-                    self.html_view = vtk_widgets.VtkRemoteView(self.render_window)
+                self.html_view = vtklocal.LocalView(self.render_window)
 
         return layout
 
@@ -106,5 +92,5 @@ class App:
 # -----------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    app = App()
+    app = CameraOrientationWidgetApp()
     app.server.start()

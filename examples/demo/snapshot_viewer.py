@@ -1,8 +1,21 @@
-from trame.app import get_server
+#!/usr/bin/env -S uv run --script
+#
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#     "trame>=3.13.2",
+#     "trame-vtklocal>=1.3",
+#     "vtk>=9.7",
+# ]
+#
+# [[tool.uv.index]]
+# url = "https://wheels.vtk.org"
+# ///
+
+from pathlib import Path
+from trame.app import TrameApp
 from trame.ui.html import DivLayout
-from trame.widgets import html, client
-from trame_vtklocal.widgets import vtklocal
-from trame.decorators import TrameApp
+from trame.widgets import client, vtklocal
 
 from vtkmodules.vtkSerializationManager import vtkObjectManager
 
@@ -28,22 +41,25 @@ def import_snapshot(state_file, blob_file):
         FileNotFoundError: If the state or blob file does not exist.
         json.JSONDecodeError: If the state file is not a valid JSON.
     """
+    state_file = Path(state_file).resolve()
+    blob_file = Path(blob_file).resolve()
     ids_to_register = []
     render_window_id = 1
-    with open(state_file, "r") as f:
-        states = json.load(f)
-        for _id, obj in states.items():
-            if obj.get("vtk-object-manager-kept-alive", False):
-                # This is a kept alive object (ex: a 3D VTK widget).
-                # we need to pass it to the VTK local view using the register_vtk_object method
-                ids_to_register.append(int(_id))
-            if "vtkRenderWindow" in obj.get("SuperClassNames"):
-                # This is the render window object
-                render_window_id = int(_id)
+
+    # Extract ids to keep around
+    states = json.loads(state_file.read_text())
+    for _id, obj in states.items():
+        if obj.get("vtk-object-manager-kept-alive", False):
+            # This is a kept alive object (ex: a 3D VTK widget).
+            # we need to pass it to the VTK local view using the register_vtk_object method
+            ids_to_register.append(int(_id))
+        if "vtkRenderWindow" in obj.get("SuperClassNames"):
+            # This is the render window object
+            render_window_id = int(_id)
 
     manager = vtkObjectManager()
     manager.Initialize()
-    manager.Import(state_file, blob_file)
+    manager.Import(str(state_file), str(blob_file))
     manager.UpdateObjectsFromStates()
 
     return manager.GetObjectAtId(render_window_id), [
@@ -51,41 +67,27 @@ def import_snapshot(state_file, blob_file):
     ]
 
 
-@TrameApp()
-class SnapshotViewer:
+class SnapshotViewer(TrameApp):
     def __init__(self, server=None):
         """Initialize the SnapshotViewer application."""
-
-        self.server = get_server(server, client_type=CLIENT_TYPE)
+        super().__init__(server, client_type=CLIENT_TYPE)
         self.server.cli.add_argument("-s", "--state", required=True)
         self.server.cli.add_argument("-b", "--blob", required=True)
         args, _ = self.server.cli.parse_known_args()
 
-        self.render_window, self.objects_to_register = import_snapshot(
-            args.state, args.blob
-        )
-        self.html_view = None
-        self.ui = self._ui()
-        # print(self.ui)
+        self.render_window, objects_to_register = import_snapshot(args.state, args.blob)
+        self._build_ui()
+        for obj in objects_to_register:
+            self.ctx.view.register_vtk_object(obj)
 
-    def _ui(self):
-        with DivLayout(self.server) as layout:
+    def _build_ui(self):
+        with DivLayout(self.server) as self.ui:
             client.Style("body { margin: 0; }")
-            with html.Div(
-                style="position: absolute; top: 0; left: 0; width: 100%; height: 100vh;"
-            ):
-                self.html_view = vtklocal.LocalView(
-                    self.render_window,
-                )
-                for obj in self.objects_to_register:
-                    self.html_view.register_vtk_object(obj)
-
-        return layout
-
-
-# -----------------------------------------------------------------------------
-# Main
-# -----------------------------------------------------------------------------
+            self.ui.root.style = "height:100vh;"
+            vtklocal.LocalView(
+                self.render_window,
+                ctx_name="view",
+            )
 
 
 if __name__ == "__main__":

@@ -72,9 +72,6 @@ Install the library
     pre-commit install
     pre-commit install --hook-type commit-msg
 
-    # Allow live code edit
-    uv pip install -e .
-
 Optionally, you can develop with bleeding edge VTK by following these steps. Make sure you've these tools
 
 1. git

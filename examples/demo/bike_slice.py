@@ -1,11 +1,25 @@
+#!/usr/bin/env -S uv run --script
+#
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#     "trame>=3.13.2",
+#     "trame-vtklocal>=1.3",
+#     "trame-vuetify",
+#     "vtk>=9.7",
+# ]
+#
+# [[tool.uv.index]]
+# url = "https://wheels.vtk.org"
+# ///
+
 import vtk
-from trame.app import get_server
+from trame.app import TrameApp
 from trame.assets.remote import HttpFile
-from trame.decorators import TrameApp, change
+from trame.decorators import change
 from trame.ui.html import DivLayout
 
-from trame.widgets import client, html  # , vtklocal
-from trame_vtklocal.widgets import vtklocal  # just for -e compatibility
+from trame.widgets import client, vtklocal
 
 FULL_SCREEN = "position:absolute; left:0; top:0; width:100vw; height:100vh;"
 K_RANGE = [0.0, 15.6]
@@ -47,7 +61,8 @@ def create_vtk_pipeline():
             0.5 * (input_bounds[0] + input_bounds[1]),
             0.5 * (input_bounds[2] + input_bounds[3]),
             0.5 * (input_bounds[4] + input_bounds[5]),
-        )
+        ),
+        normal=(0, 1, 0),
     )
 
     clipper = vtk.vtkCutter(
@@ -79,7 +94,6 @@ def create_vtk_pipeline():
     clip_mapper.SetScalarRange(K_RANGE)
 
     renderWindow.Render()
-    renderer.ResetCamera()
     renderer.SetBackground(0.4, 0.4, 0.4)
 
     rep = vtk.vtkImplicitPlaneRepresentation(
@@ -96,26 +110,22 @@ def create_vtk_pipeline():
     )
     plane_widget.On()
 
+    renderer.active_camera.position = [0, -1, 0]
+    renderer.active_camera.focal_point = [0, 0, 0]
+    renderer.active_camera.view_up = [0, 0, 1]
+    renderer.ResetCamera()
+
     return renderWindow, plane, plane_widget
 
 
-@TrameApp()
-class App:
+class ClipWidget(TrameApp):
     def __init__(self, server=None):
-        self.server = get_server(server)
+        super().__init__(server)
         self.rw, self.plane, self.widget = create_vtk_pipeline()
         self._build_ui()
 
         # reserve state variable for widget update
         self.state.plane_widget = None
-
-    @property
-    def state(self):
-        return self.server.state
-
-    @property
-    def ctrl(self):
-        return self.server.controller
 
     @change("plane_widget")
     def _on_widget_update(self, plane_widget, **_):
@@ -129,41 +139,39 @@ class App:
         self.plane.SetNormal(normal)
 
         # prevent requesting geometry too often
-        self.ctrl.view_update()
+        self.ctx.view.update_throttle()
 
     def _build_ui(self):
-        with DivLayout(self.server):
+        with DivLayout(self.server) as self.ui:
             client.Style("body { margin: 0; }")
-            with html.Div(style=FULL_SCREEN):
-                with vtklocal.LocalView(self.rw) as view:
-                    view.update_throttle.rate = 20
-                    self.ctrl.view_update = view.update_throttle
-                    self.widget_id = view.register_vtk_object(self.widget)
-                    view.listeners = (
-                        "listeners",
-                        {
-                            self.widget_id: {
-                                "InteractionEvent": {
-                                    "plane_widget": {
-                                        "origin": (
-                                            self.widget_id,
-                                            "WidgetRepresentation",
-                                            "Origin",
-                                        ),
-                                        "normal": (
-                                            self.widget_id,
-                                            "WidgetRepresentation",
-                                            "Normal",
-                                        ),
-                                    },
+            self.ui.root.style = "height:100vh;"
+            with vtklocal.LocalView(self.rw, ctx_name="view", throttle_rate=20) as view:
+                self.widget_id = view.register_vtk_object(self.widget)
+                view.listeners = (
+                    "listeners",
+                    {
+                        self.widget_id: {
+                            "InteractionEvent": {
+                                "plane_widget": {
+                                    "origin": (
+                                        self.widget_id,
+                                        "WidgetRepresentation",
+                                        "Origin",
+                                    ),
+                                    "normal": (
+                                        self.widget_id,
+                                        "WidgetRepresentation",
+                                        "Normal",
+                                    ),
                                 },
                             },
                         },
-                    )
+                    },
+                )
 
 
 def main():
-    app = App()
+    app = ClipWidget()
     app.server.start()
 
 

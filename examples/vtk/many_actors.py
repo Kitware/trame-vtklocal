@@ -30,8 +30,8 @@ from vtkmodules.vtkRenderingCore import (
 )
 
 # Required for vtk factory
-import vtkmodules.vtkRenderingOpenGL2  # noqa
-from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
+import vtkmodules.vtkRenderingOpenGL2  # noqa: F401
+import vtkmodules.vtkInteractionStyle  # noqa: F401
 
 # -----------------------------------------------------------------------------
 # VTK pipeline
@@ -78,21 +78,20 @@ class DemoApp(TrameApp):
         super().__init__(server)
         self.render_window, self.actors = create_vtk_pipeline()
         self.server.state.update(dict(mem_blob=0, mem_vtk=0))
-        self.html_view = None
         self._build_ui()
 
     @trigger("export")
     def export(self, format):
-        return self.html_view.export(format)
+        return self.ctx.view.export(format)
 
     def reset_camera(self):
-        self.html_view.reset_camera()
+        self.ctx.view.reset_camera()
 
     @change("opacity")
     def on_opacity_change(self, opacity, **kwargs):
         for actor in self.actors:
             actor.property.opacity = float(opacity)
-            self.html_view.update_throttle()
+            self.ctx.view.update_throttle()
 
     def _build_ui(self):
         with DivLayout(self.server) as self.ui:
@@ -100,8 +99,9 @@ class DemoApp(TrameApp):
             with html.Div(
                 style="position: absolute; left: 0; top: 0; width: 100vw; height: 100vh;"
             ):
-                self.html_view = vtklocal.LocalView(
+                vtklocal.LocalView(
                     self.render_window,
+                    ctx_name="view",
                     throttle_rate=20,
                     cache_size=("cache", 0),
                     emit_memory=True,

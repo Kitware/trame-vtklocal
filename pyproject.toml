@@ -76,12 +76,8 @@ packages = [
 version_toml = [
     "pyproject.toml:project.version",
 ]
-build_command = """
-  python -m venv .venv
-  source .venv/bin/activate
-  pip install -U pip build
-  python -m build .
-"""
+build_command = "uv build"
+commit_parser = "conventional"
 
 [tool.ruff]
 line-length = 88
@@ -93,7 +89,6 @@ select = ["E", "W", "F"]
 ignore = []
 fixable = ["ALL"]
 unfixable = []
-
 
 [tool.ruff.format]
 quote-style = "double"
@@ -109,15 +104,9 @@ docstring-code-line-length = "dynamic"
 [tool.ruff.lint.pycodestyle]
 max-line-length = 120
 
-
-
-
-[semantic_release.publish]
+[tool.semantic_release.publish]
 dist_glob_patterns = ["dist/*"]
 upload_to_vcs_release = true
-
-
-
 
 [lint.pydocstyle]
 convention = "google"

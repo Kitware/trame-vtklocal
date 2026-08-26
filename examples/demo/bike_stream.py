@@ -78,7 +78,9 @@ def create_vtk_pipeline():
     renderWindow.AddRenderer(renderer)
     renderWindow.OffScreenRenderingOn()
 
-    renderWindowInteractor = vtk.vtkRenderWindowInteractor()
+    renderWindowInteractor = vtk.vtkRenderWindowInteractor(
+        track_interactor_observer_instances=True
+    )
     renderWindowInteractor.SetRenderWindow(renderWindow)
     renderWindowInteractor.GetInteractorStyle().SetCurrentStyleToTrackballCamera()
 
@@ -261,7 +263,7 @@ class App(TrameApp):
                     # })
 
                     # Bind state to 3D widget interaction event
-                    widget_id = view.register_vtk_object(self.widget)
+                    widget_id = view.object_manager.GetId(self.widget)
                     view.listeners = (
                         "wasm_listeners",
                         {

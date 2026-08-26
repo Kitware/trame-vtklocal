@@ -44,7 +44,9 @@ def create_vtk_pipeline():
     renderWindow.AddRenderer(renderer)
     renderWindow.OffScreenRenderingOn()
 
-    renderWindowInteractor = vtk.vtkRenderWindowInteractor()
+    renderWindowInteractor = vtk.vtkRenderWindowInteractor(
+        track_interactor_observer_instances=True
+    )
     renderWindowInteractor.SetRenderWindow(renderWindow)
     renderWindowInteractor.GetInteractorStyle().SetCurrentStyleToTrackballCamera()
 
@@ -147,20 +149,20 @@ class ClipWidget(TrameApp):
             client.Style("body { margin: 0; }")
             self.ui.root.style = "height:100vh;"
             with vtklocal.LocalView(self.rw, ctx_name="view", throttle_rate=20) as view:
-                self.widget_id = view.register_vtk_object(self.widget)
+                widget_id = view.object_manager.GetId(self.widget)
                 view.listeners = (
                     "listeners",
                     {
-                        self.widget_id: {
+                        widget_id: {
                             "InteractionEvent": {
                                 "plane_widget": {
                                     "origin": (
-                                        self.widget_id,
+                                        widget_id,
                                         "WidgetRepresentation",
                                         "Origin",
                                     ),
                                     "normal": (
-                                        self.widget_id,
+                                        widget_id,
                                         "WidgetRepresentation",
                                         "Normal",
                                     ),

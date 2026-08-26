@@ -1,3 +1,19 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+#
+# requires-python = ">=3.10"
+#
+# dependencies = [
+#   "numpy>=2.5.2",
+#   "trame>=3.13",
+#   "trame-vtklocal>=1.3",
+#   "vtk>=9.7",
+# ]
+#
+# [[tool.uv.index]]
+# url = "https://wheels.vtk.org"
+#
+# ///
 """Demonstrate why the wasm64 (memory64) VTK runtime is needed.
 
 The example builds a multi-block triangulated surface whose total memory

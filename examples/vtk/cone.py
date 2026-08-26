@@ -14,12 +14,13 @@
 #
 # ///
 # Required for vtk factory
-import vtkmodules.vtkRenderingOpenGL2  # noqa
+import vtkmodules.vtkRenderingOpenGL2  # noqa: F401
+import vtkmodules.vtkInteractionStyle  # noqa: F401
+
 from trame.app import TrameApp
 from trame.decorators import change, trigger
 from trame.ui.html import DivLayout
 from vtkmodules.vtkFiltersSources import vtkConeSource
-from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
 from vtkmodules.vtkRenderingCore import (
     vtkActor,
     vtkPolyDataMapper,
@@ -71,46 +72,45 @@ class ConeApp(TrameApp):
         super().__init__(server, client_type=CLIENT_TYPE)
         self.render_window, self.cone, self.actor = create_vtk_pipeline()
         self.server.state.update(dict(mem_blob=0, mem_vtk=0))
-        self.html_view = None
         self._build_ui()
         # print(self.ui)
 
     @trigger("export")
     def export(self, format):
-        return self.html_view.export(format)
+        return self.ctx.view.export(format)
 
     def reset_camera(self):
-        self.html_view.reset_camera()
+        self.ctx.view.reset_camera()
 
     @change("resolution")
     def on_resolution_change(self, resolution, **_):
         self.cone.SetResolution(int(resolution))
-        self.html_view.update_throttle(
+        self.ctx.view.update_throttle(
             resolution=resolution
         )  # provide custom content on update
 
     @change("opacity")
     def on_opacity_change(self, opacity, **_):
         self.actor.property.opacity = float(opacity)
-        self.html_view.update_throttle(
+        self.ctx.view.update_throttle(
             opacity=opacity
         )  # provide custom content on update
 
     def _build_ui(self):
         with DivLayout(self.server) as self.ui:
+            self.ui.root.style = "height:100vh;"
             client.Style("body { margin: 0; }")
-            with html.Div(
-                style="position: absolute; left: 0; top: 0; width: 100vw; height: 100vh;"
-            ):
-                self.html_view = vtklocal.LocalView(
-                    self.render_window,
-                    throttle_rate=20,
-                    cache_size=("cache", 0),
-                    emit_memory=True,
-                    memory_vtk="mem_vtk = $event",
-                    memory_arrays="mem_blob = $event",
-                    updated="console.log('updated', $event)",  # print custom update content
-                )
+
+            vtklocal.LocalView(
+                self.render_window,
+                ctx_name="view",
+                throttle_rate=20,
+                cache_size=("cache", 0),
+                emit_memory=True,
+                memory_vtk="mem_vtk = $event",
+                memory_arrays="mem_blob = $event",
+                updated="console.log('updated', $event)",  # print custom update content
+            )
             html.Div(
                 "Scene: {{ (mem_vtk / 1024).toFixed(1) }}KB - "
                 "Arrays: {{ (mem_blob / 1024).toFixed(1) }}KB - "

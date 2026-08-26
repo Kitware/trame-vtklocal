@@ -41,7 +41,9 @@ import math
 import time
 
 # Required for vtk factory
-import vtkmodules.vtkRenderingOpenGL2  # noqa
+import vtkmodules.vtkRenderingOpenGL2  # noqa: F401
+import vtkmodules.vtkInteractionStyle  # noqa: F401
+
 from vtkmodules.vtkCommonDataModel import vtkPolyData
 from vtkmodules.vtkFiltersCore import vtkAppendPolyData
 from vtkmodules.vtkFiltersSources import (
@@ -49,7 +51,6 @@ from vtkmodules.vtkFiltersSources import (
     vtkPlaneSource,
     vtkSphereSource,
 )
-from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
 from vtkmodules.vtkRenderingCore import (
     vtkActor,
     vtkLight,
@@ -694,7 +695,6 @@ class BenchmarkApp(TrameApp):
             )
         )
 
-        self.html_view = None
         self._sync_start = None
         self._orbit_suspended = (
             False  # Set when user bumps actor count while camera orbit is active.
@@ -718,7 +718,7 @@ class BenchmarkApp(TrameApp):
 
         # The camera moved with the yard, so it has to go over with the actors.
         self._sync_start = time.time()
-        self.html_view.update(push_camera=True)
+        self.ctx.view.update(push_camera=True)
 
     def _on_updated(self, options=None, **_):
         """Fires when the client has applied the whole batch: states pulled,
@@ -736,14 +736,14 @@ class BenchmarkApp(TrameApp):
 
     def reset_camera(self):
         self.builder.frame_yard(self.renderer.GetActiveCamera())
-        self.html_view.update(push_camera=True)
+        self.ctx.view.update(push_camera=True)
 
     @change("orbit")
     def on_orbit(self, orbit, **_):
         self.ctrl.js_orbit(
             {
-                "ref": self.html_view.ref_name,
-                "camera": self.html_view.get_wasm_id(self.renderer.GetActiveCamera()),
+                "ref": self.ctx.view.ref_name,
+                "camera": self.ctx.view.get_wasm_id(self.renderer.GetActiveCamera()),
                 "azimuth": self.azimuth,
                 "run": bool(orbit),
             }
@@ -753,8 +753,9 @@ class BenchmarkApp(TrameApp):
         with DivLayout(self.server) as self.ui:
             client.Style("body { margin: 0; }")
             with html.Div(style=FULL_SCREEN):
-                self.html_view = vtklocal.LocalView(
+                vtklocal.LocalView(
                     self.render_window,
+                    ctx_name="view",
                     throttle_rate=20,
                     # wasm64: growing the yard past a few tens of thousands of
                     # actors mirrors more per-actor state than a 4 GiB address

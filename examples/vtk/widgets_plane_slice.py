@@ -18,7 +18,7 @@
 from pathlib import Path
 
 # Required for vtk factory
-import vtkmodules.vtkRenderingOpenGL2  # noqa
+import vtkmodules.vtkRenderingOpenGL2  # noqa: F401
 from trame.app import TrameApp
 from trame.decorators import change
 from trame.ui.html import DivLayout
@@ -41,6 +41,16 @@ from vtkmodules.vtkRenderingCore import (
 )
 
 from trame.widgets import client, html, vtklocal
+
+TOOLBAR_CSS = """
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    right: 1rem;
+    z-index: 10;
+    display: flex;
+    gap: 1rem;
+"""
 
 
 def create_vtk_pipeline(file_to_load):
@@ -134,12 +144,7 @@ class PlaneWidgetSlicerApp(TrameApp):
         self.state.plane_widget = None
 
         # Build UI
-        self.html_view = None
         self._build_ui()
-
-    @property
-    def state(self):
-        return self.server.state
 
     @change("plane_widget")
     def _on_widget_update(self, plane_widget, **_):
@@ -151,13 +156,13 @@ class PlaneWidgetSlicerApp(TrameApp):
         self.plane.origin = plane_widget.get("origin")
 
         # prevent requesting geometry too often
-        self.html_view.update_throttle()
+        self.ctx.view.update_throttle()
 
     def toggle_listeners(self):
         if self.state.wasm_listeners is not None and len(self.state.wasm_listeners):
             self.state.wasm_listeners = {}
         else:
-            widget_id = self.html_view.object_manager.GetId(self.widget)
+            widget_id = self.ctx.view.object_manager.GetId(self.widget)
             assert widget_id is not None and widget_id > 0
             self.state.wasm_listeners = {
                 widget_id: {
@@ -179,9 +184,9 @@ class PlaneWidgetSlicerApp(TrameApp):
             }
 
     def one_time_update(self):
-        widget_id = self.html_view.object_manager.GetId(self.widget)
+        widget_id = self.ctx.view.object_manager.GetId(self.widget)
         assert widget_id is not None and widget_id > 0
-        self.html_view.eval(
+        self.ctx.view.eval(
             {
                 "plane_widget": {
                     "origin": (widget_id, "WidgetRepresentation", "Origin"),
@@ -192,25 +197,25 @@ class PlaneWidgetSlicerApp(TrameApp):
 
     def _build_ui(self):
         with DivLayout(self.server) as self.ui:
+            self.ui.root.style = "height: 100vh;"
             client.Style("body { margin: 0; }")
-            html.Button(
-                "Toggle listeners (currently {{ Object.keys(wasm_listeners).length === 0 ? 'Off' : 'On' }})",
-                click=self.toggle_listeners,
-                style="position: absolute; left: 1rem; top: 1rem; z-index: 10;",
+
+            vtklocal.LocalView(
+                self.render_window,
+                throttle_rate=20,
+                ctx_name="view",
+                config=("{ mode: 'wasm64' }",),
+                listeners=("wasm_listeners", {}),
             )
-            html.Button(
-                "Update cut",
-                click=self.one_time_update,
-                style="position: absolute; right: 1rem; top: 1rem; z-index: 10;",
-            )
-            with html.Div(
-                style="position: absolute; left: 0; top: 0; width: 100vw; height: 100vh;"
-            ):
-                self.html_view = vtklocal.LocalView(
-                    self.render_window,
-                    throttle_rate=20,
-                    config=("{ mode: 'wasm64' }",),
-                    listeners=("wasm_listeners", {}),
+
+            with html.Div(style=TOOLBAR_CSS):
+                html.Button(
+                    "Toggle listeners (currently {{ Object.keys(wasm_listeners).length === 0 ? 'Off' : 'On' }})",
+                    click=self.toggle_listeners,
+                )
+                html.Button(
+                    "Update cut",
+                    click=self.one_time_update,
                 )
 
 

@@ -1,3 +1,18 @@
+#!/usr/bin/env -S uv run --script
+#
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#     "trame>=3.13.2",
+#     "trame-vtklocal>=1.3",
+#     "trame-components>=2.5",
+#     "trame-vuetify",
+#     "vtk>=9.7",
+# ]
+#
+# [[tool.uv.index]]
+# url = "https://wheels.vtk.org"
+# ///
 import vtk
 
 from trame.app import TrameApp
@@ -189,13 +204,11 @@ class App(TrameApp):
         self.ctx.local_view.save(self.state.file_name)
 
     def _build_ui(self):
-        with SinglePageWithDrawerLayout(self.server, full_height=True) as layout:
-            self.ui = layout  # for jupyter integration
-
+        with SinglePageWithDrawerLayout(self.server, full_height=True) as self.ui:
             # Toolbar
-            with layout.toolbar as toolbar:
+            with self.ui.toolbar as toolbar:
                 toolbar.density = "compact"
-                layout.title.set_text("Bike CFD")
+                self.ui.title.set_text("Bike CFD")
                 v3.VSpacer()
                 v3.VSlider(
                     v_model=("bike_opacity", 1),
@@ -208,7 +221,7 @@ class App(TrameApp):
                 v3.VBtn(icon="mdi-crop-free", click=self.ctrl.view_reset_camera)
 
             # Drawer
-            with layout.drawer:
+            with self.ui.drawer:
                 tw.LineSeed(
                     image=to_url(IMAGE.path),
                     point_1=("line_widget.p1",),
@@ -230,7 +243,7 @@ class App(TrameApp):
                 )
 
             # Content
-            with layout.content:
+            with self.ui.content:
                 with vtklocal.LocalView(
                     self.rw,
                     throttle_rate=20,

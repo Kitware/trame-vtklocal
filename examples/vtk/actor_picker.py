@@ -4,9 +4,9 @@
 # requires-python = ">=3.10"
 #
 # dependencies = [
-#   "trame>=3.9",
-#   "trame-vtklocal>0.16",
-#   "vtk==9.5.20250712.dev0",
+#   "trame>=3.13",
+#   "trame-vtklocal>=1.3",
+#   "vtk>=9.7",
 # ]
 #
 # [[tool.uv.index]]

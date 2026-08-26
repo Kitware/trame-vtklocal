@@ -21,13 +21,13 @@ from vtkmodules.vtkRenderingCore import (
 )
 
 # Required for vtk factory
-import vtkmodules.vtkRenderingOpenGL2  # noqa
-from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
+import vtkmodules.vtkRenderingOpenGL2  # noqa: F401
+import vtkmodules.vtkInteractionStyle  # noqa: F401
 
 # trame imports
 from trame.app import TrameApp
 from trame.ui.vuetify3 import SinglePageLayout
-from trame.widgets import vuetify3, vtklocal
+from trame.widgets import vtklocal
 
 
 def get_scalar_bar(colorTransferFunction):
@@ -61,16 +61,11 @@ def get_render_window():
 class App(TrameApp):
     def __init__(self, server=None):
         super().__init__(server)
-        renderWindow = get_render_window()
 
         with SinglePageLayout(self.server) as self.ui:
             self.ui.title.set_text("Scalar Bar Actor")
             with self.ui.content:
-                with vuetify3.VContainer(
-                    fluid=True,
-                    classes="pa-0 fill-height",
-                ):
-                    vtklocal.LocalView(renderWindow)
+                vtklocal.LocalView(get_render_window())
 
 
 def main():

@@ -245,11 +245,11 @@ jobs:
             echo "released=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Generate artifact attestation for sdist and wheel
-        if: steps.release.outputs.released == 'true'
-        uses: actions/attest-build-provenance@v4.2.2
-        with:
-          subject-path: "dist/*"
+      # - name: Generate artifact attestation for sdist and wheel
+      #   if: steps.release.outputs.released == 'true'
+      #   uses: actions/attest-build-provenance@v4.2.2
+      #   with:
+      #     subject-path: "dist/*"
 
       - name: Publish package distributions to PyPI
         if: steps.release.outputs.released == 'true'

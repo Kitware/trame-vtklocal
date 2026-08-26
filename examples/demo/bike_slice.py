@@ -106,8 +106,9 @@ def create_vtk_pipeline():
     rep.origin = plane.origin
 
     plane_widget = vtk.vtkImplicitPlaneWidget2(
-        interactor=renderWindowInteractor, representation=rep
+        interactor=renderWindowInteractor,
     )
+    plane_widget.SetRepresentation(rep)
     plane_widget.On()
 
     renderer.active_camera.position = [0, -1, 0]

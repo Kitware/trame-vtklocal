@@ -28,8 +28,8 @@ from vtkmodules.vtkRenderingCore import (
 )
 
 # Required for vtk factory
-import vtkmodules.vtkRenderingOpenGL2  # noqa
-from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
+import vtkmodules.vtkRenderingOpenGL2  # noqa: F401
+import vtkmodules.vtkInteractionStyle  # noqa: F401
 
 # -----------------------------------------------------------------------------
 # VTK pipeline
@@ -70,55 +70,55 @@ class DemoApp(TrameApp):
         super().__init__(server)
         self.render_window, self.renderer, self.cone = create_vtk_pipeline()
         self.server.state.update(dict(mem_blob=0, mem_vtk=0))
-        self.html_view = None
         self._build_ui()
 
     def reset_camera(self):
-        self.html_view.reset_camera()
+        self.ctx.view.reset_camera()
 
     @change("resolution")
-    def on_resolution_change(self, resolution, **kwargs):
+    def on_resolution_change(self, resolution, **_):
         self.cone.SetResolution(int(resolution))
-        self.html_view.update_throttle()
+        self.ctx.view.update_throttle()
 
     def get_camera(self):
         print("call get_camera")
         asynchronous.create_task(self._get_client_camera())
 
     def debug(self):
-        self.html_view.print_scene_manager_information()
+        self.ctx.view.print_scene_manager_information()
 
     async def _get_client_camera(self):
-        active_camera = await self.html_view.invoke(
+        active_camera = await self.ctx.view.invoke(
             self.renderer, "GetActiveCamera", unwrap_vtk_object=False
         )
         print(f"\n{active_camera=}")
 
-        cam_pos = await self.html_view.invoke(
+        cam_pos = await self.ctx.view.invoke(
             self.renderer.GetActiveCamera(), "GetPosition"
         )
         print(f"\n{cam_pos=}")
 
         # Making sure we got the same camera object on the server
         assert (
-            self.html_view.get_vtk_obj(active_camera.get("Id"))
+            self.ctx.view.get_vtk_obj(active_camera.get("Id"))
             == self.renderer.active_camera
         )
 
     def _build_ui(self):
         with DivLayout(self.server) as self.ui:
+            self.ui.root.style = "height:100vh;"
             client.Style("body { margin: 0; }")
-            with html.Div(
-                style="position: absolute; left: 0; top: 0; width: 100vw; height: 100vh;"
-            ):
-                self.html_view = vtklocal.LocalView(
-                    self.render_window,
-                    throttle_rate=20,
-                    cache_size=("cache", 0),
-                    emit_memory=True,
-                    memory_vtk="mem_vtk = $event",
-                    memory_arrays="mem_blob = $event",
-                )
+
+            vtklocal.LocalView(
+                self.render_window,
+                ctx_name="view",
+                throttle_rate=20,
+                cache_size=("cache", 0),
+                emit_memory=True,
+                memory_vtk="mem_vtk = $event",
+                memory_arrays="mem_blob = $event",
+            )
+
             html.Div(
                 "Scene: {{ (mem_vtk / 1024).toFixed(1) }}KB - "
                 "Arrays: {{ (mem_blob / 1024).toFixed(1) }}KB - "

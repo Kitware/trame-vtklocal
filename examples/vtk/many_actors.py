@@ -65,7 +65,7 @@ class DemoApp(TrameApp):
         self.render_window, self.actors = create_vtk_pipeline()
         self.server.state.update(dict(mem_blob=0, mem_vtk=0))
         self.html_view = None
-        self.ui = self._ui()
+        self._build_ui()
 
     @trigger("export")
     def export(self, format):
@@ -80,8 +80,8 @@ class DemoApp(TrameApp):
             actor.property.opacity = float(opacity)
             self.html_view.update_throttle()
 
-    def _ui(self):
-        with DivLayout(self.server) as layout:
+    def _build_ui(self):
+        with DivLayout(self.server) as self.ui:
             client.Style("body { margin: 0; }")
             with html.Div(
                 style="position: absolute; left: 0; top: 0; width: 100vw; height: 100vh;"
@@ -144,8 +144,6 @@ class DemoApp(TrameApp):
                 click=self.reset_camera,
                 style="position: absolute; top: 6rem; left: 14rem; z-index: 10;",
             )
-
-        return layout
 
 
 # -----------------------------------------------------------------------------

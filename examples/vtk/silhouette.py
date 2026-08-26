@@ -56,7 +56,7 @@ class SilhouetteApp(TrameApp):
     def __init__(self, server=None):
         super().__init__(server)
         self.render_window, self.cone_source = setup_vtk()
-        self.ui = self._build_ui()
+        self._build_ui()
 
     @property
     def ctrl(self):
@@ -76,13 +76,13 @@ class SilhouetteApp(TrameApp):
         self.state.resolution = 6
 
     def _build_ui(self):
-        with SinglePageLayout(self.server) as layout:
-            layout.icon.click = self.ctrl.view_reset_camera
-            layout.title.set_text(
+        with SinglePageLayout(self.server) as self.ui:
+            self.ui.icon.click = self.ctrl.view_reset_camera
+            self.ui.title.set_text(
                 "Interact with VtkRemoteView on right, and click the update view button"
             )
 
-            with layout.toolbar:
+            with self.ui.toolbar:
                 vuetify3.VSpacer()
                 vuetify3.VSlider(
                     v_model=("resolution", 6),
@@ -98,7 +98,7 @@ class SilhouetteApp(TrameApp):
                     vuetify3.VIcon("mdi-undo-variant")
                 vuetify3.VBtn("Update view", click=self.ctrl.view_update)
 
-            with layout.content:
+            with self.ui.content:
                 with vuetify3.VContainer(
                     fluid=True,
                     classes="pa-0 fill-height",

@@ -685,7 +685,7 @@ class BenchmarkApp(TrameApp):
         self._orbit_suspended = (
             False  # Set when user bumps actor count while camera orbit is active.
         )
-        self.ui = self._ui()
+        self._build_ui()
 
     def add_actors(self):
         # A render loop running against a scene the client is deserializing
@@ -735,8 +735,8 @@ class BenchmarkApp(TrameApp):
             }
         )
 
-    def _ui(self):
-        with DivLayout(self.server) as layout:
+    def _build_ui(self):
+        with DivLayout(self.server) as self.ui:
             client.Style("body { margin: 0; }")
             with html.Div(style=FULL_SCREEN):
                 self.html_view = vtklocal.LocalView(
@@ -775,8 +775,6 @@ class BenchmarkApp(TrameApp):
                     click="orbit = !orbit",
                 )
                 html.Button("Reset Camera", click=self.reset_camera)
-
-        return layout
 
 
 # -----------------------------------------------------------------------------

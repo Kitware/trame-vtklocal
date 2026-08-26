@@ -76,7 +76,7 @@ class BoxWidgetApp(TrameApp):
 
         self.render_window, self.widget, self.actor = create_vtk_pipeline()
         self.html_view = None
-        self.ui = self._ui()
+        self._build_ui()
 
     @property
     def state(self):
@@ -127,8 +127,8 @@ class BoxWidgetApp(TrameApp):
             }
         )
 
-    def _ui(self):
-        with DivLayout(self.server) as layout:
+    def _build_ui(self):
+        with DivLayout(self.server) as self.ui:
             client.Style("body { margin: 0; }")
             html.Button(
                 "Toggle listeners (currently {{ Object.keys(wasm_listeners).length === 0 ? 'Off' : 'On' }})",
@@ -148,8 +148,6 @@ class BoxWidgetApp(TrameApp):
                     throttle_rate=20,
                     listeners=("wasm_listeners", {}),
                 )
-
-        return layout
 
 
 # -----------------------------------------------------------------------------

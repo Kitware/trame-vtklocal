@@ -1,8 +1,8 @@
 import vtk
 
-from trame.app import get_server
+from trame.app import TrameApp
 from trame.ui.vuetify3 import SinglePageLayout
-from trame.widgets import vuetify3 as vuetify
+from trame.widgets import vuetify3 as v3
 from trame.widgets.vtk import VtkRemoteView
 from trame_vtklocal.widgets import vtklocal
 
@@ -75,46 +75,46 @@ def setup_vtk():
 # -----------------------------------------------------------------------------
 
 
-class App:
+class VolumeApp(TrameApp):
     def __init__(self, server=None):
-        self.server = get_server(server, client_type="vue3")
+        super().__init__(server, client_type="vue3")
 
         self.local_view = None
         self.render_window = setup_vtk()
-        self.ui = self._build_ui()
+        self._build_ui()
 
     @property
     def ctrl(self):
         return self.server.controller
 
     def _build_ui(self):
-        with SinglePageLayout(self.server) as layout:
-            layout.title.set_text(
+        with SinglePageLayout(self.server) as self.ui:
+            self.ui.title.set_text(
                 "Volume rendering: click update to copy camera from VtkRemoteView (right) to WASM (left)"
             )
-            layout.icon.click = self.ctrl.view_reset_camera
+            self.ui.icon.click = self.ctrl.view_reset_camera
 
-            with layout.toolbar:
-                vuetify.VSpacer()
-                vuetify.VBtn("Update", click=self.ctrl.view_update)
+            with self.ui.toolbar:
+                v3.VSpacer()
+                v3.VBtn("Update", click=self.ctrl.view_update)
 
-            with layout.content:
-                with vuetify.VContainer(
+            with self.ui.content:
+                with v3.VContainer(
                     fluid=True,
                     classes="pa-0 fill-height",
                 ):
-                    with vuetify.VContainer(
+                    with v3.VContainer(
                         fluid=True, classes="pa-0 fill-height", style="width: 50%;"
                     ):
                         self.local_view = vtklocal.LocalView(self.render_window)
                         self.ctrl.view_update = self.local_view.update
-                    with vuetify.VContainer(
+                    with v3.VContainer(
                         fluid=True, classes="pa-0 fill-height", style="width: 50%;"
                     ):
                         VtkRemoteView(self.render_window, interactive_ratio=1)
 
             # hide footer
-            layout.footer.hide()
+            self.ui.footer.hide()
 
 
 # -----------------------------------------------------------------------------
@@ -122,5 +122,5 @@ class App:
 # -----------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    app = App()
+    app = VolumeApp()
     app.server.start()

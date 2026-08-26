@@ -154,10 +154,10 @@ class GlyphApp(TrameApp):
         self.ctrl.view_update(push_camera=True)
 
     def _build_ui(self):
-        with SinglePageLayout(self.server) as layout:
-            layout.icon.click = self.reset_camera
-            layout.title.set_text("WASM LocalView on Left, VtkRemoteView on right")
-            with layout.toolbar:
+        with SinglePageLayout(self.server) as self.ui:
+            self.ui.icon.click = self.reset_camera
+            self.ui.title.set_text("WASM LocalView on Left, VtkRemoteView on right")
+            with self.ui.toolbar:
                 vuetify.VSpacer()
                 vuetify.VSlider(
                     v_model=("resolution", 6),
@@ -174,7 +174,7 @@ class GlyphApp(TrameApp):
                     click=(self.update_client, "[true]"),
                 )
 
-            with layout.content:
+            with self.ui.content:
                 with vuetify.VContainer(
                     fluid=True,
                     classes="pa-0 fill-height",
@@ -198,7 +198,7 @@ class GlyphApp(TrameApp):
                         self.ctrl.rview_reset_camera = self.view_remote.reset_camera
 
             # hide footer
-            layout.footer.hide()
+            self.ui.footer.hide()
 
 
 # -----------------------------------------------------------------------------

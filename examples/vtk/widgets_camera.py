@@ -74,17 +74,15 @@ class CameraOrientationWidgetApp(TrameApp):
         args, _ = self.server.cli.parse_known_args()
         self.render_window = create_vtk_pipeline(args.data)
         self.html_view = None
-        self.ui = self._ui()
+        self._build_ui()
 
-    def _ui(self):
-        with DivLayout(self.server) as layout:
+    def _build_ui(self):
+        with DivLayout(self.server) as self.ui:
             client.Style("body { margin: 0; }")
             with html.Div(
                 style="position: absolute; left: 0; top: 0; width: 100vw; height: 100vh;"
             ):
                 self.html_view = vtklocal.LocalView(self.render_window)
-
-        return layout
 
 
 # -----------------------------------------------------------------------------

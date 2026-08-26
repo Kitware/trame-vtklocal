@@ -39,8 +39,8 @@ from vtkmodules.vtkRenderingCore import (
 )
 
 # Required for vtk factory
-import vtkmodules.vtkRenderingOpenGL2  # noqa
-from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
+import vtkmodules.vtkRenderingOpenGL2  # noqa: F401
+import vtkmodules.vtkInteractionStyle  # noqa: F401
 
 CLIENT_TYPE = "vue3"
 DATA_FILE = str((Path(__file__).parent.with_name("data") / "carotid.vtk").resolve())
@@ -156,7 +156,7 @@ class FlowApp(TrameApp):
 
     def _build_ui(self):
         with DivLayout(self.server) as self.ui:
-            self.ui.root.style = "width: 100vw; height: 100vh;"
+            self.ui.root.style = "height: 100vh;"
             client.Style("body { margin: 0; }")
             vtklocal.LocalView(self.render_window)
 

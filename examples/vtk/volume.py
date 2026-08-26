@@ -99,10 +99,6 @@ class VolumeApp(TrameApp):
         self.render_window = setup_vtk()
         self._build_ui()
 
-    @property
-    def ctrl(self):
-        return self.server.controller
-
     def _build_ui(self):
         with SinglePageLayout(self.server) as self.ui:
             self.ui.title.set_text(

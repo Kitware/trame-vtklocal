@@ -35,8 +35,8 @@ from vtkmodules.vtkRenderingCore import (
 )
 
 # Required for vtk factory
-import vtkmodules.vtkRenderingOpenGL2  # noqa
-from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
+import vtkmodules.vtkRenderingOpenGL2  # noqa: F401
+import vtkmodules.vtkInteractionStyle  # noqa: F401
 
 import json
 
@@ -137,13 +137,9 @@ class GlyphApp(TrameApp):
         self.render_window, self.renderer, self.cone, self.sphere = setup_vtk()
         self.view_local = None
         self.view_remote = None
-        self.ui = self._build_ui()
+        self._build_ui()
 
         self.server.state.camera = None
-
-    @property
-    def ctrl(self):
-        return self.server.controller
 
     @change("resolution")
     def on_resolution_change(self, resolution, **kwargs):

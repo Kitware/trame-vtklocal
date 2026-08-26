@@ -192,12 +192,25 @@ class ObjectManagerAPI(LinkProtocol):
         chunk_threshold = int(os.environ.get("WSLINK_MAX_MSG_SIZE", "4194304"))
         next_hashes = []
         hashes = {}
-        states = [
-            json.loads(self.vtk_object_manager.GetState(obj_id)) for obj_id in state_ids
-        ]
+        states = []
+
+        for obj_id in state_ids:
+            state = json.loads(self.vtk_object_manager.GetState(obj_id))
+            if state:
+                states.append(state)
+            else:
+                # Abort as the state is stale
+                return {
+                    "states": [],
+                    "hashes": {},
+                    "next": False,
+                    "skip": True,
+                }
+
         for hash in hash_keys:
             if blob_chunk_size < chunk_threshold:
-                blob = memoryview(self.vtk_object_manager.GetBlob(hash))
+                array = self.vtk_object_manager.GetBlob(hash)
+                blob = memoryview(array)
                 blob_chunk_size += blob.nbytes
                 hashes[hash] = blob
             else:
@@ -238,6 +251,7 @@ class ObjectManagerAPI(LinkProtocol):
                 else:
                     force_push.append(cid)
                 cameras.append(cid)
+
         return dict(
             ids=ids_mtime,
             hashes=hashes,

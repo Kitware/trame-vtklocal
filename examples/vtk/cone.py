@@ -16,6 +16,8 @@ from vtkmodules.vtkRenderingCore import (
 from trame.widgets import client, html
 from trame_vtklocal.widgets import vtklocal
 
+CLIENT_TYPE = "vue3"
+
 # -----------------------------------------------------------------------------
 # VTK pipeline
 # -----------------------------------------------------------------------------
@@ -52,7 +54,7 @@ def create_vtk_pipeline():
 
 class ConeApp(TrameApp):
     def __init__(self, server=None):
-        super().__init__(server)
+        super().__init__(server, client_type=CLIENT_TYPE)
         self.render_window, self.cone, self.actor = create_vtk_pipeline()
         self.server.state.update(dict(mem_blob=0, mem_vtk=0))
         self.html_view = None

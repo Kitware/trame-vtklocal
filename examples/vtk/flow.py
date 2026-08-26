@@ -27,6 +27,7 @@ from vtkmodules.vtkRenderingCore import (
 import vtkmodules.vtkRenderingOpenGL2  # noqa
 from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
 
+CLIENT_TYPE = "vue3"
 DATA_FILE = str((Path(__file__).parent.with_name("data") / "carotid.vtk").resolve())
 
 # -----------------------------------------------------------------------------
@@ -134,7 +135,7 @@ def create_vtk_pipeline():
 
 class FlowApp(TrameApp):
     def __init__(self, server=None):
-        super().__init__(server)
+        super().__init__(server, client_type=CLIENT_TYPE)
         self.render_window = create_vtk_pipeline()
         self.ui = self._ui()
 

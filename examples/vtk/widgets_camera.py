@@ -16,12 +16,13 @@
 from pathlib import Path
 
 # Required for vtk factory
-import vtkmodules.vtkRenderingOpenGL2  # noqa
+import vtkmodules.vtkRenderingOpenGL2  # noqa: F401
+import vtkmodules.vtkInteractionStyle  # noqa: F401
+
 from trame.app import TrameApp
 from trame.ui.html import DivLayout
 from vtkmodules.vtkCommonColor import vtkNamedColors
 from vtkmodules.vtkFiltersSources import vtkConeSource
-from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
 from vtkmodules.vtkInteractionWidgets import vtkCameraOrientationWidget
 from vtkmodules.vtkIOXML import vtkXMLPolyDataReader
 from vtkmodules.vtkRenderingCore import (
@@ -32,7 +33,7 @@ from vtkmodules.vtkRenderingCore import (
     vtkRenderWindowInteractor,
 )
 
-from trame.widgets import client, html, vtklocal
+from trame.widgets import client, vtklocal
 
 
 def create_vtk_pipeline(path):
@@ -87,16 +88,13 @@ class CameraOrientationWidgetApp(TrameApp):
         self.server.cli.add_argument("--data")
         args, _ = self.server.cli.parse_known_args()
         self.render_window = create_vtk_pipeline(args.data)
-        self.html_view = None
         self._build_ui()
 
     def _build_ui(self):
         with DivLayout(self.server) as self.ui:
+            self.ui.root.style = "height: 100vh;"
             client.Style("body { margin: 0; }")
-            with html.Div(
-                style="position: absolute; left: 0; top: 0; width: 100vw; height: 100vh;"
-            ):
-                self.html_view = vtklocal.LocalView(self.render_window)
+            vtklocal.LocalView(self.render_window)
 
 
 # -----------------------------------------------------------------------------

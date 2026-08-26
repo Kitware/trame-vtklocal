@@ -1,3 +1,18 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+#
+# requires-python = ">=3.10"
+#
+# dependencies = [
+#   "trame>=3.13",
+#   "trame-vtklocal>=1.3",
+#   "vtk>=9.7",
+# ]
+#
+# [[tool.uv.index]]
+# url = "https://wheels.vtk.org"
+#
+# ///
 # Required for vtk factory
 import vtkmodules.vtkRenderingOpenGL2  # noqa
 from trame.app import TrameApp

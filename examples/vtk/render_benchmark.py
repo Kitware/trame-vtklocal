@@ -1,3 +1,18 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+#
+# requires-python = ">=3.10"
+#
+# dependencies = [
+#   "trame>=3.13",
+#   "trame-vtklocal>=1.3",
+#   "vtk>=9.7",
+# ]
+#
+# [[tool.uv.index]]
+# url = "https://wheels.vtk.org"
+#
+# ///
 """Many-actor render benchmark, ported from ../vtk-render-benchmarks.
 
 The scene is a process plant where every piece of equipment is its own ``vtkActor``,

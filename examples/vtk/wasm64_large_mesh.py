@@ -266,7 +266,6 @@ class LargeMeshApp(TrameApp):
         # Initial coloring, before the scene gets mirrored to the client
         self._select_color_array(field_name(0))
 
-        self.html_view = None
         self.mapper_ids = []
         self.client_ready = False
         self._build_ui()
@@ -296,7 +295,7 @@ class LargeMeshApp(TrameApp):
         scalar_range = self.field_ranges[index]
         self.ctrl.js_color_by(
             {
-                "ref": self.html_view.ref_name,
+                "ref": self.ctx.view.ref_name,
                 "mappers": self.mapper_ids,
                 "name": color_field,
                 "min": scalar_range[0],
@@ -305,14 +304,15 @@ class LargeMeshApp(TrameApp):
         )
 
     def reset_camera(self):
-        self.html_view.reset_camera()
+        self.ctx.view.reset_camera()
 
     def _build_ui(self):
         with DivLayout(self.server) as self.ui:
             client.Style("body { margin: 0; }")
             with html.Div(style=FULL_SCREEN):
-                self.html_view = vtklocal.LocalView(
+                vtklocal.LocalView(
                     self.render_window,
+                    ctx_name="view",
                     throttle_rate=20,
                     config=(f"{{ mode: '{self.wasm_mode}' }}",),
                     progress_enabled=True,
@@ -322,7 +322,7 @@ class LargeMeshApp(TrameApp):
                     updated=self._on_view_updated,
                 )
                 self.mapper_ids = [
-                    self.html_view.get_wasm_id(mapper) for mapper in self.mappers
+                    self.ctx.view.get_wasm_id(mapper) for mapper in self.mappers
                 ]
 
             # Client side coloring: reach the mirrored mappers through

@@ -31,8 +31,8 @@ from vtkmodules.vtkRenderingCore import (
 )
 
 # Required for vtk factory
-import vtkmodules.vtkRenderingOpenGL2  # noqa
-from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
+import vtkmodules.vtkRenderingOpenGL2  # noqa: F401
+import vtkmodules.vtkInteractionStyle  # noqa: F401
 
 
 def setup_vtk():
@@ -73,14 +73,6 @@ class SilhouetteApp(TrameApp):
         super().__init__(server)
         self.render_window, self.cone_source = setup_vtk()
         self._build_ui()
-
-    @property
-    def ctrl(self):
-        return self.server.controller
-
-    @property
-    def state(self):
-        return self.server.state
 
     @change("resolution")
     def on_resolution(self, resolution, **kwargs):

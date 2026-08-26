@@ -15,8 +15,7 @@
 # ///
 from trame.app import TrameApp
 from trame.ui.html import DivLayout
-from trame.widgets import html, client
-from trame_vtklocal.widgets import vtklocal
+from trame.widgets import html, client, vtklocal
 from trame.decorators import trigger
 
 from vtkmodules.vtkIOXML import vtkXMLPolyDataReader, vtkXMLMultiBlockDataReader

@@ -15,8 +15,7 @@
 # ///
 from trame.app import TrameApp, asynchronous
 from trame.ui.html import DivLayout
-from trame.widgets import html, client
-from trame_vtklocal.widgets import vtklocal
+from trame.widgets import html, client, vtklocal
 from trame.decorators import change
 
 from vtkmodules.vtkFiltersSources import vtkConeSource

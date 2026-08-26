@@ -17,9 +17,8 @@
 # ///
 from trame.app import TrameApp
 from trame.ui.vuetify3 import SinglePageLayout
-from trame.widgets import vuetify3 as vuetify
+from trame.widgets import vtklocal, vuetify3 as vuetify
 from trame.widgets.vtk import VtkRemoteView
-from trame_vtklocal.widgets import vtklocal
 from trame.decorators import change
 
 from vtkmodules.vtkCommonColor import vtkNamedColors

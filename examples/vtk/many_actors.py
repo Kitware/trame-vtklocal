@@ -17,8 +17,7 @@ import random
 
 from trame.app import TrameApp
 from trame.ui.html import DivLayout
-from trame.widgets import html, client
-from trame_vtklocal.widgets import vtklocal
+from trame.widgets import html, client, vtklocal
 from trame.decorators import change, trigger
 
 from vtkmodules.vtkFiltersSources import vtkSphereSource

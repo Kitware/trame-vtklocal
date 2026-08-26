@@ -62,8 +62,7 @@ from vtkmodules.vtkRenderingCore import (
 from trame.app import TrameApp
 from trame.decorators import change
 from trame.ui.html import DivLayout
-from trame.widgets import client, html
-from trame_vtklocal.widgets import vtklocal
+from trame.widgets import client, html, vtklocal
 
 # -----------------------------------------------------------------------------
 # Scene constants (world units)

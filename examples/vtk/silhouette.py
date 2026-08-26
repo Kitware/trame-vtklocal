@@ -18,8 +18,7 @@
 from trame.app import TrameApp
 from trame.decorators import change
 from trame.ui.vuetify3 import SinglePageLayout
-from trame.widgets import vtk as vtk_widgets, vuetify3
-from trame_vtklocal.widgets import vtklocal
+from trame.widgets import vtk as vtk_widgets, vuetify3, vtklocal
 from vtkmodules.vtkFiltersHybrid import vtkPolyDataSilhouette
 from vtkmodules.vtkFiltersSources import vtkConeSource
 

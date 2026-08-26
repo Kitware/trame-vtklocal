@@ -55,8 +55,7 @@ from vtkmodules.vtkRenderingCore import (
     vtkRenderWindowInteractor,
 )
 
-from trame.widgets import client, html
-from trame_vtklocal.widgets import vtklocal
+from trame.widgets import client, html, vtklocal
 
 GiB = 1024**3
 ANGLE = np.pi * (3 - np.sqrt(5))

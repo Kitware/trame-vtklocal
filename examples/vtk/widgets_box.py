@@ -31,8 +31,7 @@ from vtkmodules.vtkRenderingCore import (
     vtkRenderWindowInteractor,
 )
 
-from trame.widgets import client, html
-from trame_vtklocal.widgets import vtklocal
+from trame.widgets import client, html, vtklocal
 
 
 def create_vtk_pipeline():

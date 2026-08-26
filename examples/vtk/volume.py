@@ -19,9 +19,8 @@ import vtk
 
 from trame.app import TrameApp
 from trame.ui.vuetify3 import SinglePageLayout
-from trame.widgets import vuetify3 as v3
+from trame.widgets import vtklocal, vuetify3 as v3
 from trame.widgets.vtk import VtkRemoteView
-from trame_vtklocal.widgets import vtklocal
 
 
 # MAPPER_TYPE = "FixedPoint"

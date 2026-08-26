@@ -14,14 +14,15 @@
 #
 # ///
 # Required for vtk factory
-import vtkmodules.vtkRenderingOpenGL2  # noqa
+import vtkmodules.vtkRenderingOpenGL2  # noqa: F401
+import vtkmodules.vtkInteractionStyle  # noqa: F401
+
 from trame.app import TrameApp
 from trame.decorators import change
 from trame.ui.html import DivLayout
 from vtkmodules.vtkCommonColor import vtkNamedColors
 from vtkmodules.vtkCommonTransforms import vtkTransform
 from vtkmodules.vtkFiltersSources import vtkConeSource
-from vtkmodules.vtkInteractionStyle import vtkInteractorStyleSwitch  # noqa
 from vtkmodules.vtkInteractionWidgets import vtkBoxRepresentation, vtkBoxWidget2
 from vtkmodules.vtkRenderingCore import (
     vtkActor,
@@ -81,6 +82,16 @@ def create_vtk_pipeline():
 # GUI
 # -----------------------------------------------------------------------------
 
+TOOLBAR_CSS = """
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    right: 1rem;
+    z-index: 10;
+    display: flex;
+    gap: 1rem;
+"""
+
 
 class BoxWidgetApp(TrameApp):
     def __init__(self, server=None):
@@ -89,12 +100,7 @@ class BoxWidgetApp(TrameApp):
         self.state.widget_state = None
 
         self.render_window, self.widget, self.actor = create_vtk_pipeline()
-        self.html_view = None
         self._build_ui()
-
-    @property
-    def state(self):
-        return self.server.state
 
     @change("widget_state")
     def _on_widget_update(self, widget_state, **_):
@@ -106,13 +112,13 @@ class BoxWidgetApp(TrameApp):
         # Compute user transform for the actor from the new corners.
         self.widget.representation.GetTransform(self.actor.user_transform)
 
-        self.html_view.update_throttle()
+        self.ctx.view.update_throttle()
 
     def toggle_listeners(self):
         if self.state.wasm_listeners is not None and len(self.state.wasm_listeners):
             self.state.wasm_listeners = {}
         else:
-            widget_id = self.html_view.object_manager.GetId(self.widget)
+            widget_id = self.ctx.view.object_manager.GetId(self.widget)
             assert widget_id is not None and widget_id > 0
             self.state.wasm_listeners = {
                 widget_id: {
@@ -129,11 +135,12 @@ class BoxWidgetApp(TrameApp):
             }
 
     def one_time_update(self):
-        self.html_view.eval(
+        widget_id = self.ctx.view.object_manager.GetId(self.widget)
+        self.ctx.view.eval(
             {
                 "widget_state": {
                     "corners": (
-                        self.widget_id,
+                        widget_id,
                         "WidgetRepresentation",
                         "Corners",
                     ),
@@ -143,24 +150,24 @@ class BoxWidgetApp(TrameApp):
 
     def _build_ui(self):
         with DivLayout(self.server) as self.ui:
+            self.ui.root.style = "height: 100vh;"
             client.Style("body { margin: 0; }")
-            html.Button(
-                "Toggle listeners (currently {{ Object.keys(wasm_listeners).length === 0 ? 'Off' : 'On' }})",
-                click=self.toggle_listeners,
-                style="position: absolute; left: 1rem; top: 1rem; z-index: 10;",
+
+            vtklocal.LocalView(
+                self.render_window,
+                ctx_name="view",
+                throttle_rate=20,
+                listeners=("wasm_listeners", {}),
             )
-            html.Button(
-                "Update transformation matrix",
-                click=self.one_time_update,
-                style="position: absolute; right: 1rem; top: 1rem; z-index: 10;",
-            )
-            with html.Div(
-                style="position: absolute; left: 0; top: 0; width: 100vw; height: 100vh;"
-            ):
-                self.html_view = vtklocal.LocalView(
-                    self.render_window,
-                    throttle_rate=20,
-                    listeners=("wasm_listeners", {}),
+
+            with html.Div(style=TOOLBAR_CSS):
+                html.Button(
+                    "Toggle listeners (currently {{ Object.keys(wasm_listeners).length === 0 ? 'Off' : 'On' }})",
+                    click=self.toggle_listeners,
+                )
+                html.Button(
+                    "Update transformation matrix",
+                    click=self.one_time_update,
                 )
 
 

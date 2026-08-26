@@ -57,7 +57,7 @@ class DemoApp(TrameApp):
         self.render_window, self.renderer, self.cone = create_vtk_pipeline()
         self.server.state.update(dict(mem_blob=0, mem_vtk=0))
         self.html_view = None
-        self.ui = self._ui()
+        self._build_ui()
 
     def reset_camera(self):
         self.html_view.reset_camera()
@@ -91,8 +91,8 @@ class DemoApp(TrameApp):
             == self.renderer.active_camera
         )
 
-    def _ui(self):
-        with DivLayout(self.server) as layout:
+    def _build_ui(self):
+        with DivLayout(self.server) as self.ui:
             client.Style("body { margin: 0; }")
             with html.Div(
                 style="position: absolute; left: 0; top: 0; width: 100vw; height: 100vh;"
@@ -138,8 +138,6 @@ class DemoApp(TrameApp):
                     "Debug",
                     click=self.debug,
                 )
-
-        return layout
 
 
 # -----------------------------------------------------------------------------

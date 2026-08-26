@@ -137,15 +137,13 @@ class FlowApp(TrameApp):
     def __init__(self, server=None):
         super().__init__(server, client_type=CLIENT_TYPE)
         self.render_window = create_vtk_pipeline()
-        self.ui = self._ui()
+        self._build_ui()
 
-    def _ui(self):
-        with DivLayout(self.server) as layout:
-            layout.root.style = "width: 100vw; height: 100vh;"
+    def _build_ui(self):
+        with DivLayout(self.server) as self.ui:
+            self.ui.root.style = "width: 100vw; height: 100vh;"
             client.Style("body { margin: 0; }")
             vtklocal.LocalView(self.render_window)
-
-        return layout
 
 
 # -----------------------------------------------------------------------------

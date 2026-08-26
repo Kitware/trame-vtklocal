@@ -63,9 +63,9 @@ class App(TrameApp):
         super().__init__(server)
         renderWindow = get_render_window()
 
-        with SinglePageLayout(self.server) as layout:
-            layout.title.set_text("Scalar Bar Actor")
-            with layout.content:
+        with SinglePageLayout(self.server) as self.ui:
+            self.ui.title.set_text("Scalar Bar Actor")
+            with self.ui.content:
                 with vuetify3.VContainer(
                     fluid=True,
                     classes="pa-0 fill-height",

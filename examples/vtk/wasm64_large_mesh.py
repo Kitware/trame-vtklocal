@@ -254,7 +254,7 @@ class LargeMeshApp(TrameApp):
         self.html_view = None
         self.mapper_ids = []
         self.client_ready = False
-        self.ui = self._ui()
+        self._build_ui()
 
     def _select_color_array(self, name):
         index = int(name.rsplit("_", 1)[-1])
@@ -292,8 +292,8 @@ class LargeMeshApp(TrameApp):
     def reset_camera(self):
         self.html_view.reset_camera()
 
-    def _ui(self):
-        with DivLayout(self.server) as layout:
+    def _build_ui(self):
+        with DivLayout(self.server) as self.ui:
             client.Style("body { margin: 0; }")
             with html.Div(style=FULL_SCREEN):
                 self.html_view = vtklocal.LocalView(
@@ -349,8 +349,6 @@ async function updateColorArray(refName, mapperIds, name, min, max) {
                 with html.Select(v_model=("color_field", field_name(0))):
                     html.Option("{{ name }}", v_for="name in color_fields", key="name")
                 html.Button("Reset Camera", click=self.reset_camera)
-
-        return layout
 
 
 # -----------------------------------------------------------------------------

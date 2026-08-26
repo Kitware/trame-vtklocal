@@ -128,7 +128,7 @@ jobs:
       - name: Build Vue Components
         run: |
           cd vue-components
-          npm i
+          npm ci
           npm run build
 
       - name: Install the project
@@ -185,7 +185,7 @@ jobs:
       - name: Build Vue Components
         run: |
           cd vue-components
-          npm i
+          npm ci
           npm run build
 
   release:
@@ -218,9 +218,15 @@ jobs:
 
       - name: Python Semantic Release
         id: release
-        uses: python-semantic-release/python-semantic-release@v9.15.2
+        uses: python-semantic-release/python-semantic-release@v10.6.1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate artifact attestation for sdist and wheel
+        if: steps.release.outputs.released == 'true'
+        uses: actions/attest-build-provenance@v4.2.2
+        with:
+          subject-path: "dist/*"
 
       - name: Publish package distributions to PyPI
         if: steps.release.outputs.released == 'true'

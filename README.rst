@@ -106,8 +106,6 @@ Running examples
     # Activate environment
     source .venv/bin/activate
 
-    pip install -r ./examples/requirements.txt
-
     # regular trame app
     python ./examples/vtk/cone.py
 

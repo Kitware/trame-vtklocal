@@ -40,7 +40,7 @@ dev = [
     "trame-client[test]",
     "trame-vuetify",
     # Dev wheel from wheels.vtk.org (see [tool.uv] below)
-    "vtk==9.7.20260816.dev0",
+    "vtk==9.7.20260726.dev0",
 ]
 
 # Resolve the pinned vtk dev build from the VTK nightly wheel index instead of

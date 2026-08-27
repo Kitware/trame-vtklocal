@@ -32,6 +32,10 @@ NOTE: the dataset is generated on the server and streamed to the client, so the
 server needs roughly ``--size-gb`` of RAM and the initial synchronization moves
 that many bytes over the websocket. Use ``--size-gb`` to scale it down when
 experimenting (values <= 4 will also run in wasm32).
+
+NOTE: set the environment variable ``TRAME_WS_MAX_MSG_SIZE`` to control the number of
+blobs that can be sent in one batch. A higher size means more blobs will fit in one batch,
+a lower size means blobs may be split across batches. Try a value of `20971520` (20MB).
 """
 
 import math

@@ -169,9 +169,9 @@ Click a screenshot to open its source.
    :alt: actor_picker.py
    :width: 100%
 
-.. |actor_highlight_on_hover| image:: https://raw.githubusercontent.com/Kitware/trame-vtklocal/refs/heads/master/examples/vtk/screenshots/actor_highlight_on_hover.png
-   :target: https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/actor_highlight_on_hover.py
-   :alt: actor_highlight_on_hover.py
+.. |actor_highlight| image:: https://raw.githubusercontent.com/Kitware/trame-vtklocal/refs/heads/master/examples/vtk/screenshots/actor_highlight_on_hover.png
+   :target: https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/actor-highlight/app.py
+   :alt: actor-highlight
    :width: 100%
 
 .. |many_actors| image:: https://raw.githubusercontent.com/Kitware/trame-vtklocal/refs/heads/master/examples/vtk/screenshots/many_actors.png
@@ -277,9 +277,9 @@ Click a screenshot to open its source.
 
        Pick actors from the browser.
 
-     - |actor_highlight_on_hover|
+     - |actor_highlight|
 
-       `actor_highlight_on_hover.py <https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/actor_highlight_on_hover.py>`_
+       `actor_highlight <https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/actor-highlight/app.py>`_
 
        Highlight the actor under the cursor.
 

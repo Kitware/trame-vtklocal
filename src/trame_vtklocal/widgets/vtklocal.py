@@ -75,9 +75,6 @@ class LocalView(HtmlElement):
             method will actually perform.
         cache_size (number):
             Size of client side cache for geometry and arrays in Bytes.
-        eager_sync (bool):
-            If enabled, the server will push states rather than waiting
-            for the client to request them. Usually improve fast update behavior.
         listeners (dict):
             Dynamic structure describing what to observe and how to map internal
             WASM state to trame state variable.
@@ -152,7 +149,6 @@ class LocalView(HtmlElement):
         self._attr_names += [
             ("use_handler", "useHandler"),
             ("cache_size", "cacheSize"),
-            ("eager_sync", "eagerSync"),
             "verbosity",
             ("listeners", ":listeners"),
             ("config", ":config"),

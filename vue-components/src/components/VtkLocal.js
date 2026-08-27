@@ -87,10 +87,6 @@ export default {
       type: Number,
       default: 0,
     },
-    eagerSync: {
-      type: Boolean,
-      default: false,
-    },
     cacheSize: {
       type: Number,
       default: 100000000,
@@ -270,45 +266,6 @@ export default {
         wasmFuture.reject(error);
       }
     });
-
-    // Eager state synchronization --------------------------------------------
-
-    if (props.eagerSync) {
-      const rpcSession = client.getConnection().getSession();
-      const subscription = rpcSession.subscribe(
-        "vtklocal.subscriptions",
-        ([event]) => {
-          if (!hasRemoteSession()) return;
-          if (event.type === "state") {
-            remoteSession.patchState(event.content);
-          }
-          if (event.type === "blob") {
-            remoteSession.pushHash(event.hash, event.content);
-          }
-        },
-      );
-      onBeforeUnmount(async () => {
-        rpcSession.unsubscribe(subscription);
-        if (props.renderWindow > 0) {
-          await rpcSession.call("vtklocal.subscribe.update", [
-            props.renderWindow,
-            -1,
-          ]);
-        }
-      });
-      watch(
-        () => props.renderWindow,
-        async (newId, oldId) => {
-          if (oldId > 0) {
-            await rpcSession.call("vtklocal.subscribe.update", [oldId, -1]);
-          }
-          if (newId > 0) {
-            await rpcSession.call("vtklocal.subscribe.update", [newId, +1]);
-          }
-        },
-        { immediate: true },
-      );
-    }
 
     // Logger verbosity synchronization ---------------------------------------
 

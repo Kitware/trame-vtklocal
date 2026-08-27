@@ -114,7 +114,6 @@ class SilhouetteApp(TrameApp):
                     with vuetify3.VCol(classes="pa-0 fill-height"):
                         view = vtklocal.LocalView(
                             self.render_window,
-                            eager_sync=True,
                         )
                         self.ctrl.view_update = view.update
                         self.ctrl.view_reset_camera = view.reset_camera

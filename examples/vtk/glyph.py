@@ -196,7 +196,6 @@ class GlyphApp(TrameApp):
                     ):
                         self.view_local = vtklocal.LocalView(
                             self.render_window,
-                            eager_sync=True,
                             camera="camera = $event",
                         )
                         self.ctrl.view_update = self.view_local.update

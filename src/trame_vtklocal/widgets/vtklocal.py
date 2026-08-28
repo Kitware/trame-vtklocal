@@ -95,18 +95,20 @@ class LocalView(HtmlElement):
         auto_resize (bool):
             Enabled by default. If disabled, the render window will not
             automatically resize when the canvas is resized.
-        updated (event):
+        updated/on_updated (event):
             Emitted after each completed client side update.
-        memory_vtk (event):
+        memory_vtk/on_memory_vtk (event):
             Event which provides the current memory used by vtk object structures.
-        memory_arrays (event):
+        memory_arrays/on_memory_arrays (event):
             Event which provides the current memory used by vtk arrays.
-        camera (event):
+        camera/on_camera (event):
             Event emitted when any camera is changed. The actual state of
             the camera is passed as arg.
-        progress (event):
+        progress/on_progress (event):
             Event emitted during wasm sync. Payload includes active flag and
             current/total counts for states and blobs.
+
+        Events starting with on_* are for client_type='react'.
 
     """
 
@@ -118,10 +120,6 @@ class LocalView(HtmlElement):
         throttle_rate=10,
         **kwargs,
     ):
-        # Register response callback if not overridden
-        kwargs.setdefault("invoke_response", (self._on_invoke_response, "$event"))
-        kwargs.setdefault("ready", (self._on_ready, "[$event]"))
-        kwargs.setdefault("unmount", self._on_unmount)
         self._pending_invoke_result = {}
         self._pending_result_id = 0
         self._mounted = False
@@ -144,29 +142,74 @@ class LocalView(HtmlElement):
         if self.api._debug_state:
             self.object_manager.Export(f"snapshot-{self.api._debug_state_counter}")
 
-        self._attributes["rw_id"] = f':render-window="{self._window_id}"'
-        self._attributes["ref"] = f'ref="{self.__ref}"'
-        self._attr_names += [
-            ("use_handler", "useHandler"),
-            ("cache_size", "cacheSize"),
-            "verbosity",
-            ("listeners", ":listeners"),
-            ("config", ":config"),
-            ("progress_enabled", "progressEnabled"),
-            ("progress_delay", "progressDelay"),
-            ("emit_memory", "emitMemory"),
-            ("auto_resize", "autoResize"),
-        ]
-        self._event_names += [
-            "ready",
-            "unmount",
-            "updated",
-            "camera",
-            ("memory_vtk", "memory-vtk"),
-            ("memory_arrays", "memory-arrays"),
-            ("invoke_response", "invoke-response"),
-            "progress",
-        ]
+        if self.server.client_type == "react":
+            from trame.widgets import react
+
+            self.props += [
+                ("render_window", "renderWindow"),
+                ("progress_enabled", "progressEnabled"),
+                ("progress_delay", "progressDelay"),
+                ("cache_size", "cacheSize"),
+                "verbosity",
+                "listeners",
+                "config",
+                ("auto_resize", "autoResize"),
+            ]
+            self.events += [
+                ("on_ready", "onReady"),
+                ("on_unmount", "onUnmount"),
+                ("on_updated", "onUpdated"),
+                ("on_camera", "onCamera"),
+                ("on_memory_vtk", "onMemoryVtk"),
+                ("on_memory_arrays", "onMemoryArrays"),
+                ("on_invoke_response", "onInvokeResponse"),
+                ("on_progress", "onProgress"),
+            ]
+
+            self.ref = self.__ref
+            self.render_window = self._window_id
+
+            # Register response callback if not overridden
+            if "on_invoke_response" not in kwargs:
+                self.on_invoke_response = react.Callback(
+                    self._on_invoke_response, "$event"
+                )
+            if "on_ready" not in kwargs:
+                self.on_ready = react.Callback(self._on_ready, "[$event]")
+            if "on_unmount" not in kwargs:
+                self.on_unmount = react.Callback(self._on_unmount)
+        else:
+            # Register response callback if not overridden
+            if "invoke_response" not in kwargs:
+                self.invoke_response = (self._on_invoke_response, "$event")
+            if "ready" not in kwargs:
+                self.ready = (self._on_ready, "[$event]")
+            if "unmount" not in kwargs:
+                self.unmount = self._on_unmount
+
+            self._attributes["rw_id"] = f':render-window="{self._window_id}"'
+            self._attributes["ref"] = f'ref="{self.__ref}"'
+            self._attr_names += [
+                ("use_handler", "useHandler"),
+                ("cache_size", "cacheSize"),
+                "verbosity",
+                ("listeners", ":listeners"),
+                ("config", ":config"),
+                ("progress_enabled", "progressEnabled"),
+                ("progress_delay", "progressDelay"),
+                ("emit_memory", "emitMemory"),
+                ("auto_resize", "autoResize"),
+            ]
+            self._event_names += [
+                "ready",
+                "unmount",
+                "updated",
+                "camera",
+                ("memory_vtk", "memory-vtk"),
+                ("memory_arrays", "memory-arrays"),
+                ("invoke_response", "invoke-response"),
+                "progress",
+            ]
 
         # Generate throttle update function
         self._update_throttle = Throttle(self.update)

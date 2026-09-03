@@ -95,6 +95,7 @@ class ObjectManagerAPI(LinkProtocol):
 
     def update(self, push_camera=False, obj_to_update=None, **_):
         self._push_camera = push_camera
+        # t0 = time.perf_counter()
 
         if API_NO_IDS_UPDATE:  # <= 9.4.2
             self.vtk_object_manager.UpdateStatesFromObjects()
@@ -110,6 +111,9 @@ class ObjectManagerAPI(LinkProtocol):
         if self._debug_state:
             self.vtk_object_manager.Export(f"snapshot-{self._debug_state_counter}")
             self._debug_state_counter += 1
+
+        # t1 = time.perf_counter()
+        # print(f"Update in {t1-t0:.3f}s")
 
     @property
     def active_ids(self):

@@ -20,7 +20,7 @@ HELPER = FixtureHelper(ROOT_PATH)
 async def chromium_launch(p, args=None):
     """Launch headless Chromium"""
     args = list(args or [])
-    if os.environ.get("TRAME_TEST_GPU") == "1":
+    if os.environ.get("TRAME_TEST_NO_SANDBOX") == "1":
         # The container runs as root, where the setuid sandbox refuses to start.
         args += ["--no-sandbox", "--ignore-gpu-blocklist"]
     return await p.chromium.launch(args=args, headless=True)
@@ -200,7 +200,7 @@ class VolumeRendering(TrameApp):
 
     def _setup_vtk(self, mapper_type):
         renderer = vtk.vtkRenderer()
-        rw = vtk.vtkRenderWindow()
+        rw = vtk.vtkRenderWindow(off_screen_rendering=True)
         rw.AddRenderer(renderer)
         rwi = vtk.vtkRenderWindowInteractor(render_window=rw)
         rwi.interactor_style.SetCurrentStyleToTrackballCamera()
@@ -295,7 +295,7 @@ class Cone(TrameApp):
 
     def _setup_vtk(self):
         renderer = vtk.vtkRenderer()
-        rw = vtk.vtkRenderWindow()
+        rw = vtk.vtkRenderWindow(off_screen_rendering=True)
         rw.AddRenderer(renderer)
         rwi = vtk.vtkRenderWindowInteractor(render_window=rw)
         rwi.interactor_style.SetCurrentStyleToTrackballCamera()
@@ -378,7 +378,7 @@ class MultiView(TrameApp):
     @staticmethod
     def _create_pipeline(source, background):
         renderer = vtk.vtkRenderer()
-        rw = vtk.vtkRenderWindow()
+        rw = vtk.vtkRenderWindow(off_screen_rendering=True)
         rw.AddRenderer(renderer)
         rwi = vtk.vtkRenderWindowInteractor(render_window=rw)
         rwi.interactor_style.SetCurrentStyleToTrackballCamera()

@@ -38,19 +38,27 @@ jobs:
         config:
           - {
               name: "Linux",
-              os: [self-hosted, gpu],
+              os: [Linux, self-hosted, gpu],
               container: "mcr.microsoft.com/playwright:v1.61.0-noble",
               # Default caps are compute,utility, which mount no rendering
               # driver at all. "all" pulls in graphics/display so
               # libEGL_nvidia and libGLX_nvidia reach the container.
-              container-options: "--gpus all -e NVIDIA_DRIVER_CAPABILITIES=all -e NVIDIA_VISIBLE_DEVICES=all",
+              # TRAME_TEST_NO_SANDBOX: container runs as root, where Chromium's
+              # setuid sandbox refuses to start, so launch with --no-sandbox.
+              container-options: "--gpus all -e NVIDIA_DRIVER_CAPABILITIES=all -e NVIDIA_VISIBLE_DEVICES=all -e TRAME_TEST_NO_SANDBOX=1",
             }
           - { name: "MacOSX", os: [macos-latest], container: "", container-options: "" }
-          - { name: "Windows", os: [windows-latest], container: "", container-options: "" }
+          - {
+              name: "Windows",
+              os: [Windows, self-hosted, gpu],
+              container: "",
+              container-options: ""
+            }
 
     defaults:
       run:
-        shell: bash
+        # Windows keeps its native shell (pwsh); Linux/macOS use bash.
+        shell: ${{ matrix.config.name == 'Windows' && 'pwsh' || 'bash' }}
 
     # Pin uv to the matrix interpreter; without this uv picks its own default
     # and the vtk dev wheel is only published for the interpreters listed above.
@@ -58,19 +66,8 @@ jobs:
       UV_PYTHON: ${{ matrix.python-version }}
 
     steps:
-      # The Playwright image already ships libvulkan1/libegl1/libgles2 (webkit
-      # pulls them in), so no apt step is needed. The NVIDIA libraries those
-      # loaders dispatch to are mounted by the container toolkit, not installed.
-      - name: Enable GPU tests
-        if: matrix.config.name == 'Linux'
-        run: echo "TRAME_TEST_GPU=1" >> "$GITHUB_ENV"
-
-      - name: Report GPU
-        if: matrix.config.name == 'Linux'
-        run: nvidia-smi
-
       # Write manifests when they are missing.
-      # without the Vulkan one, ANGLE's vulkan backend finds no device and
+      # Without the Vulkan one, ANGLE's vulkan backend finds no device and
       # WebGPU silently drops to SwiftShader (undesired)
       - name: Backfill GPU ICD manifests
         if: matrix.config.name == 'Linux'
@@ -132,25 +129,11 @@ jobs:
           npm run build
 
       - name: Install the project
-        run: uv sync --all-extras --dev
-
-      - name: Install OSMesa for Windows
-        if: matrix.config.name == 'Windows'
-        # 25.0.7 is the last mesa-dist-win release that ships osmesa.dll
-        # (removed in 25.1.0). PATH is searched by LoadLibrary, which is how
-        # VTK's vtkOSOpenGLRenderWindow locates osmesa.dll at runtime.
-        run: |
-          curl -sSL -o mesa.7z https://github.com/pal1000/mesa-dist-win/releases/download/25.0.7/mesa3d-25.0.7-release-msvc.7z
-          7z x mesa.7z -omesa
-          cygpath -w "$PWD/mesa/x64" >> "$GITHUB_PATH"
-
-      - name: Install dependencies
         run: |
           uv sync --all-extras --dev
           uv run playwright install
 
       - name: Verify browser GPU
-        if: matrix.config.name == 'Linux'
         run: uv run python tests/check_gpu.py
 
       - name: Run tests

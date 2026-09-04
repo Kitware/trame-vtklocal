@@ -131,6 +131,12 @@ jobs:
           npm ci
           npm run build
 
+      - name: Build React Components
+        run: |
+          cd react-components
+          npm ci
+          npm run build
+
       - name: Install the project
         run: uv sync --all-extras --dev
 
@@ -188,6 +194,12 @@ jobs:
           npm ci
           npm run build
 
+      - name: Build React Components
+        run: |
+          cd react-components
+          npm ci
+          npm run build
+
   release:
     needs: [pre-commit, pytest, test-npm-build]
     runs-on: ubuntu-latest
@@ -213,6 +225,12 @@ jobs:
       - name: Build Vue Components
         run: |
           cd vue-components
+          npm i
+          npm run build
+
+      - name: Build React Components
+        run: |
+          cd react-components
           npm i
           npm run build
 

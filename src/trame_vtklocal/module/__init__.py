@@ -11,9 +11,9 @@ __all__ = [
 ]
 
 serve_path = str(Path(__file__).with_name("serve").resolve())
-serve_directory = f"__trame_vtklocal_{__version__}"
+BASE_URL = f"__trame_vtklocal_{__version__}"
 
-serve = {serve_directory: serve_path}
+serve = {BASE_URL: serve_path}
 
 # -----------------------------------------------------------------------------
 # Module advanced initialization
@@ -41,16 +41,16 @@ def setup(trame_server, **kwargs):
     if client_type == "react":
         trame_server.enable_module(
             {
-                "scripts": [f"{serve_directory}/js/trame_vtklocal_react.umd.cjs"],
-                "styles": [f"{serve_directory}/js/trame_vtklocal_react.css"],
+                "scripts": [f"{BASE_URL}/js/trame_vtklocal_react.umd.cjs"],
+                "styles": [f"{BASE_URL}/js/trame_vtklocal_react.css"],
                 "react_use": ["trame_vtklocal_react"],
             }
         )
     else:
         trame_server.enable_module(
             {
-                "scripts": [f"{serve_directory}/js/trame_vtklocal.umd.js"],
-                "styles": [f"{serve_directory}/js/trame_vtklocal.css"],
+                "scripts": [f"{BASE_URL}/js/trame_vtklocal.umd.js"],
+                "styles": [f"{BASE_URL}/js/trame_vtklocal.css"],
                 "vue_use": ["trame_vtklocal"],
             }
         )

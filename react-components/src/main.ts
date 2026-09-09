@@ -6,6 +6,6 @@ interface Registry {
   register(tag: string, component: ComponentType<any>): void;
 }
 
-export function install(registry: Registry) {
-  registry.register("vtk-local", VtkLocal);
+export function install(registerTag: Registry["register"]) {
+  registerTag("vtk-local", VtkLocal);
 }

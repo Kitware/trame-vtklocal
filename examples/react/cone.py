@@ -5,6 +5,7 @@
 #
 # dependencies = [
 #   "trame>=4",
+#   "trame-client>=4.0.1", # Fix missing trame.utils
 #   "trame-vtklocal>=1.5",
 #   "vtk>=9.7",
 # ]
@@ -200,9 +201,13 @@ class ConeApp(TrameApp):
             )
             html.Button(
                 "Export json",
-                on_click=react.Callback(
-                    "utils.download('scene-wasm.json', trigger('export', ['json']), 'application/octet-stream')"
-                ),
+                on_click=react.Callback("""
+                    trame.utils.download(
+                      'scene-wasm.json',
+                      trame.trigger('export', ['json']),
+                      'application/octet-stream'
+                    )
+                    """),
                 style={
                     "position": "absolute",
                     "top": "6rem",
@@ -212,9 +217,13 @@ class ConeApp(TrameApp):
             )
             html.Button(
                 "Export zip",
-                on_click=react.Callback(
-                    "utils.download('scene-wasm.zip', trigger('export', ['zip']), 'application/octet-stream')"
-                ),
+                on_click=react.Callback("""
+                    trame.utils.download(
+                        'scene-wasm.zip',
+                        trame.trigger('export', ['zip']),
+                        'application/octet-stream'
+                    )
+                    """),
                 style={
                     "position": "absolute",
                     "top": "6rem",

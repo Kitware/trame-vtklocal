@@ -1,4 +1,4 @@
-.. |pypi_download| image:: https://img.shields.io/pypi/dm/trame-vtklocal
+.. |pypi_download| image:: https://kitware.github.io/trame/downloads/trame-vtklocal.svg
 
 ========================================================
 trame-vtklocal  |pypi_download|

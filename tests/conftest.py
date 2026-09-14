@@ -404,11 +404,15 @@ class MultiView(TrameApp):
             )
             with html.Div(style=self.HALF):
                 vtklocal.LocalView(
-                    self.render_window_1, updated="local_rendering_ready++"
+                    self.render_window_1,
+                    ref="first_view",
+                    updated="local_rendering_ready++",
                 )
             with html.Div(style=self.HALF):
                 vtklocal.LocalView(
-                    self.render_window_2, updated="local_rendering_ready++"
+                    self.render_window_2,
+                    ref="second_view",
+                    updated="local_rendering_ready++",
                 )
 
 

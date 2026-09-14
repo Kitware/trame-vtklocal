@@ -16,10 +16,11 @@ BASELINES = [
 
 @pytest.mark.asyncio
 async def test_multi_view(MultiViewApp, utils):
-    """Two LocalViews sharing one WASM session must both render (issues/76, /77).
+    """Two LocalViews sharing one WASM session must render and interact.
 
     Catches the updateAsync-serialization regression (a second view's update
-    being swallowed leaves it black).
+    being swallowed leaves it black) and the non-JSPI event-loop regression
+    (only the first view receives an Emscripten main loop).
     """
     app = MultiViewApp("multi-view")
     task = app.server.start(exec_mode="task", port=0)
@@ -41,6 +42,49 @@ async def test_multi_view(MultiViewApp, utils):
             await utils.compare_screenshot(
                 page, BASELINES[0], RESULT_BASE, threshold=0.1
             )
+        )
+
+        # A synchronous Emscripten runtime has only one native main loop. The
+        # second LocalView therefore relies on vtk-wasm's per-view JavaScript
+        # ProcessEvents pump. Drag its canvas and verify that a client-side
+        # camera state changes; a rendering-only screenshot would miss this
+        # regression because both views can paint their initial frame.
+        await page.evaluate(
+            """() => {
+                window.__secondViewCameraState = () => {
+                    const session =
+                        window.trame.refs.second_view.getRemoteSession();
+                    return [...session.cameraIds]
+                        .sort((a, b) => a - b)
+                        .map((id) => {
+                            const state = session.getVtkObject(id).$state;
+                            return [
+                                id,
+                                state.position,
+                                state.focalPoint,
+                                state.viewUp,
+                            ];
+                        });
+                };
+            }"""
+        )
+        before = await page.evaluate("window.__secondViewCameraState()")
+        second_canvas = page.locator("canvas").nth(1)
+        bounds = await second_canvas.bounding_box()
+        assert bounds is not None
+        x = bounds["x"] + bounds["width"] * 0.5
+        y = bounds["y"] + bounds["height"] * 0.5
+        await page.mouse.move(x, y)
+        await page.mouse.down()
+        await page.mouse.move(x + 50, y + 20, steps=8)
+        await page.mouse.up()
+        await page.wait_for_function(
+            """(before) =>
+                JSON.stringify(window.__secondViewCameraState()) !==
+                JSON.stringify(before)
+            """,
+            arg=before,
+            timeout=3000,
         )
 
         assert all(valid_image_comparisons), "Some images don't match"

@@ -11,7 +11,7 @@
     "react": ">=19"
   },
   "dependencies": {
-    "@kitware/vtk-wasm": "^3.0.3"
+    "@kitware/vtk-wasm": "3.0.5"
   },
   "devDependencies": {
     "@types/react": "^19.2.18",

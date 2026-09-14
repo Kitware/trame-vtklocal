@@ -366,6 +366,14 @@ class MultiView(TrameApp):
 
     def __init__(self, server=None):
         super().__init__(server)
+        # Keep this regression on the synchronous runtime: only one native
+        # Emscripten event loop can run there, so the second view exercises
+        # vtk-wasm's per-render-window ProcessEvents fallback.
+        self.state.wasm_conf = {
+            "mode": "wasm32",
+            "exec": "sync",
+            "rendering": "webgl",
+        }
         enable_testing(self.server, "local_rendering_ready")
         self.render_window_1 = self._create_pipeline(
             vtk.vtkConeSource(), (0.1, 0.2, 0.4)
@@ -405,12 +413,14 @@ class MultiView(TrameApp):
                 vtklocal.LocalView(
                     self.render_window_1,
                     ref="first_view",
+                    config=["wasm_conf"],
                     updated="local_rendering_ready++",
                 )
             with html.Div(style=self.HALF):
                 vtklocal.LocalView(
                     self.render_window_2,
                     ref="second_view",
+                    config=["wasm_conf"],
                     updated="local_rendering_ready++",
                 )
 

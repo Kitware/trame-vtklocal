@@ -367,12 +367,12 @@ class MultiView(TrameApp):
 
     def __init__(self, server=None):
         super().__init__(server)
-        # Keep this regression on the synchronous runtime: only one native
-        # Emscripten event loop can run there, so the second view exercises
-        # vtk-wasm's per-render-window ProcessEvents fallback.
+        # VTK 9.7.20260726 and newer publish one JSPI-capable bundle. Exercise
+        # that supported async path explicitly while checking that each view
+        # keeps its own interactive render-window binding.
         self.state.wasm_conf = {
             "mode": "wasm32",
-            "exec": "sync",
+            "exec": "async",
             "rendering": "webgl",
         }
         enable_testing(self.server, "local_rendering_ready")

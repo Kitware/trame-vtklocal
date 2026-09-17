@@ -2,7 +2,7 @@ from pathlib import Path
 
 from trame_vtklocal import __version__
 from trame_vtklocal.module.protocol import ObjectManagerHelper
-from trame_vtklocal.module.wasm import register_wasm
+from trame_vtklocal.module.wasm import register_wasm, get_wasm_cache_directory
 
 __all__ = [
     "serve",
@@ -11,9 +11,16 @@ __all__ = [
 ]
 
 serve_path = str(Path(__file__).with_name("serve").resolve())
-BASE_URL = f"__trame_vtklocal_{__version__}"
+wasm_serve_path = get_wasm_cache_directory(serve_path)
 
-serve = {BASE_URL: serve_path}
+
+BASE_URL = f"__trame_vtklocal_{__version__}"
+WASM_BASE_URL = "__trame_vtklocal_wasm"
+
+serve = {
+    BASE_URL: serve_path,
+    WASM_BASE_URL: wasm_serve_path,
+}
 
 # -----------------------------------------------------------------------------
 # Module advanced initialization
@@ -31,8 +38,12 @@ def setup(trame_server, **kwargs):
     HELPERS_PER_SERVER[trame_server.name] = ObjectManagerHelper(
         trame_server, addon_serdes_registrars=kwargs.pop("addon_serdes_registrars", [])
     )
-    trame_server.enable_module(register_wasm(serve_path, wasm_bits="wasm64", **kwargs))
-    trame_server.enable_module(register_wasm(serve_path, wasm_bits="wasm32", **kwargs))
+    trame_server.enable_module(
+        register_wasm(wasm_serve_path, wasm_bits="wasm64", **kwargs)
+    )
+    trame_server.enable_module(
+        register_wasm(wasm_serve_path, wasm_bits="wasm32", **kwargs)
+    )
 
     client_type = "vue2"
     if hasattr(trame_server, "client_type"):

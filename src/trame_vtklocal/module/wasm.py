@@ -3,12 +3,14 @@ import os
 import shutil
 import tarfile
 from pathlib import Path
+import platform
+import contextlib
 
 import aiohttp
 from packaging.version import parse
 
-from trame_vtklocal import __version__
-
+CURRENT_OS = platform.system()
+IS_WINDOWS = CURRENT_OS == "Windows"
 WASM_DOWNLOADING = []
 
 
@@ -83,6 +85,27 @@ def get_wasm_info(wasm_bits="wasm32"):
     return version, url
 
 
+def get_wasm_cache_directory(serve_path):
+    default_path = Path(serve_path)
+
+    # If we can write in Python env, let's use it
+    with contextlib.suppress(PermissionError):
+        test_file = default_path / "test.write"
+        test_file.unlink(missing_ok=True)
+        test_file.touch()
+        test_file.unlink(missing_ok=True)
+        return serve_path
+
+    # We need to find a directory where user can write
+    cache_dir = (
+        Path(os.environ.get("APPDATA")) / "vtk-wasm"
+        if IS_WINDOWS
+        else Path("~/.vtk-wasm").expanduser()
+    )
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    return str(cache_dir.resolve())
+
+
 def register_wasm(serve_path, wasm_bits="wasm32", **kwargs):
     """Register the VTK WebAssembly files in the given serve path.
     Keywords:
@@ -93,7 +116,7 @@ def register_wasm(serve_path, wasm_bits="wasm32", **kwargs):
     """
     version, wasm_url = get_wasm_info(wasm_bits)
     wasm_base_name = kwargs.get("wasm_base_name", "vtk")
-    BASE_URL = f"__trame_vtklocal_{__version__}/{wasm_bits}/{version}"
+    BASE_URL = f"__trame_vtklocal_wasm/{wasm_bits}/{version}"
     dest_directory = Path(serve_path) / wasm_bits / version
 
     # get wasm directory from kwargs or environment variable

@@ -9,6 +9,8 @@ class CanvasId {
   }
 }
 
+const BG_CANVAS = document.createElement('canvas');
+
 const CANVAS_ID_GENERATOR = new CanvasId();
 export function createFuture() {
   let resolve, reject;
@@ -70,4 +72,14 @@ export function createExtractCallback(trame, remoteSession, extractInfo) {
 
 export function generateNextCanvasId() {
   return CANVAS_ID_GENERATOR.nextId();
+}
+
+
+export function rgbaToImage(width, height, clampedArray, format="image/png") {
+  BG_CANVAS.width = width;
+  BG_CANVAS.height = height;
+  const ctx = BG_CANVAS.getContext('2d');
+  const imageData = new ImageData(clampedArray, width, height);
+  ctx.putImageData(imageData, 0, 0);
+  return BG_CANVAS.toDataURL(format);
 }

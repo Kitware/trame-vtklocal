@@ -69,7 +69,7 @@ def write_html(stream, data, config):
     stream.write("""\n<div id="viewer"></div>""".encode(UTF8))
     stream.write("\n<script>".encode(UTF8))
     stream.write(to_url(wasm_file.read_bytes(), "wasm"))
-    stream.write(to_url(data.getvalue(), "data"))
+    stream.write(to_url(data, "data"))
     stream.write(
         f"""
         vtkWASMViewer.createViewerAsync(
@@ -204,6 +204,7 @@ def to_html(
         output = BytesIO()
         write_html(output, data, config)
         output.seek(0)
+        output = output.getvalue()
     else:
         output = Path(output)
         output.parent.mkdir(parents=True, exist_ok=True)
@@ -343,5 +344,8 @@ def to_wazex(
                 f"blobs/{hash}",
                 memoryview(object_manager.GetBlob(hash)),
             )
+
+    if isinstance(output, BytesIO):
+        return output.getvalue()
 
     return output

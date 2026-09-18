@@ -388,6 +388,9 @@ class LocalView(HtmlElement):
         """Write a standalone WASM viewer HTML page that does NOT embed any data."""
         exporter.create_viewer(file_name, self._extract_config(config))
 
+    def download_screenshot(self, filename, format="image/png"):
+        self.server.js_call(self.__ref, "screenshot", filename, format)
+
     def _extract_config(self, config):
         if config is None and self.config:
             if isinstance(self.config, str):

@@ -9,7 +9,6 @@ import {
   onBeforeUnmount,
   toRef,
   watchEffect,
-  watch,
 } from "vue";
 
 import "@kitware/vtk-wasm/style.css";
@@ -21,6 +20,7 @@ import {
   createExtractCallback,
   generateNextCanvasId,
   createFuture,
+  rgbaToImage,
 } from "../utils";
 
 const WASM_RUNTIMES = {};
@@ -298,6 +298,26 @@ export default {
       }
     });
 
+    // Client-Side-Objects ----------------------------------------------------
+    // Client-side objects need ids that never collide with the server's.
+    let nextClientId = 2147418112; // half of max 32-bit uint
+
+    function createClientSideObject(native, state) {
+      const objectId = nextClientId;
+      native.registerState({
+        ...state,
+        Id: nextClientId++,
+        MTime: 1,
+        "vtk-object-manager-kept-alive": true,
+      });
+      native.updateObjectsFromStates();
+      return getVtkObject(objectId);
+    }
+
+    function disposeClientSideObject(native, vtkObjectProxy) {
+      native.unRegisterState(vtkObjectProxy.Id);
+    }
+
     // Resize -----------------------------------------------------------------
 
     const resize = debounce(async () => {
@@ -516,6 +536,63 @@ export default {
 
     // Public -----------------------------------------------------------------
 
+    async function screenshot(fileNameToDownload = null, format = "image/png") {
+      const front = 1;
+      const { vtk, typedArrayInterface: heap } = remoteSession;
+      const renderWindow = vtk.getVtkObject(props.renderWindow);
+
+      const [width, height] = renderWindow.getSize();
+      // GetRGBACharPixelData takes inclusive pixel bounds.
+      const x2 = width - 1;
+      const y2 = height - 1;
+
+      // The array must live in the same wasm module as the render window so the
+      // C++ side can write into its buffer.
+      const native = remoteSession.native;
+      const pixels = createClientSideObject(native, {
+        ClassName: "vtkUnsignedCharArray",
+        SuperClassNames: [
+          "vtkObjectBase",
+          "vtkObject",
+          "vtkAbstractArray",
+          "vtkDataArray",
+        ],
+        NumberOfComponents: 4,
+      });
+      try {
+        const ok = await renderWindow.getRGBACharPixelData(
+          0,
+          0,
+          x2,
+          y2,
+          front,
+          pixels,
+          0,
+        );
+        if (!ok) {
+          throw new Error(
+            `GetRGBACharPixelData failed for render window ${props.renderWindow}.`,
+          );
+        }
+
+        // toJSTypedArray is a zero-copy view onto the heap. Constructing a
+        // Uint8ClampedArray from it copies the bytes, so the result survives after
+        // the vtkUnsignedCharArray is deleted below.
+        const data = new Uint8ClampedArray(heap.toJSTypedArray(pixels));
+
+        const dataURL = rgbaToImage(width, height, data, format);
+        if (fileNameToDownload) {
+          const a = document.createElement("a");
+          a.href = dataURL;
+          a.download = fileNameToDownload;
+          a.click();
+        }
+        return dataURL;
+      } finally {
+        disposeClientSideObject(pixels);
+      }
+    }
+
     function evalStateExtract(definition) {
       createExtractCallback(trame, remoteSession, definition)();
     }
@@ -553,6 +630,7 @@ export default {
       update,
       resetCamera,
       render,
+      screenshot,
       evalStateExtract,
       invoke,
       resize,

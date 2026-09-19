@@ -1,3 +1,5 @@
+import { viteStaticCopy } from 'vite-plugin-static-copy'
+
 export default {
   base: "./",
   build: {
@@ -18,4 +20,20 @@ export default {
     outDir: "../src/trame_vtklocal/module/serve/js",
     assetsDir: ".",
   },
+  plugins: [
+      viteStaticCopy({
+        targets: [
+          {
+            src: './node_modules/@kitware/vtk-wasm/dist/umd/viewer.css',
+            dest: "../viewer",
+            rename: { stripBase: 5 },
+          },
+          {
+            src: './node_modules/@kitware/vtk-wasm/dist/umd/viewer.umd.js',
+            dest: "../viewer",
+            rename: { stripBase: 5 },
+          },
+        ]
+      })
+  ],
 };

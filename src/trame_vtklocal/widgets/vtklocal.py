@@ -10,6 +10,7 @@ from trame_client.widgets.core import AbstractElement
 from trame_common.exec.throttle import Throttle
 
 from trame_vtklocal import module
+from trame_vtklocal.utils import exporter
 
 try:
     import zlib  # noqa
@@ -365,6 +366,42 @@ class LocalView(HtmlElement):
             wasm_ids = self.api.get_all_ids(self._window_id)
 
         self.api.dump_data(file_name, wasm_ids)
+
+    def export_wazex(self, file_name=None):
+        """Serialize the scene into an in memory `BytesIO` return or into a provided wazex file path"""
+        return exporter.to_wazex(
+            object_manager=self.object_manager,
+            root_ids=self.api.get_all_ids(self._window_id),
+            output=file_name,
+        )
+
+    def export_html(self, file_name=None, config=None):
+        """Serialize the scene into a standalone HTML as in memory `BytesIO` return or a provided html file path"""
+        return exporter.to_html(
+            object_manager=self.object_manager,
+            root_ids=self.api.get_all_ids(self._window_id),
+            output=file_name,
+            config=self._extract_config(config),
+        )
+
+    def export_viewer(self, file_name, config=None):
+        """Write a standalone WASM viewer HTML page that does NOT embed any data."""
+        exporter.create_viewer(file_name, self._extract_config(config))
+
+    def download_screenshot(self, filename, format="image/png"):
+        self.server.js_call(self.__ref, "screenshot", filename, format)
+
+    def _extract_config(self, config):
+        if config is None and self.config:
+            if isinstance(self.config, str):
+                config = json.loads(self.config)
+            elif isinstance(self.config, tuple | list):
+                config = self.state[self.config[0]]
+            else:
+                msg = f"Invalid config: {self.config}"
+                raise ValueError(msg)
+
+        return config
 
     def reset_camera(self, renderer_or_render_window=None, **kwargs):
         """Reset camera by making the call on the client side"""

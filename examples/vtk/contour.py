@@ -129,6 +129,10 @@ class ContourApp(TrameApp):
                     f"Volume size: {DIMENSION * 2}x{DIMENSION * 2}x{DIMENSION}",
                 ]:
                     html.Div(msg, style="color: white;")
+                html.Button(
+                    "Screenshot",
+                    click=lambda: self.ctx.view.download_screenshot("contour.png"),
+                )
 
     @change("contour")
     def _on_contour(self, contour, **_):

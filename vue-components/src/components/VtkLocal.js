@@ -298,6 +298,26 @@ export default {
       }
     });
 
+    // Client-Side-Objects ----------------------------------------------------
+    // Client-side objects need ids that never collide with the server's.
+    let nextClientId = 2147418112; // half of max 32-bit uint
+
+    function createClientSideObject(native, state) {
+      const objectId = nextClientId;
+      native.registerState({
+        ...state,
+        Id: nextClientId++,
+        MTime: 1,
+        "vtk-object-manager-kept-alive": true,
+      });
+      native.updateObjectsFromStates();
+      return getVtkObject(objectId);
+    }
+
+    function disposeClientSideObject(native, vtkObjectProxy) {
+      native.unRegisterState(vtkObjectProxy.Id);
+    }
+
     // Resize -----------------------------------------------------------------
 
     const resize = debounce(async () => {
@@ -516,7 +536,7 @@ export default {
 
     // Public -----------------------------------------------------------------
 
-    async function screenshot(fileNameToDownload=null, format="image/png") {
+    async function screenshot(fileNameToDownload = null, format = "image/png") {
       const front = 1;
       const { vtk, typedArrayInterface: heap } = remoteSession;
       const renderWindow = vtk.getVtkObject(props.renderWindow);
@@ -528,11 +548,31 @@ export default {
 
       // The array must live in the same wasm module as the render window so the
       // C++ side can write into its buffer.
-      const pixels = vtk.vtkUnsignedCharArray({ numberOfComponents: 4 });
+      const native = remoteSession.native;
+      const pixels = createClientSideObject(native, {
+        ClassName: "vtkUnsignedCharArray",
+        SuperClassNames: [
+          "vtkObjectBase",
+          "vtkObject",
+          "vtkAbstractArray",
+          "vtkDataArray",
+        ],
+        NumberOfComponents: 4,
+      });
       try {
-        const ok = await renderWindow.getRGBACharPixelData(0, 0, x2, y2, front, pixels, 0);
+        const ok = await renderWindow.getRGBACharPixelData(
+          0,
+          0,
+          x2,
+          y2,
+          front,
+          pixels,
+          0,
+        );
         if (!ok) {
-          throw new Error(`GetRGBACharPixelData failed for render window ${props.renderWindow}.`);
+          throw new Error(
+            `GetRGBACharPixelData failed for render window ${props.renderWindow}.`,
+          );
         }
 
         // toJSTypedArray is a zero-copy view onto the heap. Constructing a
@@ -542,14 +582,14 @@ export default {
 
         const dataURL = rgbaToImage(width, height, data, format);
         if (fileNameToDownload) {
-          const a = document.createElement('a');
+          const a = document.createElement("a");
           a.href = dataURL;
           a.download = fileNameToDownload;
           a.click();
         }
         return dataURL;
       } finally {
-        pixels.delete();
+        disposeClientSideObject(pixels);
       }
     }
 

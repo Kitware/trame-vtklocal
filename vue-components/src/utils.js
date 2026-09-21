@@ -10,6 +10,7 @@ class CanvasId {
 }
 
 const BG_CANVAS = document.createElement('canvas');
+const BG_CANVAS_FLIP = document.createElement('canvas');
 
 const CANVAS_ID_GENERATOR = new CanvasId();
 export function createFuture() {
@@ -81,5 +82,16 @@ export function rgbaToImage(width, height, clampedArray, format="image/png") {
   const ctx = BG_CANVAS.getContext('2d');
   const imageData = new ImageData(clampedArray, width, height);
   ctx.putImageData(imageData, 0, 0);
-  return BG_CANVAS.toDataURL(format);
+
+  // Vertical flip
+  BG_CANVAS_FLIP.width = width;
+  BG_CANVAS_FLIP.height = height;
+  const ctx2 = BG_CANVAS_FLIP.getContext('2d');
+  ctx2.clearRect(0, 0, width, height);
+  ctx2.translate(0, height);
+  ctx2.scale(1, -1);
+  ctx2.drawImage(BG_CANVAS, 0, 0);
+
+  // Generate requested image
+  return BG_CANVAS_FLIP.toDataURL(format);
 }

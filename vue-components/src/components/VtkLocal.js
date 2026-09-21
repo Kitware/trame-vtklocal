@@ -315,7 +315,7 @@ export default {
     }
 
     function disposeClientSideObject(native, vtkObjectProxy) {
-      native.unRegisterState(vtkObjectProxy.Id);
+      native.unRegisterState(vtkObjectProxy.$id);
     }
 
     // Resize -----------------------------------------------------------------
@@ -589,7 +589,7 @@ export default {
         }
         return dataURL;
       } finally {
-        disposeClientSideObject(pixels);
+        disposeClientSideObject(native, pixels);
       }
     }
 

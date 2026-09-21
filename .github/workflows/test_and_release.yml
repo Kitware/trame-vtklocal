@@ -46,7 +46,8 @@ jobs:
               container-options: "--gpus all -e NVIDIA_DRIVER_CAPABILITIES=all -e NVIDIA_VISIBLE_DEVICES=all",
             }
           - { name: "MacOSX", os: [macos-latest], container: "", container-options: "" }
-          - { name: "Windows", os: [windows-latest], container: "", container-options: "" }
+          # FIXME: uncomment when bumping VTK
+          # - { name: "Windows", os: [windows-latest], container: "", container-options: "" }
 
     defaults:
       run:

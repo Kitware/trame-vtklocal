@@ -74,6 +74,7 @@ export default {
     "progress",
     "ready",
     "unmount",
+    "end-interaction",
   ],
   props: {
     progressEnabled: {
@@ -141,6 +142,7 @@ export default {
 
     let remoteSession = null;
     let removeProgressCallback = null;
+    const interactorTags = [];
     const cameraTags = [];
     const listenersTags = [];
     const wasmFuture = createFuture();
@@ -447,6 +449,15 @@ export default {
       }
       await update({ onMounted: props.renderWindow });
 
+      // Interaction listener
+      const iid = remoteSession.getState(props.renderWindow).Interactor.Id;
+      interactorTags.push([
+        iid,
+        remoteSession.native.observe(iid, "EndInteractionEvent", () => {
+          emit("end-interaction", getCameraStates());
+        }),
+      ])
+
       // Camera listener
       remoteSession.cameraIds.forEach((cid) => {
         try {
@@ -518,6 +529,10 @@ export default {
       if (!hasRemoteSession()) return;
 
       // Camera listeners
+      while (interactorTags.length) {
+        const [cid, tag] = interactorTags.pop();
+        remoteSession.native.unObserve(cid, tag);
+      }
       while (cameraTags.length) {
         const [cid, tag] = cameraTags.pop();
         remoteSession.native.unObserve(cid, tag);
@@ -535,6 +550,20 @@ export default {
     });
 
     // Public -----------------------------------------------------------------
+    function getCameraStates() {
+      const cameraStates = [];
+      remoteSession.cameraIds.forEach((cid) => {
+        try {
+          const cameraState = remoteSession.getState(cid);
+          if (cameraState) {
+            cameraStates.push(cameraState);
+          }
+        } catch (err) {
+          console.error("getCameraStates() failed with id", cid, err);
+        }
+      })
+      return cameraStates;
+    }
 
     async function screenshot(fileNameToDownload = null, format = "image/png") {
       const front = 1;
@@ -637,6 +666,7 @@ export default {
       printSceneManagerInformation,
       getRemoteSession: () => remoteSession,
       getWasmRuntime: () => WASM_RUNTIMES[wasmRuntime.value],
+      getCameraStates,
       disposeRemoteSession,
       disposeWasmRuntime,
       getVtkObject,

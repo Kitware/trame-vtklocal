@@ -216,6 +216,7 @@ const VtkLocal = forwardRef<any, AnyProps>(function VtkLocal(props, ref) {
     const context: any = {
       remoteSession: null,
       cameraTags: [],
+      interactorTags: [],
       listenersTags: [],
       progress: {
         active: false,
@@ -267,6 +268,27 @@ const VtkLocal = forwardRef<any, AnyProps>(function VtkLocal(props, ref) {
         Number(context.remoteSession.native.getTotalBlobMemoryUsage()),
       );
     }
+
+    context.getCameraStates = () => {
+      if (!hasRemoteSession()) return [];
+      return context.remoteSession.cameraIds.map((cid: number) => context.remoteSession.getState(cid));
+    }
+
+    type CameraState = NonNullable<ReturnType<typeof context.remoteSession.getState>>;
+    context.getCameraStates = (): CameraState[] => {
+      const cameraStates: CameraState[] = [];
+      context.remoteSession.cameraIds.forEach((cid: number) => {
+        try {
+          const cameraState = context.remoteSession.getState(cid);
+          if (cameraState) {
+            cameraStates.push(cameraState);
+          }
+        } catch (err) {
+          console.error("getCameraStates() failed with id", cid, err);
+        }
+      })
+      return cameraStates;
+    };
 
     context.update = async (options?: unknown) => {
       if (!hasRemoteSession()) return;
@@ -394,6 +416,15 @@ const VtkLocal = forwardRef<any, AnyProps>(function VtkLocal(props, ref) {
       await context.update({ onMounted: renderWindow });
       if (context.disposed) return;
 
+      // Interaction listener
+      const iid = context.remoteSession.getState(props.renderWindow).Interactor.Id;
+      context.interactorTags.push([
+        iid,
+        context.remoteSession.native.observe(iid, "EndInteractionEvent", () => {
+          emit("end-interaction", context.getCameraStates());
+        }),
+      ]);
+
       // Camera listener
       context.remoteSession.cameraIds.forEach((cid: number) => {
         try {
@@ -429,6 +460,10 @@ const VtkLocal = forwardRef<any, AnyProps>(function VtkLocal(props, ref) {
       if (removeProgressCallback) removeProgressCallback();
       if (resizeObserver) resizeObserver.disconnect();
       if (!hasRemoteSession()) return;
+      while (context.interactorTags.length) {
+        const [cid, tag] = context.interactorTags.pop();
+        context.remoteSession.native.unObserve(cid, tag);
+      }
       while (context.cameraTags.length) {
         const [cid, tag] = context.cameraTags.pop();
         context.remoteSession.native.unObserve(cid, tag);

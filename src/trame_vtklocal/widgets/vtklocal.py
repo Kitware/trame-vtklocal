@@ -109,6 +109,10 @@ class LocalView(HtmlElement):
             Event emitted during wasm sync. Payload includes active flag and
             current/total counts for states and blobs.
 
+        end_interaction/on_end_interaction (event):
+            Event emitted after a camera/widget interaction. Payload includes a
+            list of camera state for possible client/server synchronization.
+
         Events starting with on_* are for client_type='react'.
 
     """
@@ -165,6 +169,7 @@ class LocalView(HtmlElement):
                 ("on_memory_arrays", "onMemoryArrays"),
                 ("on_invoke_response", "onInvokeResponse"),
                 ("on_progress", "onProgress"),
+                ("on_end_interaction", "onEndInteraction"),
             ]
 
             self.ref = self.__ref
@@ -210,6 +215,7 @@ class LocalView(HtmlElement):
                 ("memory_arrays", "memory-arrays"),
                 ("invoke_response", "invoke-response"),
                 "progress",
+                ("end_interaction", "end-interaction"),
             ]
 
         # Generate throttle update function

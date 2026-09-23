@@ -417,7 +417,7 @@ const VtkLocal = forwardRef<any, AnyProps>(function VtkLocal(props, ref) {
       if (context.disposed) return;
 
       // Interaction listener
-      const iid = context.remoteSession.getState(props.renderWindow).Interactor.Id;
+      const iid = context.remoteSession.native.invoke(props.renderWindow, "GetInteractor", []).Id;
       context.interactorTags.push([
         iid,
         context.remoteSession.native.observe(iid, "EndInteractionEvent", () => {

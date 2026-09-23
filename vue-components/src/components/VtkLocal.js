@@ -450,7 +450,7 @@ export default {
       await update({ onMounted: props.renderWindow });
 
       // Interaction listener
-      const iid = remoteSession.getState(props.renderWindow).Interactor.Id;
+      const iid = remoteSession.native.invoke(props.renderWindow, "GetInteractor", []).Id;
       interactorTags.push([
         iid,
         remoteSession.native.observe(iid, "EndInteractionEvent", () => {

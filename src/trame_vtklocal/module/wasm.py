@@ -59,7 +59,10 @@ async def setup_wasm_directory(target_directory, wasm_url):
 
         # unpack
         with tarfile.open(dest_file) as tgz:
-            tgz.extractall(dest_folder)
+            if hasattr(tarfile, "data_filter"):
+                tgz.extractall(dest_folder, filter="data")
+            else:
+                tgz.extractall(dest_folder)
 
         print(f"Downloaded WASM:\n - from: {wasm_url}\n - to: {dest_folder}")
 

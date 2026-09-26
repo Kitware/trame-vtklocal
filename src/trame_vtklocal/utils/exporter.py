@@ -330,7 +330,7 @@ def to_wazex(
             ),
         )
         # Write states
-        zipf.mkdir("states")
+        zipf.writestr("states/", "")
         for vtk_id in ids_to_export:
             zipf.writestr(
                 f"states/{vtk_id}",
@@ -338,7 +338,7 @@ def to_wazex(
             )
 
         # Write blobs
-        zipf.mkdir("blobs")
+        zipf.writestr("blobs/", "")
         for hash in hashes:
             zipf.writestr(
                 f"blobs/{hash}",

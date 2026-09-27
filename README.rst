@@ -214,6 +214,11 @@ Click a screenshot to open its source.
    :alt: widgets_plane_slice.py
    :width: 100%
 
+.. |dynamic_point_cloud| image:: https://raw.githubusercontent.com/Kitware/trame-vtklocal/refs/heads/master/examples/vtk/screenshots/dynamic_point_cloud.png
+   :target: https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/dynamic_point_cloud.py
+   :alt: dynamic_point_cloud.py
+   :width: 100%
+
 .. list-table::
    :widths: 33 33 33
 
@@ -331,7 +336,11 @@ Click a screenshot to open its source.
 
        Interactive plane slicing (uses wasm64 for 64-bit ids).
 
-     -
+     - |dynamic_point_cloud|
+
+       `dynamic_point_cloud.py <https://github.com/Kitware/trame-vtklocal/blob/master/examples/vtk/dynamic_point_cloud.py>`_
+
+       Benchmark streaming a point cloud whose points and colors change on every update.
 
      -
 

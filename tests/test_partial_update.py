@@ -1,3 +1,6 @@
+import contextlib
+import gc
+import time
 from pathlib import Path
 
 import pytest
@@ -99,6 +102,31 @@ async def rotate_camera_with_mouse(page):
     await page.mouse.down()
     await page.mouse.move(200, 170, steps=10)
     await page.mouse.up()
+
+
+@contextlib.contextmanager
+def disable_gc():
+    enabled = gc.isenabled()
+    gc.disable()
+    try:
+        yield
+    finally:
+        if enabled:
+            gc.enable()
+
+
+def best_update_time(app, roots, repeat=20):
+    """Return the fastest of ``repeat`` server-side updates of ``roots``.
+
+    Only the object manager is exercised, nothing is pushed to the client.
+    """
+    with disable_gc():
+        times = []
+        for _ in range(repeat):
+            t0 = time.perf_counter()
+            app.ctx.view1.api.update(obj_to_update=roots)
+            times.append(time.perf_counter() - t0)
+    return min(times)
 
 
 def format_report(rows):
@@ -254,8 +282,16 @@ async def test_partial_update(PartialUpdateApp, utils):
     # both strategies, so it is reported but not compared.
     subset, full = report[0], report[1]
     assert subset["roots"] == 1 and full["roots"] == 2
-    assert subset["seconds"] < full["seconds"], (
-        "subset update did not reduce serialization time:\n" + text
+
+    # The per-step timings above are single samples of a few milliseconds and
+    # are too noisy on shared CI runners to compare. Compare the best of many
+    # repeated server-side updates instead.
+    subset_best = best_update_time(app, [app.selected])
+    full_best = best_update_time(app, [app.render_window_1, app.selected])
+    assert subset_best < full_best, (
+        "subset update did not reduce serialization time: "
+        f"best subset {subset_best * 1000:.3f} ms vs "
+        f"best full {full_best * 1000:.3f} ms\n" + text
     )
 
     assert all(valid_image_comparisons), "Some images don't match"

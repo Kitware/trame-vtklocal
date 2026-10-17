@@ -171,10 +171,17 @@ def register_wasm(serve_path, wasm_bits="wasm32", **kwargs):
     # get wasm directory from kwargs or environment variable
     wasm_dir = kwargs.get("wasm_dir", os.environ.get("VTK_WASM_DIR_OVERRIDE"))
     # if the wasm directory is provided, we copy the files from there
+    # into separate "dev" directory. Leaves existing versioned dirs untouched.
     if wasm_dir and Path(wasm_dir).exists() and Path(wasm_dir).is_dir():
         print(f"Using wasm_dir: {wasm_dir}")
+        BASE_URL = "__trame_vtklocal_wasm/dev"
+        dest_directory = Path(serve_path) / "dev"
+        # start clean so nothing from a previous build is served
+        shutil.rmtree(dest_directory, ignore_errors=True)
         dest_directory.mkdir(parents=True, exist_ok=True)
         for src_file in Path(wasm_dir).rglob(f"{wasm_base_name}WebAssembly*"):
+            if src_file.suffix not in (".mjs", ".wasm"):
+                continue
             shutil.copyfile(
                 src_file,
                 dest_directory.joinpath(src_file.name),

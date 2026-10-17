@@ -92,7 +92,7 @@ def get_wasm_cache_directory(serve_path):
     default_path = Path(serve_path)
 
     # If we can write in Python env, let's use it
-    with contextlib.suppress(PermissionError):
+    with contextlib.suppress(PermissionError, OSError):
         test_file = default_path / "test.write"
         test_file.unlink(missing_ok=True)
         test_file.touch()

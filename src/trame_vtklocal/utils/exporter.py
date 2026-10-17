@@ -1,6 +1,7 @@
 import base64
 from io import BytesIO
 from pathlib import Path
+import tarfile
 import zipfile
 import json
 from vtkmodules.vtkSerializationManager import vtkObjectManager
@@ -35,13 +36,25 @@ __all__ = [
 ]
 
 
-def find_wasm(wasm_bits):
-    wasm_serve_path = wasm.get_wasm_cache_directory(SERVE_PATH)
+def get_wasm_archive(wasm_bits):
+    """Return the bytes of a .tgz archive holding the VTK WebAssembly files."""
+    wasm_serve_path = Path(wasm.get_wasm_cache_directory(SERVE_PATH))
     info = wasm.register_wasm(wasm_serve_path, wasm_bits=wasm_bits)
-    url = info["state"][f"__trame_vtklocal_{wasm_bits}"]["tgz_url"]
-    paths = url.split("/")
-    wasmFile = wasm_serve_path / "/".join(paths[1:])
-    return wasmFile
+    state = info["state"][f"__trame_vtklocal_{wasm_bits}"]
+    if "tgz_url" in state:
+        paths = state["tgz_url"].split("/")
+        return (wasm_serve_path / "/".join(paths[1:])).read_bytes()
+
+    # No release archive (e.g. VTK_WASM_DIR_OVERRIDE), so pack the served
+    # files using the same flat layout as the release archive
+    paths = state["url"].split("/")
+    wasm_directory = wasm_serve_path / "/".join(paths[1:])
+    archive = BytesIO()
+    with tarfile.open(fileobj=archive, mode="w:gz") as tgz:
+        for wasm_file in sorted(wasm_directory.iterdir()):
+            if wasm_file.is_file():
+                tgz.add(wasm_file, arcname=f"./{wasm_file.name}")
+    return archive.getvalue()
 
 
 def to_url(bytes, prefix):
@@ -54,8 +67,7 @@ def to_url(bytes, prefix):
 
 
 def write_html(stream, data, config):
-    wasm_file = find_wasm(config.get("mode", "wasm32"))
-
+    wasm_archive = get_wasm_archive(config.get("mode", "wasm32"))
     stream.write("<html>".encode(UTF8))
     stream.write("\n<head>".encode(UTF8))
     stream.write("\n<style>".encode(UTF8))
@@ -68,7 +80,7 @@ def write_html(stream, data, config):
     stream.write("\n<body>".encode(UTF8))
     stream.write("""\n<div id="viewer"></div>""".encode(UTF8))
     stream.write("\n<script>".encode(UTF8))
-    stream.write(to_url(wasm_file.read_bytes(), "wasm"))
+    stream.write(to_url(wasm_archive, "wasm"))
     stream.write(to_url(data, "data"))
     stream.write(
         f"""
@@ -114,7 +126,7 @@ def create_viewer(output_file, config=None):
         config = DEFAULT_CONFIG
 
     with output_file.open("wb") as stream:
-        wasm_file = find_wasm(config.get("mode", "wasm32"))
+        wasm_archive = get_wasm_archive(config.get("mode", "wasm32"))
 
         stream.write("<html>".encode(UTF8))
         stream.write("\n<head>".encode(UTF8))
@@ -128,7 +140,7 @@ def create_viewer(output_file, config=None):
         stream.write("\n<body>".encode(UTF8))
         stream.write("""\n<div id="viewer"></div>""".encode(UTF8))
         stream.write("\n<script>".encode(UTF8))
-        stream.write(to_url(wasm_file.read_bytes(), "wasm"))
+        stream.write(to_url(wasm_archive, "wasm"))
 
         # Extract dataURL from URL
         stream.write(

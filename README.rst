@@ -46,6 +46,26 @@ Installation
     pip install "vtk>=9.6" --pre --index-url https://wheels.vtk.org
 
 
+Container / offline deployment
+----------------------------------------
+
+Fetch the wasm binaries ahead of time with the `trame_vtklocal.wasm download` CLI.
+
+.. code-block:: console
+
+    # Download wasm32 and wasm64 into the package directory
+    python -m trame_vtklocal.wasm download
+
+    # Or into the user cache directory.
+    # Note: Files downloaded anywhere else are not picked at runtime.
+    python -m trame_vtklocal.wasm download --dest ~/.vtk-wasm
+
+Files downloaded into the package directory are used at runtime even if that directory is read-only,
+as long as both ``wasm32`` and ``wasm64`` are present for the installed VTK version.
+Use ``--wasm-bits``, ``--url`` and ``--force`` to choose the architectures, override the
+download location, or re-download existing files.
+
+
 Development
 ----------------------------------------
 

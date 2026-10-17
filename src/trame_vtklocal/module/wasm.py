@@ -88,8 +88,54 @@ def get_wasm_info(wasm_bits="wasm32"):
     return version, url
 
 
-def get_wasm_cache_directory(serve_path):
+def get_required_files(version, wasm_base_name="vtk"):
+    # The archive contents changed over time; these cutoffs distinguish the formats:
+    # - before 9.5.20250531: vtkWasmSceneManager.{mjs,wasm}
+    # - before 9.7.20260716: separate webgl ({base}WebAssembly.{mjs,wasm}) and
+    #   webgpu ({base}WebAssemblyAsync.{mjs,wasm}) builds
+    # - from 9.7.20260716: single {base}WebAssembly.{mjs,wasm} build with both
+    #   webgl and webgpu support
+    if parse(version) < parse("9.5.20250531"):
+        return [
+            "vtkWasmSceneManager.mjs",
+            "vtkWasmSceneManager.wasm",
+        ]
+    if parse(version) < parse("9.7.20260716"):
+        return [
+            f"{wasm_base_name}WebAssembly.mjs",
+            f"{wasm_base_name}WebAssembly.wasm",
+            f"{wasm_base_name}WebAssemblyAsync.mjs",
+            f"{wasm_base_name}WebAssemblyAsync.wasm",
+        ]
+    return [
+        f"{wasm_base_name}WebAssembly.mjs",
+        f"{wasm_base_name}WebAssembly.wasm",
+    ]
+
+
+def has_required_files(directory, version, wasm_base_name="vtk"):
+    directory = Path(directory)
+    return all(
+        directory.joinpath(f).exists()
+        for f in get_required_files(version, wasm_base_name)
+    )
+
+
+def get_wasm_cache_directory(serve_path, wasm_bits_list=("wasm32", "wasm64")):
     default_path = Path(serve_path)
+
+    # If the files were bundled ahead of time (e.g. at image build time), use
+    # them even when serve_path is read-only. Both architectures are required by
+    # default because setup() registers both and would otherwise try to
+    # download the missing one into serve_path.
+    from vtkmodules.vtkCommonCore import vtkVersion
+
+    version = vtkVersion().GetVTKVersion()
+    if all(
+        has_required_files(default_path / wasm_bits / version, version)
+        for wasm_bits in wasm_bits_list
+    ):
+        return serve_path
 
     # If we can write in Python env, let's use it
     with contextlib.suppress(PermissionError, OSError):
@@ -138,30 +184,7 @@ def register_wasm(serve_path, wasm_bits="wasm32", **kwargs):
         wasm_url = kwargs.get("wasm_url", wasm_url)
 
         # if the required wasm files do not exist, we need to download them
-        # The archive contents changed over time; these cutoffs distinguish the formats:
-        # - before 9.5.20250531: vtkWasmSceneManager.{mjs,wasm}
-        # - before 9.7.20260716: separate webgl ({base}WebAssembly.{mjs,wasm}) and
-        #   webgpu ({base}WebAssemblyAsync.{mjs,wasm}) builds
-        # - from 9.7.20260716: single {base}WebAssembly.{mjs,wasm} build with both
-        #   webgl and webgpu support
-        if parse(version) < parse("9.5.20250531"):
-            required_files = [
-                "vtkWasmSceneManager.mjs",
-                "vtkWasmSceneManager.wasm",
-            ]
-        elif parse(version) < parse("9.7.20260716"):
-            required_files = [
-                f"{wasm_base_name}WebAssembly.mjs",
-                f"{wasm_base_name}WebAssembly.wasm",
-                f"{wasm_base_name}WebAssemblyAsync.mjs",
-                f"{wasm_base_name}WebAssemblyAsync.wasm",
-            ]
-        else:
-            required_files = [
-                f"{wasm_base_name}WebAssembly.mjs",
-                f"{wasm_base_name}WebAssembly.wasm",
-            ]
-        if any(not dest_directory.joinpath(f).exists() for f in required_files):
+        if not has_required_files(dest_directory, version, wasm_base_name):
             run_async(setup_wasm_directory(dest_directory, wasm_url))
 
     # If tgz file available provide url

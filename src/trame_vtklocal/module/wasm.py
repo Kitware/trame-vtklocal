@@ -202,3 +202,22 @@ def register_wasm(serve_path, wasm_bits="wasm32", **kwargs):
             }
         },
     )
+
+
+def download_wasm(dest, wasm_bits="wasm32", wasm_url=None, force=False):
+    """Download and unpack the VTK WebAssembly files for the installed VTK
+    version into dest/<wasm_bits>/<version>. Blocks until done.
+    Returns the directory containing the files."""
+    version, default_url = get_wasm_info(wasm_bits)
+    dest_directory = Path(dest) / wasm_bits / version
+    if force or not has_required_files(dest_directory, version):
+        try:
+            asyncio.run(setup_wasm_directory(dest_directory, wasm_url or default_url))
+        finally:
+            # No one awaits these futures outside a server; mark any failure as
+            # retrieved since it is already raised here.
+            while WASM_DOWNLOADING:
+                future = WASM_DOWNLOADING.pop()
+                if future.done() and not future.cancelled():
+                    future.exception()
+    return dest_directory

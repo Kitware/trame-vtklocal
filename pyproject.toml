@@ -1,6 +1,6 @@
 [project]
 name = "trame-vtklocal"
-version = "1.7.2"
+version = "1.8.0"
 description = "VTK Local Rendering using WASM"
 authors = [
     {name = "Kitware Inc."},

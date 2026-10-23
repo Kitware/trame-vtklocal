@@ -15,7 +15,6 @@ try:
 except ImportError:
     ZIP_COMPRESSION = zipfile.ZIP_STORED
 
-VTK_VERSION = vtkVersion()
 UTF8 = "utf-8"
 
 SERVE_PATH = Path(__file__).parent.parent / "module/serve"
@@ -336,7 +335,7 @@ def to_wazex(
             "vtk-wasm.json",
             json.dumps(
                 {
-                    "vtk": VTK_VERSION.GetVTKVersion(),
+                    "vtk": vtkVersion.GetVTKVersion(),
                     "ids": root_ids,
                 }
             ),

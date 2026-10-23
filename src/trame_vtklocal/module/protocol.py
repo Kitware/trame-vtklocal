@@ -19,11 +19,10 @@ try:
 except ImportError:
     ZIP_COMPRESSION = zipfile.ZIP_STORED
 
-VTK_VERSION = vtkVersion()
 API_NO_IDS_UPDATE = (
-    VTK_VERSION.GetVTKMajorVersion() <= 9
-    and VTK_VERSION.GetVTKMinorVersion() <= 4
-    and VTK_VERSION.GetVTKBuildVersion() < 20250509
+    vtkVersion.GetVTKMajorVersion() <= 9
+    and vtkVersion.GetVTKMinorVersion() <= 4
+    and vtkVersion.GetVTKBuildVersion() < 20250509
 )  # mr90034
 
 
@@ -237,7 +236,7 @@ class ObjectManagerAPI(LinkProtocol):
                 "vtk-wasm.json",
                 json.dumps(
                     {
-                        "vtk": VTK_VERSION.GetVTKVersion(),
+                        "vtk": vtkVersion.GetVTKVersion(),
                         "ids": wasm_ids,
                     }
                 ),

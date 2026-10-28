@@ -128,7 +128,7 @@ class ObjectManagerAPI(LinkProtocol):
         """
         manager = self.vtk_object_manager
         covered = set()
-        for vtk_id in dict.fromkeys(ids):
+        for vtk_id in ids:
             if vtk_id in covered:
                 continue
             manager.UpdateStatesFromObjects([vtk_id])

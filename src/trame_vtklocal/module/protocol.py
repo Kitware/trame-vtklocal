@@ -115,30 +115,45 @@ class ObjectManagerAPI(LinkProtocol):
         # print(f"Update in {t1-t0:.3f}s")
 
     def _update_roots(self, ids):
-        """Serialize each root once, skipping roots an earlier walk already covered.
+        """Serialize the given roots in one call, leaving out roots another covers.
 
-        ``UpdateStatesFromObjects`` walks every identifier's dependency graph on its
-        own, so roots whose graphs overlap are serialized more than once: for
-        example a registered widget attached to the render window's interactor,
-        which reaches the whole scene through it, or the same root passed twice.
+        ``UpdateStatesFromObjects(ids)`` clears and rebuilds each identifier's
+        dependency graph in turn, so when one root reaches another, for example a
+        widget attached to the render window's interactor, the shared graph is
+        serialized once per root. The roots still have to go in a single call:
+        every call releases the registered objects that have no state yet, so a
+        new root left for a later call would never be serialized.
+
+        A root is left out when the previous update recorded it in another root's
+        graph, since that walk clears and serializes it again. If the walk no
+        longer reaches it, it is serialized by a follow-up call; it has a state by
+        then. A root registered since the last update has no recorded graph, so it
+        is always included; listing the render window before such a root keeps
+        that first update to a single walk of the scene.
 
         To attach a widget, prefer creating the interactor with
         ``vtkRenderWindowInteractor(track_interactor_observer_instances=True)``.
         The widget is then part of the render window's own graph and needs no
-        registration at all. This method guards the cases that remain.
-
-        Roots are serialized one at a time in the order given. After each walk the
-        root's dependencies are read again, and a later root is skipped only if that
-        walk reached it. Put the root most likely to reach the others first.
+        registration at all.
         """
         manager = self.vtk_object_manager
-        covered = set()
-        for vtk_id in ids:
-            if vtk_id in covered:
-                continue
-            manager.UpdateStatesFromObjects([vtk_id])
-            covered.add(vtk_id)
-            covered.update(manager.GetAllDependencies(vtk_id))
+        pending = list(dict.fromkeys(ids))
+        while pending:
+            reach = {
+                vtk_id: set(manager.GetAllDependencies(vtk_id)) for vtk_id in pending
+            }
+            roots = list(pending)
+            for vtk_id in pending:
+                if any(vtk_id in reach[other] for other in roots if other != vtk_id):
+                    roots.remove(vtk_id)
+            manager.UpdateStatesFromObjects(roots)
+            if len(roots) == len(pending):
+                return
+            # Only what a walk cleared beforehand was serialized again.
+            covered = set(roots)
+            for vtk_id in roots:
+                covered.update(reach[vtk_id] & set(manager.GetAllDependencies(vtk_id)))
+            pending = [vtk_id for vtk_id in pending if vtk_id not in covered]
 
     @property
     def active_ids(self):

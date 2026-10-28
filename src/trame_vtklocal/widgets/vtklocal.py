@@ -301,8 +301,8 @@ class LocalView(HtmlElement):
             ``@updated=`` event.
         """
         if obj_to_update is None:
-            # Widgets first: one attached to the window's interactor reaches the
-            # whole scene, so serializing it covers the window as well.
+            # Registered objects first: one attached to the window's interactor
+            # reaches the whole scene, so serializing it covers the window as well.
             obj_to_update = [*self.__registered_obj, self._render_window]
         if not isinstance(obj_to_update, list | tuple):
             obj_to_update = [obj_to_update]
@@ -313,7 +313,13 @@ class LocalView(HtmlElement):
         self.server.js_call(self.__ref, "update", options)
 
     def register_vtk_object(self, vtk_instance):
-        """Register external element (i.e. widget) into the scene so it can be managed and return its wasm_id"""
+        """Register external element (i.e. widget) into the scene so it can be managed and return its wasm_id
+
+        A widget attached to the render window's interactor does not need this when
+        the interactor is created with
+        ``vtkRenderWindowInteractor(track_interactor_observer_instances=True)``:
+        it is then serialized as part of the render window.
+        """
         if vtk_instance not in self.__registered_obj:
             self.api.register_widget(self._render_window, vtk_instance)
             self.__registered_obj.append(vtk_instance)

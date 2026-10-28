@@ -118,9 +118,14 @@ class ObjectManagerAPI(LinkProtocol):
         """Serialize each root once, skipping roots an earlier walk already covered.
 
         ``UpdateStatesFromObjects`` walks every identifier's dependency graph on its
-        own, so roots whose graphs overlap are serialized more than once. A widget
-        attached to the render window's interactor reaches the whole scene through
-        it, so updating both the window and the widget walks the scene twice.
+        own, so roots whose graphs overlap are serialized more than once: for
+        example a registered widget attached to the render window's interactor,
+        which reaches the whole scene through it, or the same root passed twice.
+
+        To attach a widget, prefer creating the interactor with
+        ``vtkRenderWindowInteractor(track_interactor_observer_instances=True)``.
+        The widget is then part of the render window's own graph and needs no
+        registration at all. This method guards the cases that remain.
 
         Roots are serialized one at a time in the order given. After each walk the
         root's dependencies are read again, and a later root is skipped only if that

@@ -105,7 +105,7 @@ class ObjectManagerAPI(LinkProtocol):
                 ids = [
                     self.vtk_object_manager.GetId(vtk_obj) for vtk_obj in obj_to_update
                 ]
-                self.vtk_object_manager.UpdateStatesFromObjects(ids)
+                self._update_roots(ids)
 
         if self._debug_state:
             self.vtk_object_manager.Export(f"snapshot-{self._debug_state_counter}")
@@ -113,6 +113,27 @@ class ObjectManagerAPI(LinkProtocol):
 
         # t1 = time.perf_counter()
         # print(f"Update in {t1-t0:.3f}s")
+
+    def _update_roots(self, ids):
+        """Serialize each root once, skipping roots an earlier walk already covered.
+
+        ``UpdateStatesFromObjects`` walks every identifier's dependency graph on its
+        own, so roots whose graphs overlap are serialized more than once. A widget
+        attached to the render window's interactor reaches the whole scene through
+        it, so updating both the window and the widget walks the scene twice.
+
+        Roots are serialized one at a time in the order given. After each walk the
+        root's dependencies are read again, and a later root is skipped only if that
+        walk reached it. Put the root most likely to reach the others first.
+        """
+        manager = self.vtk_object_manager
+        covered = set()
+        for vtk_id in dict.fromkeys(ids):
+            if vtk_id in covered:
+                continue
+            manager.UpdateStatesFromObjects([vtk_id])
+            covered.add(vtk_id)
+            covered.update(manager.GetAllDependencies(vtk_id))
 
     @property
     def active_ids(self):

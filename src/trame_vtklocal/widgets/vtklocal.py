@@ -301,9 +301,7 @@ class LocalView(HtmlElement):
             ``@updated=`` event.
         """
         if obj_to_update is None:
-            # Registered objects first: one attached to the window's interactor
-            # reaches the whole scene, so serializing it covers the window as well.
-            obj_to_update = [*self.__registered_obj, self._render_window]
+            obj_to_update = [self._render_window, *self.__registered_obj]
         if not isinstance(obj_to_update, list | tuple):
             obj_to_update = [obj_to_update]
         self.api.update(
